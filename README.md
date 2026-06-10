@@ -1,12 +1,11 @@
-# 公開中のツール・ドキュメント・各種リソース
+# Public Hub
 
-> **利用上の注意** これらのリソースは完全個人利用を目的としています。すべて自己責任でご利用ください。
+ツール、ゲーム、各種リソースの公開ページです。
 
-### ダウンロード
+## Web Site
 
-- **Ultima Media Downloader** - ストリーミングサイトのURLからメディアファイルを抽出・ダウンロードできます
-    - [UltimaMediaDownloader-win32-x64.zip (latest)](https://github.com/ttmiszk/public-hub/releases/download/release/UltimaMediaDownloader-win32-x64.zip)
+https://ttmiszk.github.io/public-hub/
 
-- **Ultima Log Viewer** - 開発者やシステム管理者のためのデスクトップ向けログ閲覧アプリです
-    - [UltimaLogViewer-win32-x64.zip (latest)](https://github.com/ttmiszk/public-hub/releases/download/release/UltimaLogViewer-win32-x64.zip)
+## License
 
+各コンテンツの利用条件は個別に定めるものとします。
