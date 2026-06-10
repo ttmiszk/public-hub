@@ -1,0 +1,1400 @@
+/**
+ * Ultima Reversi - スタイルシート
+ * 
+ * 構成:
+ * 1. CSS変数 (配色・サイズ・フォント)
+ * 2. ベーススタイル (リセット・基本設定)
+ * 3. レイアウト (コンテナ・ヘッダー)
+ * 4. コンポーネント (盤面・石・パネル・ボタン)
+ * 5. モーダル・オーバーレイ (各種ダイアログ)
+ * 6. ユーティリティ (ヘルパー・アニメーション)
+ */
+
+/* ==========================================================================
+   1. CSS変数（デザイントークン）
+   ========================================================================== */
+:root {
+    /* --------------------------------------------------------------------------
+       共通設定
+       -------------------------------------------------------------------------- */
+    /* アプリケーション情報 */
+    --app-title: "Ultima Reversi";
+    --version-text: "Version 0.2.2";
+    --copyright-text: "© 2011-2026 Ultima Architect Inc.";
+
+    /* 寸法・スペーシング */
+    --board-max-size: min(90vw, 480px);
+    --board-padding: 8px;
+    --cell-gap: 2px;
+    --border-radius: 8px;
+    --border-radius-lg: 20px;
+
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+
+    /* タイポグラフィ */
+    --font-family: 'Outfit', 'sans-serif', 'Segoe UI', 'Hiragino Sans', 'Meiryo';
+    --font-size-sm: 0.875rem;
+    --font-size-md: 1rem;
+    --font-size-lg: 1.25rem;
+    --font-size-xl: 1.5rem;
+
+    /* アニメーション設定 */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.3s ease;
+
+    /* --------------------------------------------------------------------------
+       テーマ: Light (デフォルト / Warm Beige)
+       -------------------------------------------------------------------------- */
+    /* メインカラー (Reversi Green) */
+    --color-primary: #2c7a3a;
+    --color-primary-dark: #1e5428;
+    --color-primary-light: #4caf50;
+
+    /* 背景・サーフェス (Beige) */
+    --color-background: #e6dec5;
+    --color-surface: #e6dec5;
+    --color-surface-light: #d8d0ba;
+
+    /* テキスト (Dark Brown) */
+    --color-text: #4a4036;
+    --color-text-muted: #8c857b;
+
+    /* 盤面 (Bright Green) */
+    --color-board: #388e3c;
+    --color-board-line: #256e29;
+    --color-board-highlight: rgba(255, 255, 0, 0.4);
+
+    /* 石 (Classic) */
+    --color-stone-black: #1a1a1a;
+    --color-stone-white: #f5f5f5;
+    --color-stone-shadow: rgba(0, 0, 0, 0.3);
+    /* グラデーション */
+    --stone-black-outer: linear-gradient(135deg, #666 0%, #000 100%);
+    --stone-black-inner: linear-gradient(135deg, #111 0%, #555 100%);
+    --stone-white-outer: linear-gradient(135deg, #ffffff 0%, #bbb 100%);
+    --stone-white-inner: linear-gradient(135deg, #999 0%, #ffffff 100%);
+
+    /* シャドウ (Warm) */
+    --shadow-light: #fbf5e6;
+    --shadow-dark: #b8b09b;
+
+    /* UIパーツ */
+    --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234a4036' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+/* --------------------------------------------------------------------------
+   テーマ: Dark (Metallic / Cool)
+   -------------------------------------------------------------------------- */
+[data-theme="dark"] {
+    --color-primary: #e0e0e0;
+    --color-primary-dark: #bdbdbd;
+    --color-primary-light: #f5f5f5;
+
+    --color-background: #212529;
+    --color-surface: #343a40;
+    --color-surface-light: #495057;
+
+    --color-text: #f8f9fa;
+    --color-text-muted: #adb5bd;
+
+    --color-board: #0f7b42;
+    --color-board-line: #0a5c31;
+    --color-board-highlight: rgba(255, 255, 0, 0.3);
+
+    --shadow-light: #3e454d;
+    --shadow-dark: #1a1d21;
+
+    --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23f8f9fa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+/* Darkテーマ固有の調整 */
+[data-theme="dark"] .player-info.active {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: #e74c3c;
+}
+
+/* --------------------------------------------------------------------------
+   テーマ: Pop (Vibrant / Blue)
+   -------------------------------------------------------------------------- */
+[data-theme="pop"] {
+    --color-primary: #2563eb;
+    --color-primary-dark: #1d4ed8;
+    --color-primary-light: #60a5fa;
+
+    --color-background: #eff6ff;
+    --color-surface: #dbeafe;
+    --color-surface-light: #bfdbfe;
+
+    --color-text: #1e3a8a;
+    --color-text-muted: #64748b;
+
+    --color-board: #3b82f6;
+    --color-board-line: #1e40af;
+    --color-board-highlight: rgba(255, 255, 255, 0.5);
+
+    --shadow-light: rgba(255, 255, 255, 0.8);
+    --shadow-dark: rgba(30, 58, 138, 0.2);
+
+    --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%231e3a8a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+/* Popテーマ固有の調整 */
+[data-theme="pop"] .player-info.active {
+    border-color: #e74c3c;
+}
+
+/* ==========================================================================
+   2. ベーススタイル
+   ========================================================================== */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    font-size: 18px;
+}
+
+body {
+    font-family: var(--font-family);
+    background: linear-gradient(135deg, var(--color-background) 0%, var(--color-surface) 100%);
+    color: var(--color-text);
+    min-height: 100vh;
+    line-height: 1.5;
+}
+
+/* 画面揺れアニメーション（ユーティリティから移動） */
+.shake-screen {
+    animation: shakeScreen 0.4s cubic-bezier(.36, .07, .19, .97) both;
+}
+
+@keyframes shakeScreen {
+    0% {
+        transform: translate(0, 0);
+    }
+
+    10% {
+        transform: translate(-5px, -5px);
+    }
+
+    20% {
+        transform: translate(5px, 5px);
+    }
+
+    30% {
+        transform: translate(-5px, 5px);
+    }
+
+    40% {
+        transform: translate(5px, -5px);
+    }
+
+    50% {
+        transform: translate(-3px, -3px);
+    }
+
+    60% {
+        transform: translate(3px, 3px);
+    }
+
+    70% {
+        transform: translate(-3px, 3px);
+    }
+
+    80% {
+        transform: translate(3px, -3px);
+    }
+
+    90% {
+        transform: translate(-1px, 1px);
+    }
+
+    100% {
+        transform: translate(0, 0);
+    }
+}
+
+/* ==========================================================================
+   3. レイアウト
+   ========================================================================== */
+.app-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: var(--spacing-sm);
+}
+
+.app-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--spacing-md) 0;
+    width: 100%;
+}
+
+.header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 2px;
+}
+
+.header-spacer {
+    width: 36px;
+}
+
+.game-rule-display {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    font-weight: 600;
+    height: 1.2em;
+    line-height: 1.2em;
+    min-height: 1.2em;
+    text-align: center;
+    width: 100%;
+}
+
+.app-title {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    color: var(--color-text);
+    text-align: center;
+    letter-spacing: 0.05em;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.info-button {
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+}
+
+.info-button:hover {
+    color: var(--color-text);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* ==========================================================================
+   4. コンポーネント - ルール説明 (ルールモーダル内)
+   ========================================================================== */
+/* ==========================================================================
+   4. コンポーネント - ルール説明 (ルールモーダル内)
+   ========================================================================== */
+/* ルール閲覧用ラッパー */
+.rule-viewer-wrapper {
+    position: relative;
+    background: var(--color-surface-light);
+    border-radius: var(--border-radius);
+    box-shadow: inset 2px 2px 5px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light);
+    overflow: hidden;
+    /* 丸角に合わせる */
+}
+
+/* スクロール領域 */
+.rule-scroll-area {
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: var(--spacing-md);
+    /* 下部余白（透かしに被らないように） */
+    padding-bottom: 60px;
+}
+
+/* 記事本文 */
+.rule-description {
+    text-align: left;
+    font-size: var(--font-size-sm);
+}
+
+/* フッターの透かし（スクロール促進） */
+.rule-fade-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 40px;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0), var(--color-surface-light));
+    pointer-events: none;
+    z-index: 5;
+}
+
+.rule-description dl {
+    display: block;
+    margin-bottom: 16px;
+}
+
+.rule-description dt {
+    font-weight: bold;
+    color: var(--color-primary-light);
+    margin-top: 12px;
+}
+
+.rule-description dt:first-child {
+    margin-top: 0;
+}
+
+.rule-description dd {
+    margin: 0;
+    margin-left: 16px;
+    margin-bottom: 8px;
+    font-size: 0.9em;
+    line-height: 1.6;
+}
+
+.rule-description .note {
+    color: var(--color-text-muted);
+    font-size: 0.85em;
+    margin-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 8px;
+}
+
+/* スクロールバー設定 */
+.rule-scroll-area::-webkit-scrollbar {
+    width: 6px;
+}
+
+.rule-scroll-area::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.rule-scroll-area::-webkit-scrollbar-thumb {
+    background: var(--color-primary);
+    border-radius: 3px;
+}
+
+/* フッター */
+.app-footer {
+    text-align: center;
+    padding: var(--spacing-md) 0;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+}
+
+.game-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+/* ==========================================================================
+   コンポーネント - 情報パネル (プレイヤー情報)
+   ========================================================================== */
+.info-panel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--color-surface);
+    border-radius: 20px;
+    padding: var(--spacing-md);
+    box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light);
+    flex-wrap: nowrap;
+    gap: var(--spacing-sm);
+}
+
+.player-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius);
+    border: 2px solid transparent;
+    transition: all var(--transition-normal);
+    flex-shrink: 0;
+    white-space: nowrap;
+    position: relative;
+    flex: 1;
+    width: 0;
+    /* 均等幅を強制 */
+    justify-content: space-between;
+    overflow: visible;
+}
+
+.player-info.player-black {
+    flex-direction: row;
+    /* 石:左 名前:右 */
+    justify-content: flex-start;
+}
+
+.player-info.player-white {
+    flex-direction: row-reverse;
+    /* 石:右 名前:左 */
+    justify-content: flex-start;
+}
+
+/* アクティブプレイヤーの強調表示 */
+.player-info.active {
+    background: rgba(255, 255, 255, 0.4);
+    box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
+    border-color: #e74c3c;
+    /* 赤枠で強調 */
+    z-index: 5;
+}
+
+.player-info.active .player-name {
+    color: var(--color-primary-light);
+}
+
+/* AI思考中の表示 */
+.player-info.thinking {
+    animation: thinkingPulse 1s ease-in-out infinite;
+}
+
+@keyframes thinkingPulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 12px rgba(76, 175, 80, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(76, 175, 80, 0.7);
+    }
+}
+
+.player-stone {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    box-shadow: 3px 4px 6px rgba(0, 0, 0, 0.4);
+    flex-shrink: 0;
+    margin-top: -16px;
+    /* 上にはみ出す */
+    margin-bottom: -4px;
+    position: relative;
+    z-index: 2;
+    background: var(--stone-bg-outer);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.player-stone::before {
+    content: '';
+    width: 80%;
+    height: 80%;
+    border-radius: 50%;
+    background: var(--stone-bg-inner);
+}
+
+.player-stone.black {
+    --stone-bg-outer: var(--stone-black-outer);
+    --stone-bg-inner: var(--stone-black-inner);
+    margin-left: -20px;
+    /* 左にはみ出す */
+}
+
+.player-stone.white {
+    --stone-bg-outer: var(--stone-white-outer);
+    --stone-bg-inner: var(--stone-white-inner);
+    margin-right: -20px;
+    /* 右にはみ出す */
+}
+
+/* 設定モーダル用アイコン（小） */
+.player-icon-small {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--stone-bg-outer);
+    flex-shrink: 0;
+    margin-bottom: 2px;
+}
+
+.player-icon-small::before {
+    content: '';
+    width: 80%;
+    height: 80%;
+    border-radius: 50%;
+    background: var(--stone-bg-inner);
+}
+
+.player-icon-small.black {
+    --stone-bg-outer: var(--stone-black-outer);
+    --stone-bg-inner: var(--stone-black-inner);
+}
+
+.player-icon-small.white {
+    --stone-bg-outer: var(--stone-white-outer);
+    --stone-bg-inner: var(--stone-white-inner);
+}
+
+.player-details {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.player-name {
+    font-weight: 600;
+    transition: color var(--transition-fast);
+    line-height: 1.2;
+}
+
+/* 思考進捗バー */
+.progress-bar-container {
+    height: 4px;
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    margin-top: 4px;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.player-info.thinking .progress-bar-container,
+.player-info.thinking-done .progress-bar-container {
+    opacity: 1;
+}
+
+.progress-bar {
+    height: 100%;
+    background-color: var(--color-primary-light);
+    width: 0%;
+    transition: width 0.2s linear;
+    border-radius: 2px;
+}
+
+.player-black .player-details {
+    align-items: flex-start;
+    padding-left: 8px;
+    text-align: left;
+}
+
+.player-white .player-details {
+    align-items: flex-end;
+    padding-right: 8px;
+    text-align: right;
+}
+
+/* 石数カウント */
+.stone-count {
+    font-size: 1.5rem;
+    font-weight: 700;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 3;
+    width: 64px;
+    text-align: center;
+    margin-top: -8px;
+}
+
+.player-black .stone-count {
+    color: #fff;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.9);
+    left: -12px;
+    /* オーバーラップ調整 */
+    transform: translateY(-50%);
+}
+
+.player-white .stone-count {
+    color: #333;
+    text-shadow: 0 0 3px rgba(255, 255, 255, 0.9);
+    right: -12px;
+    /* オーバーラップ調整 */
+    left: auto;
+    transform: translateY(-50%);
+}
+
+/* ゲーム結果（未使用？） */
+.game-result {
+    font-weight: 600;
+    padding: var(--spacing-xs) var(--spacing-md);
+    background: var(--color-primary);
+    border-radius: var(--border-radius);
+    text-align: center;
+    flex-shrink: 0;
+}
+
+/* ==========================================================================
+   コンポーネント - 盤面
+   ========================================================================== */
+.board-container {
+    position: relative;
+    width: var(--board-max-size);
+    max-width: 100%;
+    aspect-ratio: 1;
+    align-self: center;
+}
+
+.board {
+    display: grid;
+    gap: var(--cell-gap);
+    background: var(--color-board-line);
+    padding: var(--board-padding);
+    border-radius: var(--border-radius);
+    width: var(--board-max-size);
+    max-width: 100%;
+    aspect-ratio: 1;
+    box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light);
+    transition: filter var(--transition-fast);
+}
+
+/* 思考中は盤面操作を無効化 */
+.board.thinking {
+    pointer-events: none;
+    filter: grayscale(0.2);
+}
+
+/* グリッドレイアウト (JSから data-size で制御) */
+.board[data-size="4"] {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.board[data-size="6"] {
+    grid-template-columns: repeat(6, 1fr);
+}
+
+.board[data-size="8"] {
+    grid-template-columns: repeat(8, 1fr);
+}
+
+.cell {
+    background: var(--color-board);
+    aspect-ratio: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background var(--transition-fast);
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.board-star-point {
+    position: absolute;
+    top: calc(var(--cell-gap) * -0.5);
+    left: calc(var(--cell-gap) * -0.5);
+    width: 10px;
+    height: 10px;
+    background-color: var(--color-board-line);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* プレイ可能なセルのホバー効果 */
+.cell.playable:hover {
+    background: var(--color-primary-dark);
+}
+
+.cell.playable::after {
+    content: '';
+    width: 30%;
+    height: 30%;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: inset 1px 1px 1px rgba(0, 0, 0, 0.25),
+        inset -1px -1px 1px rgba(255, 255, 255, 0.25);
+}
+
+.cell .stone {
+    width: 90%;
+    height: 90%;
+    border-radius: 50%;
+    box-shadow: 3px 4px 6px var(--color-stone-shadow);
+    transition: transform var(--transition-normal);
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--stone-bg-outer);
+}
+
+.cell .stone::before {
+    content: '';
+    width: 80%;
+    height: 80%;
+    border-radius: 50%;
+    background: var(--stone-bg-inner);
+}
+
+.cell .stone.black {
+    --stone-bg-outer: var(--stone-black-outer);
+    --stone-bg-inner: var(--stone-black-inner);
+}
+
+.cell .stone.white {
+    --stone-bg-outer: var(--stone-white-outer);
+    --stone-bg-inner: var(--stone-white-inner);
+}
+
+/* 石を置くアニメーション */
+.cell .stone.placed {
+    animation: placeStone 0.3s ease-out;
+}
+
+@keyframes placeStone {
+    0% {
+        transform: scale(0);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* 石反転アニメーション */
+.cell .stone.black.flipping {
+    animation: flipToBlack 0.5s linear forwards;
+}
+
+.cell .stone.white.flipping {
+    animation: flipToWhite 0.5s linear forwards;
+}
+
+@keyframes flipToBlack {
+    0% {
+        --stone-bg-outer: var(--stone-white-outer);
+        --stone-bg-inner: var(--stone-white-inner);
+        transform: rotateY(0deg) scale(1.1);
+    }
+
+    49% {
+        --stone-bg-outer: var(--stone-white-outer);
+        --stone-bg-inner: var(--stone-white-inner);
+        transform: rotateY(90deg) scale(1.1);
+    }
+
+    50% {
+        --stone-bg-outer: var(--stone-black-outer);
+        --stone-bg-inner: var(--stone-black-inner);
+        transform: rotateY(90deg) scale(1.1);
+    }
+
+    100% {
+        --stone-bg-outer: var(--stone-black-outer);
+        --stone-bg-inner: var(--stone-black-inner);
+        transform: rotateY(0deg) scale(1);
+    }
+}
+
+@keyframes flipToWhite {
+    0% {
+        --stone-bg-outer: var(--stone-black-outer);
+        --stone-bg-inner: var(--stone-black-inner);
+        transform: rotateY(0deg) scale(1.1);
+    }
+
+    49% {
+        --stone-bg-outer: var(--stone-black-outer);
+        --stone-bg-inner: var(--stone-black-inner);
+        transform: rotateY(90deg) scale(1.1);
+    }
+
+    50% {
+        --stone-bg-outer: var(--stone-white-outer);
+        --stone-bg-inner: var(--stone-white-inner);
+        transform: rotateY(90deg) scale(1.1);
+    }
+
+    100% {
+        --stone-bg-outer: var(--stone-white-outer);
+        --stone-bg-inner: var(--stone-white-inner);
+        transform: rotateY(0deg) scale(1);
+    }
+}
+
+/* 軽量版反転アニメーション（スケール変化のみ） */
+.cell .stone.black.flipping-scale {
+    animation: flipScaleToBlack 0.3s ease-in-out forwards;
+}
+
+.cell .stone.white.flipping-scale {
+    animation: flipScaleToWhite 0.3s ease-in-out forwards;
+}
+
+@keyframes flipScaleToBlack {
+    0% {
+        --stone-bg-outer: var(--stone-white-outer);
+        --stone-bg-inner: var(--stone-white-inner);
+        transform: scaleX(1);
+    }
+
+    49% {
+        --stone-bg-outer: var(--stone-white-outer);
+        --stone-bg-inner: var(--stone-white-inner);
+        transform: scaleX(0);
+    }
+
+    50% {
+        --stone-bg-outer: var(--stone-black-outer);
+        --stone-bg-inner: var(--stone-black-inner);
+        transform: scaleX(0);
+    }
+
+    100% {
+        --stone-bg-outer: var(--stone-black-outer);
+        --stone-bg-inner: var(--stone-black-inner);
+        transform: scaleX(1);
+    }
+}
+
+@keyframes flipScaleToWhite {
+    0% {
+        --stone-bg-outer: var(--stone-black-outer);
+        --stone-bg-inner: var(--stone-black-inner);
+        transform: scaleX(1);
+    }
+
+    49% {
+        --stone-bg-outer: var(--stone-black-outer);
+        --stone-bg-inner: var(--stone-black-inner);
+        transform: scaleX(0);
+    }
+
+    50% {
+        --stone-bg-outer: var(--stone-white-outer);
+        --stone-bg-inner: var(--stone-white-inner);
+        transform: scaleX(0);
+    }
+
+    100% {
+        --stone-bg-outer: var(--stone-white-outer);
+        --stone-bg-inner: var(--stone-white-inner);
+        transform: scaleX(1);
+    }
+}
+
+/* ==========================================================================
+   コンポーネント - コントロールパネル
+   ========================================================================== */
+.control-panel {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    flex-wrap: nowrap;
+}
+
+.control-panel .btn {
+    flex: 1;
+    justify-content: center;
+}
+
+.btn {
+    font-family: inherit;
+    font-size: var(--font-size-md);
+    font-weight: 600;
+    padding: 10px 20px;
+    line-height: normal;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    outline: none;
+    box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+    flex-shrink: 0;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light);
+}
+
+.btn:active {
+    transform: translateY(0);
+    box-shadow: inset 2px 2px 5px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary {
+    background: var(--color-surface);
+    color: var(--color-primary);
+}
+
+.btn-secondary {
+    background: var(--color-surface);
+    color: var(--color-text);
+}
+
+/* テーマセレクター */
+.theme-selector {
+    display: flex;
+    gap: 10px;
+    background: var(--color-surface-light);
+    padding: 5px;
+    border-radius: 10px;
+    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.theme-selector .theme-option {
+    flex: 1;
+    position: relative;
+    cursor: pointer;
+    text-align: center;
+    margin-bottom: 0;
+}
+
+.theme-option input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.theme-name {
+    display: block;
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    color: var(--color-text);
+    opacity: 0.7;
+}
+
+.theme-option input:checked+.theme-name {
+    background: var(--color-background);
+    box-shadow: 2px 2px 2px var(--shadow-dark), -2px -2px 2px var(--shadow-light);
+    color: var(--color-primary);
+    opacity: 1;
+}
+
+/* ==========================================================================
+   5. モーダル・オーバーレイ
+   ========================================================================== */
+/* オーバーレイメッセージ (パス/結果) */
+.overlay-message {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease;
+    border-radius: var(--border-radius);
+}
+
+.overlay-message.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.overlay-message-text {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 20px 40px;
+    border-radius: 50px;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* パス表示用：ポップイン */
+.overlay-message.active .overlay-message-text.msg-pass {
+    animation: overlaySimplePopIn 0.3s ease-out both;
+}
+
+/* 結果表示用：回転ズーム */
+.overlay-message.active .overlay-message-text.msg-result {
+    animation: overlaySpinBoom 1.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) both;
+}
+
+@keyframes overlaySimplePopIn {
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes overlaySpinBoom {
+    0% {
+        transform: scale(0) rotate(-1080deg);
+        opacity: 0;
+    }
+
+    60% {
+        transform: scale(1.2) rotate(20deg);
+        opacity: 1;
+    }
+
+    80% {
+        transform: scale(0.9) rotate(-10deg);
+    }
+
+    100% {
+        transform: scale(1) rotate(0);
+        opacity: 1;
+    }
+}
+
+/* 共通モーダルベース (ルール設定など) */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    opacity: 0;
+    transition: all var(--transition-normal);
+}
+
+.modal.active {
+    display: flex;
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background: var(--color-surface);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-xl);
+    max-width: 400px;
+    width: 90%;
+    transform: scale(0.9);
+    transition: transform var(--transition-normal);
+    text-align: left;
+}
+
+.modal.active .modal-content {
+    transform: scale(1);
+}
+
+.modal-content h2 {
+    text-align: left;
+    margin-bottom: var(--spacing-lg);
+}
+
+/* モーダルヘッダー */
+.modal-content h2 {
+    margin-bottom: var(--spacing-sm);
+    /* Reduced margin */
+}
+
+/* 言語切り替えコントロール */
+.rule-controls {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: var(--spacing-sm);
+}
+
+.lang-switch {
+    display: flex;
+    background: var(--color-surface-light);
+    border-radius: 20px;
+    padding: 4px;
+    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.lang-btn {
+    border: none;
+    background: transparent;
+    color: var(--color-text-muted);
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.lang-btn.active {
+    background: var(--color-surface);
+    color: var(--color-primary);
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.lang-btn:hover:not(.active) {
+    color: var(--color-text);
+}
+
+/* フォーム要素 (モーダル内) */
+.form-group {
+    margin-bottom: var(--spacing-md);
+}
+
+.form-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    margin-bottom: var(--spacing-xs);
+    color: var(--color-text);
+}
+
+.form-group select {
+    width: 100%;
+    padding: 10px 40px 10px 15px;
+    border: none;
+    border-radius: var(--border-radius);
+    background: var(--color-surface-light);
+    color: var(--color-text);
+    font-family: inherit;
+    font-size: 1rem;
+    line-height: normal;
+    cursor: pointer;
+    outline: none;
+    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1);
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: var(--select-arrow);
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+}
+
+.form-group select:focus {
+    outline: none;
+    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1), 0 0 0 2px var(--color-primary-light);
+}
+
+.help-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--color-text-muted);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    padding: 0;
+}
+
+.help-icon:hover {
+    color: var(--color-text);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.form-actions {
+    text-align: left;
+    margin-top: var(--spacing-lg);
+}
+
+.form-actions .btn {
+    width: auto;
+    padding-left: 32px;
+    padding-right: 32px;
+}
+
+/* 確認ダイアログ (iPhoneスタイル) */
+.confirm-dialog {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease;
+}
+
+.confirm-dialog.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.confirm-dialog-content {
+    background: var(--color-surface);
+    color: var(--color-text);
+    padding: 30px;
+    border-radius: var(--border-radius-lg);
+    text-align: center;
+    width: 90%;
+    max-width: 350px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-sizing: border-box;
+    animation: dialogPopIn 0.2s ease-out;
+}
+
+.confirm-dialog-message {
+    padding: 0;
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 1rem;
+    color: var(--color-text);
+    line-height: 1.4;
+    border: none;
+}
+
+.confirm-dialog-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.confirm-dialog-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+    transition: all 0.2s;
+    font-size: 1rem;
+    flex: 1;
+}
+
+.confirm-dialog-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light);
+}
+
+.confirm-dialog-btn:active {
+    transform: translateY(0);
+    box-shadow: inset 2px 2px 5px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light);
+}
+
+.confirm-dialog-ok {
+    background: var(--color-surface);
+    color: var(--color-primary);
+}
+
+.confirm-dialog-cancel {
+    background: var(--color-surface);
+    color: var(--color-text);
+}
+
+@keyframes dialogPopIn {
+    0% {
+        transform: scale(1.1);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* アプリ情報モーダル */
+.app-info-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+    animation: dialogPopIn 0.3s ease;
+}
+
+.app-info-modal.active {
+    display: flex;
+}
+
+.app-info-content {
+    background: var(--color-surface);
+    color: var(--color-text);
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+    width: 90%;
+    max-width: 350px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.app-info-content h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--color-text);
+}
+
+.app-info-content p {
+    margin: 5px 0;
+    opacity: 0.8;
+    font-size: 1rem;
+}
+
+.app-info-close {
+    margin-top: 10px;
+    width: 100%;
+}
+
+/* Dark Theme Border Adjustment */
+[data-theme="dark"] .app-info-content {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* ==========================================================================
+   6. ユーティリティ
+   ========================================================================== */
+/* 前回手マーカー */
+.stone .last-move-marker {
+    position: absolute;
+    width: 24%;
+    height: 24%;
+    border-radius: 50%;
+    background: rgba(30, 255, 30, 0.9);
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+}
+
+/* テキストラベル (CSS変数埋め込み) */
+.app-title-label::after {
+    content: var(--app-title);
+}
+
+.version-label::after {
+    content: var(--version-text);
+}
+
+.copyright-label::after {
+    content: var(--copyright-text);
+}

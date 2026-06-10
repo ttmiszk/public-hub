@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Ultima Reversi - Browser Edition">
+    <title>Ultima Reversi</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- ヘッダー -->
+        <header class="app-header">
+            <div class="header-row">
+                <div class="header-spacer"></div>
+                <h1 class="app-title app-title-label"></h1>
+                <button class="info-button" id="info-button" title="About">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2" />
+                        <text x="12" y="16" text-anchor="middle" font-size="12" font-weight="bold">i</text>
+                    </svg>
+                </button>
+            </div>
+            <div id="game-rule-display" class="game-rule-display"></div>
+        </header>
+
+
+
+        <!-- メインコンテンツ -->
+        <main class="game-area">
+            <!-- ゲーム情報パネル -->
+            <section class="info-panel">
+                <div class="player-info player-black" id="player-black-info">
+                    <span class="player-stone black"></span>
+                    <div class="player-details">
+                        <span class="player-name" id="player-black-name">Black</span>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="black-progress"></div>
+                        </div>
+                    </div>
+                    <span class="stone-count" id="black-count">2</span>
+                </div>
+                <div class="player-info player-white" id="player-white-info">
+                    <span class="player-stone white"></span>
+                    <div class="player-details">
+                        <span class="player-name" id="player-white-name">White</span>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="white-progress"></div>
+                        </div>
+                    </div>
+                    <span class="stone-count" id="white-count">2</span>
+                </div>
+            </section>
+
+            <!-- 盤面コンテナ -->
+            <section class="board-container">
+                <div class="board" id="board">
+                    <!-- 盤面はJavaScriptで動的に生成 -->
+                </div>
+                <!-- オーバーレイメッセージ（パス・ゲーム終了などの通知用） -->
+                <div class="overlay-message" id="overlay-message">
+                    <span class="overlay-message-text" id="overlay-message-text"></span>
+                </div>
+            </section>
+
+            <!-- コントロールパネル -->
+            <section class="control-panel">
+                <button class="btn btn-primary" id="btn-new-game">New Game</button>
+                <button class="btn btn-secondary" id="btn-undo" disabled>Undo</button>
+            </section>
+        </main>
+
+        <!-- フッター -->
+        <footer class="app-footer">
+            <p class="copyright-label"></p>
+        </footer>
+    </div>
+
+    <!-- アプリ情報モーダル -->
+    <div class="app-info-modal" id="app-info-modal">
+        <div class="app-info-content">
+            <h2 class="app-title-label"></h2>
+            <p class="app-version version-label"></p>
+            <p class="app-copyright copyright-label"></p>
+            <button class="btn btn-primary app-info-close" id="app-info-close">Close</button>
+        </div>
+    </div>
+
+    <!-- 確認ダイアログ -->
+    <div class="confirm-dialog" id="confirm-dialog">
+        <div class="confirm-dialog-content">
+            <p class="confirm-dialog-message" id="confirm-dialog-message">Current game is in progress. Start next game?
+            </p>
+            <div class="confirm-dialog-buttons">
+                <button class="confirm-dialog-btn confirm-dialog-cancel" id="confirm-dialog-cancel">Cancel</button>
+                <button class="confirm-dialog-btn confirm-dialog-ok" id="confirm-dialog-ok">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 設定モーダル（初期表示・新規ゲーム時） -->
+    <div class="modal" id="setup-modal">
+        <div class="modal-content">
+            <h2>Game Setup</h2>
+            <form id="setup-form">
+                <div class="form-group">
+                    <label for="board-size">Board Size</label>
+                    <select id="board-size">
+                        <option value="4">4 x 4</option>
+                        <option value="6">6 x 6</option>
+                        <option value="8" selected>8 x 8</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="black-player">
+                        Black <span class="player-icon-small black"></span>
+                    </label>
+                    <select id="black-player">
+                        <option value="human">Human</option>
+                        <option value="ai-1">AI Lv.1 (Easy)</option>
+                        <option value="ai-2">AI Lv.2</option>
+                        <option value="ai-3">AI Lv.3</option>
+                        <option value="ai-4">AI Lv.4</option>
+                        <option value="ai-5">AI Lv.5 (Normal)</option>
+                        <option value="ai-6">AI Lv.6</option>
+                        <option value="ai-7">AI Lv.7</option>
+                        <option value="ai-8">AI Lv.8</option>
+                        <option value="ai-9">AI Lv.9 (Hard)</option>
+                        <option value="ai-10">AI Lv.10 (Expert)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="white-player">
+                        White <span class="player-icon-small white"></span>
+                    </label>
+                    <select id="white-player">
+                        <option value="human">Human</option>
+                        <option value="ai-1" selected>AI Lv.1 (Easy)</option>
+                        <option value="ai-2">AI Lv.2</option>
+                        <option value="ai-3">AI Lv.3</option>
+                        <option value="ai-4">AI Lv.4</option>
+                        <option value="ai-5">AI Lv.5 (Normal)</option>
+                        <option value="ai-6">AI Lv.6</option>
+                        <option value="ai-7">AI Lv.7</option>
+                        <option value="ai-8">AI Lv.8</option>
+                        <option value="ai-9">AI Lv.9 (Hard)</option>
+                        <option value="ai-10">AI Lv.10 (Expert)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="rule">Rule
+                        <button type="button" class="help-icon" id="rule-help" title="Rule about">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2" />
+                                <text x="12" y="17" text-anchor="middle" font-size="14" font-weight="bold">?</text>
+                            </svg>
+                        </button>
+                    </label>
+                    <select id="rule">
+                        <option value="normal" selected data-jp-text="ノーマル">Normal</option>
+                        <option value="handicap-1" data-jp-text="ハンデ戦（1子局）">Handicap (1)</option>
+                        <option value="handicap-2" data-jp-text="ハンデ戦（2子局）">Handicap (2)</option>
+                        <option value="handicap-3" data-jp-text="ハンデ戦（3子局）">Handicap (3)</option>
+                        <option value="handicap-4" data-jp-text="ハンデ戦（4子局）">Handicap (4)</option>
+                        <option value="negative" data-jp-text="変則ルール（最弱）">Variant (Negative)</option>
+                        <option value="revolution" data-jp-text="変則ルール（革命）">Variant (Revolution)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Theme</label>
+                    <div class="theme-selector">
+                        <label class="theme-option">
+                            <input type="radio" name="theme" value="light" checked>
+                            <span class="theme-name">Light</span>
+                        </label>
+                        <label class="theme-option">
+                            <input type="radio" name="theme" value="dark">
+                            <span class="theme-name">Dark</span>
+                        </label>
+                        <label class="theme-option">
+                            <input type="radio" name="theme" value="pop">
+                            <span class="theme-name">Pop</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Start Game</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ルール説明モーダル -->
+    <div class="modal" id="rule-modal">
+        <div class="modal-content">
+            <h2 id="rule-modal-title" data-en="Rule Description" data-jp="ルール説明">Rule Description</h2>
+
+            <div class="rule-controls">
+                <div class="lang-switch">
+                    <button type="button" class="lang-btn active" data-lang="en">EN</button>
+                    <button type="button" class="lang-btn" data-lang="jp">JP</button>
+                </div>
+            </div>
+
+            <div class="rule-viewer-wrapper">
+                <div class="rule-scroll-area">
+                    <div class="rule-description lang-en">
+                        <dl>
+                            <dt>Normal:</dt>
+                            <dd>
+                                Reversi (Othello) standard rules. Black goes first, white goes second, alternately
+                                placing
+                                stones on the board. The player with the most stones at the end wins. If there are no
+                                more valid
+                                moves, the player with the most stones wins.</dd>
+
+                            <dt>Handicap (1):</dt>
+                            <dd>Add a black stone to the top-left corner and
+                                start the
+                                game.</dd>
+
+                            <dt>Handicap (2):</dt>
+                            <dd>Add black stones to the top-left and
+                                bottom-right
+                                corners and start the game.</dd>
+
+                            <dt>Handicap (3):</dt>
+                            <dd>Add black stones to the top-left,
+                                bottom-right, and
+                                top-right corners and start the game.</dd>
+
+                            <dt>Handicap (4):</dt>
+                            <dd>Add black stones to all four corners and start
+                                the game.
+                            </dd>
+
+                            <dt>Variant (Negative):</dt>
+                            <dd>
+                                If a stone is placed in a corner, all stones in the opposite corner will be flipped.
+                                This can be
+                                a double-edged sword, as it can be easy to overplay the corner.</dd>
+
+                            <dt>Variant (Revolution):</dt>
+                            <dd>
+                                If a stone is placed in a corner, all stones in the other corner will be flipped. This
+                                can be
+                                a double-edged sword, as it can be easy to overplay the corner.</dd>
+                        </dl>
+                        <p class="note">※Handicap games always start with white as the first
+                            player.</p>
+                    </div>
+
+                    <div class="rule-description lang-jp" style="display: none;">
+                        <dl>
+                            <dt>Normal:</dt>
+                            <dd>
+                                <span style="font-weight: bold;">標準ルール</span><br>
+                                黒が先手、白が後手で交互に石を置いていき、最後に数が多いほうが勝ちになります。相手の石を挟める場所が1つもない場合はパスになります。
+                            </dd>
+                            <dt>Handicap (1):</dt>
+                            <dd>
+                                <span style="font-weight: bold;">ハンデ戦（1子局）</span><br>
+                                左上の隅に黒石を追加して対局を開始します。
+                            </dd>
+
+                            <dt>Handicap (2):</dt>
+                            <dd>
+                                <span style="font-weight: bold;">ハンデ戦（2子局）</span><br>
+                                左上と右下の隅に黒石を追加して対局を開始します。
+                            </dd>
+
+                            <dt>Handicap (3):</dt>
+                            <dd>
+                                <span style="font-weight: bold;">ハンデ戦（3子局）</span><br>
+                                左上と右下、右上の隅に黒石を追加して対局を開始します。
+                            </dd>
+
+                            <dt>Handicap (4):</dt>
+                            <dd>
+                                <span style="font-weight: bold;">ハンデ戦（4子局）</span><br>
+                                四隅全てに黒石を追加して対局を開始します。
+                            </dd>
+
+                            <dt>Variant (Negative):</dt>
+                            <dd>
+                                <span style="font-weight: bold;">変則ルール（最弱）</span><br>
+                                通常とは逆に、終局時に「石が少ない方」が勝ちとなります。初期配置はノーマルと同じです。自分の石をいかに消すか、相手に取らせるかが重要です。
+                            </dd>
+
+                            <dt>Variant (Revolution):</dt>
+                            <dd><span style="font-weight: bold;">変則ルール（革命）</span><br>
+                                隅（角）に石を置くと、他の隅にある石がすべて裏返るルールです。安易に隅を狙うと痛い目に遭うかもしれません。
+                            </dd>
+                        </dl>
+                        <p class="note">※ハンデ戦では常に白が先手になります。</p>
+                    </div>
+                </div>
+                <div class="rule-fade-overlay"></div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-primary" id="rule-modal-close">Close</button>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- JavaScriptファイル（依存順序に従って読み込み） -->
+    <script src="js/model/Board.js"></script>
+    <script src="js/model/Player.js"></script>
+    <script src="js/model/PlayerHuman.js"></script>
+    <script src="js/model/PlayerAI.js"></script>
+    <script src="js/ui/BoardView.js"></script>
+    <script src="js/ui/SoundManager.js"></script>
+    <script src="js/ui/GameController.js"></script>
+    <script src="js/main.js"></script>
+</body>
+
+</html>

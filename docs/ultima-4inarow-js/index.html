@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Ultima 4 in a Row - Browser Edition">
+    <title>Ultima 4 in a Row</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- ヘッダー -->
+        <header class="app-header">
+            <div class="header-row">
+                <div class="header-spacer"></div>
+                <h1 class="app-title"></h1>
+                <button class="info-button" id="info-button" title="About">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2" />
+                        <text x="12" y="16" text-anchor="middle" font-size="12" font-weight="bold">i</text>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- アプリ情報モーダル -->
+        <div class="app-info-modal" id="app-info-modal">
+            <div class="app-info-content">
+                <h2></h2>
+                <p class="app-version version-label"></p>
+                <p class="app-copyright copyright-label"></p>
+                <button class="btn btn-primary app-info-close" id="app-info-close">Close</button>
+            </div>
+        </div>
+
+        <!-- メインコンテンツ -->
+        <main class="game-area">
+            <!-- ゲーム情報パネル -->
+            <section class="info-panel">
+                <div class="player-info player-1" id="player-1-info">
+                    <div class="ui-chip-wrapper player-chip-display">
+                        <div class="chip p1"></div>
+                    </div>
+                    <div class="player-details">
+                        <span class="player-name" id="player-1-name">Player 1</span>
+                        <div class="progress-bar-container" style="display: none;">
+                            <div class="progress-bar" id="p1-progress"></div>
+                        </div>
+                    </div>
+                    <div class="score-container">
+                        <span class="score-label">WINS</span>
+                        <span class="score-count" id="p1-wins">0</span>
+                    </div>
+                </div>
+                <div class="player-info player-2" id="player-2-info">
+                    <div class="ui-chip-wrapper player-chip-display">
+                        <div class="chip p2"></div>
+                    </div>
+                    <div class="player-details">
+                        <span class="player-name" id="player-2-name">Player 2</span>
+                        <div class="progress-bar-container" style="display: none;">
+                            <div class="progress-bar" id="p2-progress"></div>
+                        </div>
+                    </div>
+                    <div class="score-container">
+                        <span class="score-label">WINS</span>
+                        <span class="score-count" id="p2-wins">0</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 盤面コンテナ -->
+            <section class="board-container">
+                <!-- 盤面上部の操作エリア（オプション：クリック列のヒントなど） -->
+                <div class="board-header-indicators" id="board-header-indicators">
+                    <!-- 列ごとのインジケータ（ホバー時表示など） -->
+                </div>
+
+                <div class="board" id="board">
+                    <!-- 盤面はJavaScriptで動的に生成 -->
+                </div>
+
+                <!-- オーバーレイメッセージ -->
+                <div class="overlay-message" id="overlay-message">
+                    <span class="overlay-message-text" id="overlay-message-text"></span>
+                </div>
+            </section>
+
+            <!-- コントロールパネル -->
+            <section class="control-panel">
+                <button class="btn btn-primary" id="btn-next-game">Next Game</button>
+                <button class="btn btn-secondary" id="btn-undo" disabled>Undo</button>
+                <button class="btn btn-secondary" id="btn-quit">Quit Game</button>
+            </section>
+        </main>
+        <!-- 設定モーダル（初期表示・新規ゲーム時） -->
+        <div class="modal" id="setup-modal">
+            <div class="modal-content">
+                <h2>Game Setup</h2>
+                <form id="setup-form">
+                    <div class="form-group">
+                        <label for="p1-select">Player 1 <span class="ui-chip-wrapper icon-small">
+                                <div class="chip p1"></div>
+                            </span></label>
+                        <select id="p1-select">
+                            <option value="human">Human</option>
+                            <option value="ai-1">AI Lv.1 (Easy)</option>
+                            <option value="ai-2">AI Lv.2</option>
+                            <option value="ai-3">AI Lv.3</option>
+                            <option value="ai-4">AI Lv.4</option>
+                            <option value="ai-5">AI Lv.5 (Normal)</option>
+                            <option value="ai-6">AI Lv.6</option>
+                            <option value="ai-7">AI Lv.7</option>
+                            <option value="ai-8">AI Lv.8</option>
+                            <option value="ai-9">AI Lv.9 (Hard)</option>
+                            <option value="ai-10">AI Lv.10 (Expert)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="p2-select">Player 2 <span class="ui-chip-wrapper icon-small">
+                                <div class="chip p2"></div>
+                            </span></label>
+                        <select id="p2-select">
+                            <option value="human">Human</option>
+                            <option value="ai-1" selected>AI Lv.1 (Easy)</option>
+                            <option value="ai-2">AI Lv.2</option>
+                            <option value="ai-3">AI Lv.3</option>
+                            <option value="ai-4">AI Lv.4</option>
+                            <option value="ai-5">AI Lv.5 (Normal)</option>
+                            <option value="ai-6">AI Lv.6</option>
+                            <option value="ai-7">AI Lv.7</option>
+                            <option value="ai-8">AI Lv.8</option>
+                            <option value="ai-9">AI Lv.9 (Hard)</option>
+                            <option value="ai-10">AI Lv.10 (Expert)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group toggle-group">
+                        <label class="toggle-label" for="alternate-first">
+                            Alternate First Player
+                            <span class="toggle-desc">Swap who goes first each game</span>
+                        </label>
+                        <label class="toggle-switch" for="alternate-first">
+                            <input type="checkbox" id="alternate-first" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Theme</label>
+                        <div class="theme-selector">
+                            <label class="theme-option">
+                                <input type="radio" name="theme" value="light" checked>
+                                <span class="theme-name">Light</span>
+                            </label>
+                            <label class="theme-option">
+                                <input type="radio" name="theme" value="dark">
+                                <span class="theme-name">Dark</span>
+                            </label>
+                            <label class="theme-option">
+                                <input type="radio" name="theme" value="pop">
+                                <span class="theme-name">Pop</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Start Game</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+
+        <!-- Confirm Dialog -->
+        <div class="confirm-dialog" id="confirm-dialog">
+            <div class="confirm-dialog-content">
+                <p class="confirm-dialog-message" id="confirm-dialog-message">Are you sure?</p>
+                <div class="confirm-dialog-buttons">
+                    <button class="confirm-dialog-btn confirm-dialog-cancel" id="confirm-dialog-cancel">Cancel</button>
+                    <button class="confirm-dialog-btn confirm-dialog-ok" id="confirm-dialog-ok">OK</button>
+                </div>
+            </div>
+        </div>
+
+
+        <footer class="app-footer">
+            <p class="copyright-label"></p>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="js/model/Board.js"></script>
+    <script src="js/model/Player.js"></script>
+    <script src="js/model/PlayerHuman.js"></script>
+    <script src="js/model/PlayerAI.js"></script>
+    <script src="js/ui/SoundManager.js"></script>
+    <script src="js/ui/BoardView.js"></script>
+    <script src="js/ui/GameController.js"></script>
+    <script src="js/main.js"></script>
+</body>
+
+</html>
