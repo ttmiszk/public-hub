@@ -15,16 +15,24 @@
 		}
 
 		h1 {
-			border-bottom: 2px solid #ddd;
+			border-bottom: 2px solid #999;
 			padding-bottom: 10px;
+		}
+
+		h2 {
+			border: 0px;
+			padding: 0;
+			margin: 24px 0 4px 0;
 		}
 
 		.notice {
 			padding: 12px;
 			border: 1px solid #f0c36d;
+			border-left: 6px solid #f0c36d;
 			background-color: #fff8e1;
-			border-radius: 4px;
+			border-radius: 0px;
 			margin-bottom: 24px;
+			font-size: 0.9em;
 		}
 
 		.resource {
@@ -32,16 +40,21 @@
 			border-radius: 6px;
 			padding: 16px;
 			margin-bottom: 16px;
+			background-color: #f9f9f9;
+			box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.2);
+			box-sizing: border-box;
 		}
 
-		.resource h2 {
-			margin-top: 0;
-			margin-bottom: 8px;
+		.resource-title {
+			margin: 0 0 8px 0;
+			font-size: 1.4em;
+			font-weight: bold;
 		}
 
 		.resource p {
 			margin-top: 0;
 			margin-bottom: 12px;
+			font-size: 0.95em;
 		}
 
 		.resource-actions {
@@ -54,23 +67,35 @@
 		.action-button {
 			display: inline-block;
 			min-width: 180px;
-			padding: 10px 16px;
+			padding: 2px 16px;
 			text-align: center;
 			text-decoration: none;
 			border: 1px solid #0366d6;
-			border-radius: 4px;
+			border-radius: 16px;
 			box-sizing: border-box;
 			color: 0366d6;
+			font-size: 0.8em;
 		}
 
 		.action-button:hover {
-			background-color: #f3f8ff;
+			background-color: #e0e0ff;
+		}
+
+		footer {
+			margin-top: 40px;
+			padding-top: 16px;
+			border-top: 1px solid #999;
+			text-align: center;
+			font-size: 0.9em;
+			color: #666;
 		}
 	</style>
 </head>
 <body>
 
-	<h1>公開中のツール・ドキュメント・各種リソース</h1>
+	<h1>Public Hub</h1>
+
+	<p>ここでは、公開中のツール・ゲーム・各種リソースを提供しています。</p>
 
 	<div class="notice">
 		<strong>利用上の注意</strong><br>
@@ -80,10 +105,12 @@
 	<h2>ツール</h2>
 
 	<div class="resource">
-		<h2>Ultima Media Downloader</h2>
+		<div class="resource-title">
+			Ultima Media Downloader
+		</div>
 
 		<p>
-			ストリーミングサイトのURLからメディアファイルを抽出・ダウンロードできます。
+			ストリーミングサイトの動画や音声のダウンロードに便利なデスクトップ向けアプリです。
 		</p>
 
 		<div class="resource-actions">
@@ -95,7 +122,9 @@
 	</div>
 
 	<div class="resource">
-		<h2>Ultima Log Viewer</h2>
+		<div class="resource-title">
+			Ultima Log Viewer
+		</div>
 
 		<p>
 			開発者やシステム管理者のためのデスクトップ向けログ閲覧アプリです。
@@ -112,7 +141,9 @@
 	<h2>ゲーム</h2>
 
 	<div class="resource">
-		<h2>Ultima Reversi</h2>
+		<div class="resource-title">
+			Ultima Reversi
+		</div>
 
 		<p>
 			Android／UWP版「Ultima Reversi」を移植し、HTML/CSS/JavaScriptのみで再構築したブラウザゲームです。
@@ -125,6 +156,8 @@
 			</a>
 
 			<a class="action-button"
+				target="_blank"
+				rel="noopener noreferrer"
 				href="https://ttmiszk.github.io/public-hub/ultima-reversi-js/">
 				ブラウザでプレイ
 			</a>
@@ -132,7 +165,9 @@
 	</div>
 
 	<div class="resource">
-		<h2>Ultima 4 in a Row</h2>
+		<div class="resource-title">
+			Ultima 4 in a Row
+		</div>
 
 		<p>
 			Android／UWP版「重力付き四目並べ（4 in a Row）」を移植し、HTML/CSS/JavaScriptのみで再構築したブラウザゲームです。
@@ -145,11 +180,24 @@
 			</a>
 
 			<a class="action-button"
+				target="_blank"
+				rel="noopener noreferrer"
 				href="https://ttmiszk.github.io/public-hub/ultima-4inarow-js/">
 				ブラウザでプレイ
 			</a>
 		</div>
 	</div>
 
+	<footer>
+		<p>
+			© 2026 ttmiszk
+		</p>
+
+		<p>
+			<a href="https://github.com/ttmiszk/public-hub">
+				GitHub Repository
+			</a>
+		</p>
+	</footer>
 </body>
 </html>
