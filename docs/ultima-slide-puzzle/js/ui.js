@@ -20,6 +20,7 @@ class PuzzleUI {
 		this.tempModalImage = null;
 
 		this.initElements();
+		this.resizeApp();
 		this.initEvents();
 		this.loadSavedTheme();
 		this.updateImageConfigUI();
@@ -32,6 +33,8 @@ class PuzzleUI {
 		* DOM要素の参照を初期化する
 		*/
 	initElements() {
+		this.appStage = document.getElementById('app-stage');
+		this.appContainer = document.getElementById('app-container');
 		this.board = document.getElementById('board');
 		this.movesValue = document.getElementById('moves-value');
 		this.timerValue = document.getElementById('timer-value');
@@ -218,6 +221,7 @@ class PuzzleUI {
 		this.startTimer();
 		this.updateActionButtons();
 		this.updateSizeButtonsState();
+		this.updateIndicators();
 		this.render();
 	}
 
@@ -317,6 +321,7 @@ class PuzzleUI {
 		this.solvedOverlay.classList.remove('active');
 		this.updateActionButtons();
 		this.updateSizeButtonsState();
+		this.updateIndicators();
 		this.render();
 	}
 
@@ -352,6 +357,7 @@ class PuzzleUI {
 		this.themeButtons.forEach(btn => {
 			btn.classList.toggle('active', btn.dataset.theme === theme);
 		});
+		this.updateIndicators();
 	}
 
 	/**
@@ -395,6 +401,7 @@ class PuzzleUI {
 		this.stopTimer();
 		this.updateActionButtons();
 		this.updateSizeButtonsState();
+		this.updateIndicators();
 		this.render();
 	}
 
@@ -510,6 +517,7 @@ class PuzzleUI {
 			// ロックの解除とShuffleボタンの再表示
 			this.updateActionButtons();
 			this.updateSizeButtonsState();
+			this.updateIndicators();
 
 			// アニメーションのため少しだけ遅延させてクリアオーバーレイを表示
 			setTimeout(() => {
@@ -594,6 +602,74 @@ class PuzzleUI {
 		});
 
 		this.updateStatusDisplay();
+	}
+
+	/**
+	 * 画面サイズに合わせてアスペクト比を固定したスケーリングを行う
+	 */
+	resizeApp() {
+		const baseWidth = 500;
+		const baseHeight = 850;
+
+		// ビューポートサイズを取得
+		const viewportWidth = window.innerWidth;
+		const viewportHeight = window.innerHeight;
+
+		// 上下左右に最低限確保するマージン（ピクセル）
+		const margin = 24;
+		const availableWidth = Math.max(200, viewportWidth - margin);
+		const availableHeight = Math.max(300, viewportHeight - margin);
+
+		// スケール比率を計算
+		const scaleX = availableWidth / baseWidth;
+		const scaleY = availableHeight / baseHeight;
+		const scale = Math.min(scaleX, scaleY);
+
+		// stage の実寸サイズを、スケール後の寸法に更新
+		if (this.appStage) {
+			this.appStage.style.width = `${baseWidth * scale}px`;
+			this.appStage.style.height = `${baseHeight * scale}px`;
+		}
+
+		// container に対して scale(scale) を適用して中央配置
+		if (this.appContainer) {
+			this.appContainer.style.transform = `translate(-50%, -50%) scale(${scale})`;
+		}
+
+		this.updateIndicators();
+	}
+
+	/**
+	 * テーマとサイズ選択肢のインジケータ（スライダー背景）の位置と幅を更新する
+	 */
+	updateIndicators() {
+		// テーマインジケータの更新
+		const activeThemeBtn = Array.from(this.themeButtons).find(btn => btn.classList.contains('active'));
+		const themeSelector = document.getElementById('theme-selector');
+		const themeIndicator = document.getElementById('theme-indicator');
+		this.positionIndicator(themeSelector, themeIndicator, activeThemeBtn);
+
+		// サイズインジケータの更新
+		const activeSizeBtn = Array.from(this.sizeButtons).find(btn => btn.classList.contains('active'));
+		const sizeOptions = document.getElementById('size-options-container');
+		const sizeIndicator = document.getElementById('size-indicator');
+		this.positionIndicator(sizeOptions, sizeIndicator, activeSizeBtn);
+	}
+
+	/**
+	 * インジケータ要素を選択されたアクティブボタンの位置・サイズに合わせる
+	 * @param {HTMLElement} container 親コンテナ
+	 * @param {HTMLElement} indicator インジケータ要素
+	 * @param {HTMLElement} activeBtn アクティブなボタン要素
+	 */
+	positionIndicator(container, indicator, activeBtn) {
+		if (!container || !indicator || !activeBtn) return;
+		
+		const left = activeBtn.offsetLeft;
+		const width = activeBtn.offsetWidth;
+		
+		indicator.style.width = `${width}px`;
+		indicator.style.transform = `translateX(${left}px)`;
 	}
 }
 

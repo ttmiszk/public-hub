@@ -10,88 +10,91 @@
 		CSS Variables & Themes
 		========================================================================== */
 
-/* Light Theme (Ultima Reversi のベージュ調デザイン) */
+/* Light Theme (ベージュ調デザイン - 非対称Neumorphic) */
 .theme-light {
-	--bg-color: #ede7dc;
+	--bg-color: #c8beac; /* 盤面内部(#e3dbcc)よりさらに少し暗く落ち着いたベージュ */
 	--card-bg: #ece6d9;
 	--text-color: #655745;
 	--text-secondary: #8e7f6e;
 	
-	/* Neumorphic Shadows */
-	--shadow-outer-flat: 10px 10px 20px #d4cdc0, -10px -10px 20px #ffffff;
-	--shadow-outer-inset: inset 6px 6px 12px #d4cdc0, inset -6px -6px 12px #ffffff;
-	--shadow-inner-flat: 4px 4px 8px #d4cdc0, -4px -4px 8px #ffffff;
-	--shadow-inner-inset: inset 3px 3px 6px #d4cdc0, inset -3px -3px 6px #ffffff;
+	/* 非対称 Neumorphic Shadows (背景変更に伴う最適化) */
+	--shadow-outer-flat: 3px 3px 8px #a99e8c, -1px -1px 2px rgba(255, 255, 255, 0.7);
+	--shadow-outer-inset: inset 2px 2px 5px #b6ab99, inset -1px -1px 2px rgba(255, 255, 255, 0.85);
+	--shadow-inner-flat: 2px 2px 5px #a99e8c, -1px -1px 2px rgba(255, 255, 255, 0.7);
+	--shadow-inner-inset: inset 2px 2px 4px #b6ab99, inset -1px -1px 2px rgba(255, 255, 255, 0.85);
 	
 	--board-bg: #e3dbcc;
 	--tile-bg: #ece6d9;
 	--tile-text-color: #655745;
-	--tile-shadow: 4px 4px 8px #c8beae, -4px -4px 8px #ffffff;
-	--tile-shadow-hover: 6px 6px 12px #c8beae, -6px -6px 12px #ffffff;
-	--tile-shadow-active: inset 2px 2px 5px #c8beae, inset -2px -2px 5px #ffffff;
+	--tile-shadow: 2px 2px 5px #c8beae, -1px -1px 2px rgba(255, 255, 255, 0.85);
+	--tile-shadow-hover: 3px 3px 8px #c8beae, -1.5px -1.5px 3px rgba(255, 255, 255, 0.95);
+	--tile-shadow-active: inset 2px 2px 4px #c8beae, inset -1px -1px 2px rgba(255, 255, 255, 0.85);
 	
 	--accent-color: #8c7b67;
 	--accent-text: #ffffff;
 	
 	--control-bg: #ece6d9;
-	--control-shadow: 4px 4px 8px #c8beae, -4px -4px 8px #ffffff;
-	--control-shadow-active: inset 2px 2px 5px #c8beae, inset -2px -2px 5px #ffffff;
+	--control-shadow: 2px 2px 5px #c8beae, -1px -1px 2px rgba(255, 255, 255, 0.85);
+	--control-shadow-active: inset 2px 2px 4px #c8beae, inset -1px -1px 2px rgba(255, 255, 255, 0.85);
+	--modal-border: 1px solid rgba(101, 87, 69, 0.08);
 }
 
 /* Dark Theme (モダンで深みのあるダークデザイン) */
 .theme-dark {
-	--bg-color: #14171c;
-	--card-bg: #1c2026;
-	--text-color: #e0e5eb;
-	--text-secondary: #909bb0;
+	--bg-color: #0a0c10; /* 背景（最も暗く、少し引き締めた紺黒） */
+	--card-bg: #242b38; /* 凸部・カード（最明、少し明るくしてコントラスト向上） */
+	--text-color: #ecf0f6; /* 明るめの白 */
+	--text-secondary: #9bb0c5;
 	
-	/* Modern Dark Shadows */
-	--shadow-outer-flat: 10px 10px 20px #0b0d10, -10px -10px 20px #1d232c;
-	--shadow-outer-inset: inset 6px 6px 12px #0b0d10, inset -6px -6px 12px #1d232c;
-	--shadow-inner-flat: 4px 4px 8px #0b0d10, -4px -4px 8px #1d232c;
-	--shadow-inner-inset: inset 3px 3px 6px #0b0d10, inset -3px -3px 6px #1d232c;
+	/* 非対称 Modern Dark Shadows (背景変更に伴う最適化) */
+	--shadow-outer-flat: 3px 3px 8px #020304, -1px -1px 2px rgba(255, 255, 255, 0.04);
+	--shadow-outer-inset: inset 2px 2px 5px #050608, inset -1px -1px 2px rgba(255, 255, 255, 0.05);
+	--shadow-inner-flat: 2px 2px 5px #020304, -1px -1px 2px rgba(255, 255, 255, 0.04);
+	--shadow-inner-inset: inset 2px 2px 4px #050608, inset -1px -1px 2px rgba(255, 255, 255, 0.05);
 	
-	--board-bg: #111317;
-	--tile-bg: #222831;
-	--tile-text-color: #e0e5eb;
-	--tile-shadow: 4px 4px 8px #0a0c0e, -2px -2px 6px #2a323d;
-	--tile-shadow-hover: 6px 6px 12px #0a0c0e, -3px -3px 8px #2a323d;
-	--tile-shadow-active: inset 2px 2px 5px #0a0c0e, inset -2px -2px 5px #2a323d;
+	--board-bg: #141820; /* 盤面内部（中、前回の #12151b より少し明るくして背景との境界を明瞭に） */
+	--tile-bg: #242b38; /* タイル（最明、カード背景と同じ） */
+	--tile-text-color: #ecf0f6;
+	--tile-shadow: 2px 2px 5px #0c0f14, -1px -1px 2px rgba(255, 255, 255, 0.05);
+	--tile-shadow-hover: 3px 3px 8px #0c0f14, -1.5px -1.5px 3px rgba(255, 255, 255, 0.08);
+	--tile-shadow-active: inset 2px 2px 4px #0c0f14, inset -1px -1px 2px rgba(255, 255, 255, 0.05);
 	
 	--accent-color: #4f80e1;
 	--accent-text: #ffffff;
 	
-	--control-bg: #222831;
-	--control-shadow: 4px 4px 8px #0a0c0e, -2px -2px 6px #2a323d;
-	--control-shadow-active: inset 2px 2px 5px #0a0c0e, inset -2px -2px 5px #2a323d;
+	--control-bg: #242b38;
+	--control-shadow: 2px 2px 5px #0c0f14, -1px -1px 2px rgba(255, 255, 255, 0.05);
+	--control-shadow-active: inset 2px 2px 4px #0c0f14, inset -1px -1px 2px rgba(255, 255, 255, 0.05);
+	--modal-border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 /* Pop Theme (Ultima Reversi のきれいなライトブルー配色) */
 .theme-pop {
-	--bg-color: #e1edf8;
-	--card-bg: #e1edf8;
+	--bg-color: #b6cbdc; /* 背景（最も暗く、少し落ち着いたブルーグレー） */
+	--card-bg: #e1edf8; /* 凸部・カード（最明） */
 	--text-color: #2b548a;
 	--text-secondary: #577ba7;
 	
-	/* Pop Soft Shadows */
-	--shadow-outer-flat: 10px 10px 20px #c3d5e8, -10px -10px 20px #ffffff;
-	--shadow-outer-inset: inset 6px 6px 12px #c3d5e8, inset -6px -6px 12px #ffffff;
-	--shadow-inner-flat: 4px 4px 8px #c3d5e8, -4px -4px 8px #ffffff;
-	--shadow-inner-inset: inset 3px 3px 6px #c3d5e8, inset -3px -3px 6px #ffffff;
+	/* 非対称 Pop Soft Shadows (背景変更に伴う最適化) */
+	--shadow-outer-flat: 3px 3px 8px #9cb2c4, -1px -1px 2px rgba(255, 255, 255, 0.85);
+	--shadow-outer-inset: inset 2px 2px 5px #a4b7ca, inset -1px -1px 2px rgba(255, 255, 255, 0.9);
+	--shadow-inner-flat: 2px 2px 5px #9cb2c4, -1px -1px 2px rgba(255, 255, 255, 0.85);
+	--shadow-inner-inset: inset 2px 2px 4px #a4b7ca, inset -1px -1px 2px rgba(255, 255, 255, 0.9);
 	
-	--board-bg: #d1e2f3;
-	--tile-bg: #ebf3fa;
+	--board-bg: #d1e2f3; /* 盤面内部（中） */
+	--tile-bg: #e1edf8;
 	--tile-text-color: #2b548a;
-	--tile-shadow: 4px 4px 8px #bcd0e4, -4px -4px 8px #ffffff;
-	--tile-shadow-hover: 6px 6px 12px #bcd0e4, -6px -6px 12px #ffffff;
-	--tile-shadow-active: inset 2px 2px 5px #bcd0e4, inset -2px -2px 5px #ffffff;
+	--tile-shadow: 2px 2px 5px #bcd0e4, -1px -1px 2px rgba(255, 255, 255, 0.9);
+	--tile-shadow-hover: 3px 3px 8px #bcd0e4, -1.5px -1.5px 3px rgba(255, 255, 255, 0.95);
+	--tile-shadow-active: inset 2px 2px 4px #bcd0e4, inset -1px -1px 2px rgba(255, 255, 255, 0.9);
 	
 	--accent-color: #3b7cd4;
 	--accent-text: #ffffff;
 	
-	--control-bg: #ebf3fa;
-	--control-shadow: 4px 4px 8px #bcd0e4, -4px -4px 8px #ffffff;
-	--control-shadow-active: inset 2px 2px 5px #bcd0e4, inset -2px -2px 5px #ffffff;
+	--control-bg: #e1edf8;
+	--control-shadow: 2px 2px 5px #bcd0e4, -1px -1px 2px rgba(255, 255, 255, 0.9);
+	--control-shadow-active: inset 2px 2px 4px #bcd0e4, inset -1px -1px 2px rgba(255, 255, 255, 0.9);
+	--modal-border: 1px solid rgba(43, 84, 138, 0.08);
 }
 
 /* ==========================================================================
@@ -111,20 +114,39 @@ body {
 	background-color: var(--bg-color);
 	color: var(--text-color);
 	transition: background-color 0.5s ease, color 0.5s ease;
+	width: 100vw;
+	height: 100vh;
 	min-height: 100vh;
+	overflow: hidden;
 	display: flex;
-	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	padding: 20px;
+	padding: 0;
+	margin: 0;
+}
+
+.app-stage {
+	position: relative;
+	width: 500px;
+	height: 850px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: visible;
 }
 
 .app-container {
-	width: 100%;
-	max-width: 520px;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 500px;
+	height: 850px;
+	transform: translate(-50%, -50%) scale(1);
+	transform-origin: center center;
 	display: flex;
 	flex-direction: column;
 	gap: 20px;
+	box-sizing: border-box;
 }
 
 /* ==========================================================================
@@ -194,15 +216,32 @@ h1 {
 
 /* Theme Switcher Button Group */
 .theme-selector {
+	position: relative;
 	display: flex;
 	background: var(--board-bg);
 	padding: 4px;
 	border-radius: 20px;
 	box-shadow: var(--shadow-inner-inset);
 	gap: 4px;
+	z-index: 1;
+}
+
+.theme-indicator {
+	position: absolute;
+	top: 4px;
+	left: 0;
+	height: calc(100% - 8px);
+	background: var(--card-bg);
+	border-radius: 16px;
+	box-shadow: var(--shadow-inner-flat);
+	transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), width 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+	z-index: 0;
+	pointer-events: none;
 }
 
 .theme-btn {
+	position: relative;
+	z-index: 1;
 	border: none;
 	background: none;
 	padding: 6px 12px;
@@ -212,13 +251,11 @@ h1 {
 	font-weight: 600;
 	cursor: pointer;
 	color: var(--text-secondary);
-	transition: all 0.3s ease;
+	transition: color 0.3s ease;
 }
 
 .theme-btn.active {
-	background: var(--card-bg);
 	color: var(--text-color);
-	box-shadow: var(--shadow-inner-flat);
 }
 
 /* ==========================================================================
@@ -363,15 +400,38 @@ h1 {
 }
 
 .size-options {
+	position: relative;
 	display: flex;
 	gap: 6px;
 	background: var(--board-bg);
 	padding: 3px;
 	border-radius: 12px;
 	box-shadow: var(--shadow-inner-inset);
+	z-index: 1;
+}
+
+.size-indicator {
+	position: absolute;
+	top: 3px;
+	left: 0;
+	height: calc(100% - 6px);
+	background: var(--card-bg);
+	border-radius: 8px;
+	box-shadow: var(--shadow-inner-flat);
+	transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), width 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+	z-index: 0;
+	pointer-events: none;
+}
+
+/* ゲーム中の無効状態のアクティブインジケータ */
+.size-options:has(.size-btn:disabled) .size-indicator {
+	opacity: 0.85;
+	box-shadow: var(--shadow-inner-inset) !important;
 }
 
 .size-btn {
+	position: relative;
+	z-index: 1;
 	border: none;
 	background: none;
 	width: 32px;
@@ -385,13 +445,11 @@ h1 {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	transition: all 0.2s ease;
+	transition: color 0.2s ease;
 }
 
 .size-btn.active {
-	background: var(--card-bg);
 	color: var(--accent-color);
-	box-shadow: var(--shadow-inner-flat);
 }
 
 .action-buttons {
@@ -526,7 +584,8 @@ footer {
 	text-align: center;
 	font-size: 0.8rem;
 	color: var(--text-secondary);
-	margin-top: 10px;
+	margin-top: auto;
+	padding-bottom: 5px;
 }
 
 /* ==========================================================================
@@ -559,9 +618,9 @@ footer {
 .size-btn.active:disabled {
 	opacity: 0.85; /* 不透明度を高く保ち、視認性を維持 */
 	color: var(--accent-color);
-	background: var(--card-bg);
-	box-shadow: var(--shadow-inner-inset) !important; /* 凹み影をキープ */
-	border: 1px solid var(--accent-color); /* アクセント枠線でさらに強調 */
+	background: none;
+	box-shadow: none !important;
+	border: none;
 }
 
 .image-settings-options {
@@ -625,7 +684,7 @@ footer {
 		========================================================================== */
 
 .modal-overlay {
-	position: fixed;
+	position: absolute;
 	top: 0;
 	left: 0;
 	width: 100%;
@@ -640,6 +699,7 @@ footer {
 	opacity: 0;
 	pointer-events: none;
 	transition: opacity 0.3s ease;
+	border-radius: 32px;
 }
 
 .modal-overlay.active {
@@ -652,7 +712,7 @@ footer {
 	color: var(--text-color);
 	padding: 30px;
 	border-radius: 28px;
-	box-shadow: 0 20px 40px rgba(0,0,0,0.2), var(--shadow-outer-flat);
+	box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22);
 	width: 380px;
 	max-width: 90%;
 	display: flex;
@@ -660,7 +720,7 @@ footer {
 	gap: 20px;
 	transform: translateY(30px) scale(0.95);
 	transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-	border: 1px solid rgba(255, 255, 255, 0.1);
+	border: var(--modal-border);
 }
 
 .modal-overlay.active .modal-card {

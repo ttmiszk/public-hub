@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	// (主に画像モードにおける各ピースの background-size/position のサイズ再計算のため)
 	let resizeTimeout;
 	window.addEventListener('resize', () => {
+		ui.resizeApp();
 		clearTimeout(resizeTimeout);
 		resizeTimeout = setTimeout(() => {
 			ui.render();

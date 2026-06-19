@@ -9,7 +9,8 @@
 </head>
 <body class="theme-light">
 
-	<div class="app-container">
+	<div class="app-stage" id="app-stage">
+		<div class="app-container" id="app-container">
 		<!-- ヘッダー (タイトル & テーマ選択) -->
 		<header>
 			<div class="header-title-area">
@@ -17,6 +18,7 @@
 				<button class="info-trigger-btn" id="btn-open-info-modal" title="App Info">ⓘ</button>
 			</div>
 			<div class="theme-selector" id="theme-selector">
+				<div class="theme-indicator" id="theme-indicator"></div>
 				<button class="theme-btn active" data-theme="light" id="theme-btn-light">Light</button>
 				<button class="theme-btn" data-theme="dark" id="theme-btn-dark">Dark</button>
 				<button class="theme-btn" data-theme="pop" id="theme-btn-pop">Pop</button>
@@ -60,7 +62,8 @@
 			
 			<!-- 設定エリア (サイズ選択 & 画像設定が1行で横並び) -->
 			<div class="settings-panel">
-				<div class="size-options">
+				<div class="size-options" id="size-options-container">
+					<div class="size-indicator" id="size-indicator"></div>
 					<button class="size-btn" data-size="3" id="size-btn-3">3x3</button>
 					<button class="size-btn" data-size="4" id="size-btn-4">4x4</button>
 					<button class="size-btn active" data-size="5" id="size-btn-5">5x5</button>
@@ -83,7 +86,6 @@
 				<button class="btn btn-danger" id="btn-reset" style="display: none;">Reset</button>
 			</div>
 		</div>
-	</div>
 
 	<!-- 画像選択モーダルダイアログ (オーバーレイ) -->
 	<div class="modal-overlay" id="image-modal-overlay">
@@ -137,6 +139,8 @@
 	</div>
 
 	<footer class="copyright-display"></footer>
+		</div>
+	</div>
 
 	<script src="js/game.js" defer></script>
 	<script src="js/ui.js" defer></script>
