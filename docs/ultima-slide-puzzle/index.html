@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Ultima Slide Puzzle</title>
+	<meta name="description" content="シンプルでクールなブラウザ向けスライドパズルゲーム「Ultima Slide Puzzle」です。Light, Dark, Pop のテーマで遊べます。">
+	<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="theme-light">
+
+	<div class="app-container">
+		<!-- ヘッダー (タイトル & テーマ選択) -->
+		<header>
+			<div class="header-title-area">
+				<h1 class="app-title-display"></h1>
+				<button class="info-trigger-btn" id="btn-open-info-modal" title="App Info">ⓘ</button>
+			</div>
+			<div class="theme-selector" id="theme-selector">
+				<button class="theme-btn active" data-theme="light" id="theme-btn-light">Light</button>
+				<button class="theme-btn" data-theme="dark" id="theme-btn-dark">Dark</button>
+				<button class="theme-btn" data-theme="pop" id="theme-btn-pop">Pop</button>
+			</div>
+		</header>
+
+		<!-- ステータス表示パネル (手数 & タイマー) -->
+		<div class="status-panel">
+			<div class="status-item">
+				<span class="status-label">Moves</span>
+				<span class="status-value" id="moves-value">0</span>
+			</div>
+			<div class="status-item">
+				<span class="status-label">Time</span>
+				<span class="status-value" id="timer-value">00:00</span>
+			</div>
+		</div>
+
+		<!-- パズル盤面コンテナ -->
+		<div class="board-wrapper">
+			<div class="board" id="board">
+				<!-- JavaScript から動的にタイルが生成されます -->
+			</div>
+			
+			<!-- クリア時に表示されるオーバーレイ画面 -->
+			<div class="solved-overlay" id="solved-overlay">
+				<div class="solved-card">
+					<h2 class="solved-title">Game Clear!</h2>
+					<div class="solved-stats">
+						<p>Congratulations!</p>
+						<p>Moves: <strong id="solved-moves">0</strong></p>
+						<p>Time: <strong id="solved-time">00:00</strong></p>
+					</div>
+					<button class="btn btn-primary" id="btn-close-overlay">Close</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- 設定・操作パネル (サイズ選択、画像選択、アクションボタン) -->
+		<div class="controls-panel">
+			
+			<!-- 設定エリア (サイズ選択 & 画像設定が1行で横並び) -->
+			<div class="settings-panel">
+				<div class="size-options">
+					<button class="size-btn" data-size="3" id="size-btn-3">3x3</button>
+					<button class="size-btn" data-size="4" id="size-btn-4">4x4</button>
+					<button class="size-btn active" data-size="5" id="size-btn-5">5x5</button>
+					<button class="size-btn" data-size="6" id="size-btn-6">6x6</button>
+					<button class="size-btn" data-size="7" id="size-btn-7">7x7</button>
+				</div>
+
+				<div class="image-settings-options">
+					<button class="btn btn-sm" id="btn-open-image-modal">Set Image</button>
+					<label class="toggle-container" id="lbl-show-numbers">
+						<input type="checkbox" id="chk-show-numbers" checked disabled>
+						<span class="toggle-label">Show Numbers</span>
+					</label>
+				</div>
+			</div>
+
+			<!-- メインアクション (ゲーム開始前はShuffle、進行中はResetを表示) -->
+			<div class="action-buttons">
+				<button class="btn btn-primary" id="btn-shuffle">Start</button>
+				<button class="btn btn-danger" id="btn-reset" style="display: none;">Reset</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- 画像選択モーダルダイアログ (オーバーレイ) -->
+	<div class="modal-overlay" id="image-modal-overlay">
+		<div class="modal-card">
+			<h2 class="modal-title">Select Puzzle Image</h2>
+			
+			<!-- モーダル内画像プレビュー窓 -->
+			<div class="modal-preview-wrapper">
+				<div class="modal-preview-box" id="modal-preview-box">
+					<span class="modal-preview-placeholder" id="modal-preview-placeholder">No Image Selected</span>
+				</div>
+			</div>
+			
+			<!-- 隠しファイル入力 & アップロードトリガー -->
+			<input type="file" id="modal-file-input" accept="image/*" style="display: none;">
+			<button class="btn" id="btn-modal-upload">Choose Image File</button>
+			
+			<!-- モーダル下部アクションボタン -->
+			<div class="modal-actions">
+				<button class="btn btn-danger" id="btn-modal-remove" style="display: none;">Remove Image</button>
+				<div class="modal-action-group">
+					<button class="btn" id="btn-modal-cancel">Cancel</button>
+					<button class="btn btn-primary" id="btn-modal-apply">Apply</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- 独自リセット確認モーダル (オーバーレイ) -->
+	<div class="modal-overlay" id="reset-confirm-modal">
+		<div class="modal-card">
+			<h2 class="modal-title">Reset Game</h2>
+			<p class="modal-message">Are you sure you want to reset the current game?</p>
+			<div class="modal-actions">
+				<button class="btn" id="btn-reset-cancel">Cancel</button>
+				<button class="btn btn-danger" id="btn-reset-confirm">Yes, Reset</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- アプリ情報モーダル (オーバーレイ) -->
+	<div class="modal-overlay" id="info-modal">
+		<div class="modal-card info-card">
+			<h2 class="modal-title app-title-display"></h2>
+			<div class="info-content">
+				<p class="info-version-row">Version: <span class="version-display"></span></p>
+				<p class="info-copyright-row copyright-display"></p>
+			</div>
+			<button class="btn btn-primary" id="btn-info-close">Close</button>
+		</div>
+	</div>
+
+	<footer class="copyright-display"></footer>
+
+	<script src="js/game.js" defer></script>
+	<script src="js/ui.js" defer></script>
+	<script src="js/main.js" defer></script>
+</body>
+</html>

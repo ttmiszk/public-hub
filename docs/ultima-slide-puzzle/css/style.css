@@ -1,0 +1,788 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+	--app-title-text: "Ultima Slide Puzzle";
+	--version-text: "1.0.0";
+	--copyright-text: "© 2026 Ultima Architect Inc.";
+}
+
+/* ==========================================================================
+		CSS Variables & Themes
+		========================================================================== */
+
+/* Light Theme (Ultima Reversi のベージュ調デザイン) */
+.theme-light {
+	--bg-color: #ede7dc;
+	--card-bg: #ece6d9;
+	--text-color: #655745;
+	--text-secondary: #8e7f6e;
+	
+	/* Neumorphic Shadows */
+	--shadow-outer-flat: 10px 10px 20px #d4cdc0, -10px -10px 20px #ffffff;
+	--shadow-outer-inset: inset 6px 6px 12px #d4cdc0, inset -6px -6px 12px #ffffff;
+	--shadow-inner-flat: 4px 4px 8px #d4cdc0, -4px -4px 8px #ffffff;
+	--shadow-inner-inset: inset 3px 3px 6px #d4cdc0, inset -3px -3px 6px #ffffff;
+	
+	--board-bg: #e3dbcc;
+	--tile-bg: #ece6d9;
+	--tile-text-color: #655745;
+	--tile-shadow: 4px 4px 8px #c8beae, -4px -4px 8px #ffffff;
+	--tile-shadow-hover: 6px 6px 12px #c8beae, -6px -6px 12px #ffffff;
+	--tile-shadow-active: inset 2px 2px 5px #c8beae, inset -2px -2px 5px #ffffff;
+	
+	--accent-color: #8c7b67;
+	--accent-text: #ffffff;
+	
+	--control-bg: #ece6d9;
+	--control-shadow: 4px 4px 8px #c8beae, -4px -4px 8px #ffffff;
+	--control-shadow-active: inset 2px 2px 5px #c8beae, inset -2px -2px 5px #ffffff;
+}
+
+/* Dark Theme (モダンで深みのあるダークデザイン) */
+.theme-dark {
+	--bg-color: #14171c;
+	--card-bg: #1c2026;
+	--text-color: #e0e5eb;
+	--text-secondary: #909bb0;
+	
+	/* Modern Dark Shadows */
+	--shadow-outer-flat: 10px 10px 20px #0b0d10, -10px -10px 20px #1d232c;
+	--shadow-outer-inset: inset 6px 6px 12px #0b0d10, inset -6px -6px 12px #1d232c;
+	--shadow-inner-flat: 4px 4px 8px #0b0d10, -4px -4px 8px #1d232c;
+	--shadow-inner-inset: inset 3px 3px 6px #0b0d10, inset -3px -3px 6px #1d232c;
+	
+	--board-bg: #111317;
+	--tile-bg: #222831;
+	--tile-text-color: #e0e5eb;
+	--tile-shadow: 4px 4px 8px #0a0c0e, -2px -2px 6px #2a323d;
+	--tile-shadow-hover: 6px 6px 12px #0a0c0e, -3px -3px 8px #2a323d;
+	--tile-shadow-active: inset 2px 2px 5px #0a0c0e, inset -2px -2px 5px #2a323d;
+	
+	--accent-color: #4f80e1;
+	--accent-text: #ffffff;
+	
+	--control-bg: #222831;
+	--control-shadow: 4px 4px 8px #0a0c0e, -2px -2px 6px #2a323d;
+	--control-shadow-active: inset 2px 2px 5px #0a0c0e, inset -2px -2px 5px #2a323d;
+}
+
+/* Pop Theme (Ultima Reversi のきれいなライトブルー配色) */
+.theme-pop {
+	--bg-color: #e1edf8;
+	--card-bg: #e1edf8;
+	--text-color: #2b548a;
+	--text-secondary: #577ba7;
+	
+	/* Pop Soft Shadows */
+	--shadow-outer-flat: 10px 10px 20px #c3d5e8, -10px -10px 20px #ffffff;
+	--shadow-outer-inset: inset 6px 6px 12px #c3d5e8, inset -6px -6px 12px #ffffff;
+	--shadow-inner-flat: 4px 4px 8px #c3d5e8, -4px -4px 8px #ffffff;
+	--shadow-inner-inset: inset 3px 3px 6px #c3d5e8, inset -3px -3px 6px #ffffff;
+	
+	--board-bg: #d1e2f3;
+	--tile-bg: #ebf3fa;
+	--tile-text-color: #2b548a;
+	--tile-shadow: 4px 4px 8px #bcd0e4, -4px -4px 8px #ffffff;
+	--tile-shadow-hover: 6px 6px 12px #bcd0e4, -6px -6px 12px #ffffff;
+	--tile-shadow-active: inset 2px 2px 5px #bcd0e4, inset -2px -2px 5px #ffffff;
+	
+	--accent-color: #3b7cd4;
+	--accent-text: #ffffff;
+	
+	--control-bg: #ebf3fa;
+	--control-shadow: 4px 4px 8px #bcd0e4, -4px -4px 8px #ffffff;
+	--control-shadow-active: inset 2px 2px 5px #bcd0e4, inset -2px -2px 5px #ffffff;
+}
+
+/* ==========================================================================
+		Base Elements
+		========================================================================== */
+
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+body {
+	font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+	background-color: var(--bg-color);
+	color: var(--text-color);
+	transition: background-color 0.5s ease, color 0.5s ease;
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 20px;
+}
+
+.app-container {
+	width: 100%;
+	max-width: 520px;
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+/* ==========================================================================
+		Header Component
+		========================================================================== */
+
+header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	position: relative;
+	padding: 0 5px;
+	width: 100%;
+}
+
+.header-title-area {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+h1 {
+	font-size: 1.8rem;
+	font-weight: 700;
+	letter-spacing: -0.5px;
+}
+
+/* ⓘ情報モーダル起動ボタン */
+.info-trigger-btn {
+	background: none;
+	border: none;
+	color: var(--text-secondary);
+	font-size: 1.25rem;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	transition: all 0.2s ease;
+	padding: 0;
+}
+
+.info-trigger-btn:hover {
+	color: var(--accent-color);
+	background: var(--board-bg);
+	box-shadow: var(--shadow-inner-flat);
+}
+
+.info-trigger-btn:active {
+	box-shadow: var(--shadow-inner-inset);
+}
+
+/* CSS変数テキストの疑似要素描画 */
+.app-title-display::before {
+	content: var(--app-title-text);
+}
+
+.version-display::before {
+	content: var(--version-text);
+}
+
+.copyright-display::before {
+	content: var(--copyright-text);
+}
+
+/* Theme Switcher Button Group */
+.theme-selector {
+	display: flex;
+	background: var(--board-bg);
+	padding: 4px;
+	border-radius: 20px;
+	box-shadow: var(--shadow-inner-inset);
+	gap: 4px;
+}
+
+.theme-btn {
+	border: none;
+	background: none;
+	padding: 6px 12px;
+	border-radius: 16px;
+	font-family: inherit;
+	font-size: 0.8rem;
+	font-weight: 600;
+	cursor: pointer;
+	color: var(--text-secondary);
+	transition: all 0.3s ease;
+}
+
+.theme-btn.active {
+	background: var(--card-bg);
+	color: var(--text-color);
+	box-shadow: var(--shadow-inner-flat);
+}
+
+/* ==========================================================================
+		Status Panel (手数値 / タイマー)
+		========================================================================== */
+
+.status-panel {
+	display: flex;
+	justify-content: space-around;
+	align-items: center;
+	padding: 16px;
+	background: var(--card-bg);
+	border-radius: 24px;
+	box-shadow: var(--shadow-outer-flat);
+}
+
+.status-item {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+}
+
+.status-label {
+	font-size: 0.8rem;
+	font-weight: 500;
+	color: var(--text-secondary);
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.status-value {
+	font-size: 1.5rem;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+		Board Container & Tiles
+		========================================================================== */
+
+.board-wrapper {
+	position: relative;
+	width: 100%;
+	aspect-ratio: 1 / 1;
+	background: var(--card-bg);
+	border-radius: 32px;
+	padding: 16px;
+	box-shadow: var(--shadow-outer-flat);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.board {
+	display: grid;
+	width: 100%;
+	height: 100%;
+	background: var(--board-bg);
+	border-radius: 20px;
+	padding: 8px;
+	gap: 8px;
+	box-shadow: var(--shadow-inner-inset);
+	/* 動的に JavaScript で --grid-size 変数を設定して利用する */
+	grid-template-columns: repeat(var(--grid-size, 5), 1fr);
+	grid-template-rows: repeat(var(--grid-size, 5), 1fr);
+}
+
+.tile {
+	background: var(--tile-bg);
+	color: var(--tile-text-color);
+	border-radius: 12px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: calc(1.8rem - (var(--grid-size, 5) - 3) * 0.2rem);
+	font-weight: 700;
+	box-shadow: var(--tile-shadow);
+	cursor: pointer;
+	position: relative;
+	transition: box-shadow 0.2s ease, transform 0.15s ease, background 0.3s ease;
+	aspect-ratio: 1 / 1;
+	will-change: transform; /* アニメーションのガタつき防止・最適化 */
+}
+
+/* タッチデバイスでのホバー効果のちらつき防止 */
+@media (hover: hover) {
+	.tile:not(.tile-empty):hover {
+		transform: translateY(-2px);
+		box-shadow: var(--tile-shadow-hover);
+	}
+}
+
+.tile:not(.tile-empty):active {
+	transform: translateY(1px);
+	box-shadow: var(--tile-shadow-active);
+}
+
+/* 空セル（空白）のスタイル */
+.tile-empty {
+	background: transparent;
+	box-shadow: none;
+	cursor: default;
+	pointer-events: none;
+}
+
+/* 将来的な画像分割パズルのためのプレースホルダー定義 */
+.tile-image {
+	background-image: var(--tile-img-url, none);
+	background-size: calc(var(--board-width) * 1px) calc(var(--board-height) * 1px);
+	background-position: var(--tile-bg-x, 0) var(--tile-bg-y, 0);
+	background-repeat: no-repeat;
+	/* 画像の上に乗せる数字のオーバーレイ（必要に応じて表示） */
+	color: #ffffff;
+	text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6), 0 0 2px rgba(0, 0, 0, 0.8);
+}
+
+/* ==========================================================================
+		Controls Panel (サイズ選択、シャッフル、リセット)
+		========================================================================== */
+
+.controls-panel {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.size-selector {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	background: var(--card-bg);
+	padding: 12px 20px;
+	border-radius: 20px;
+	box-shadow: var(--shadow-outer-flat);
+}
+
+.size-label {
+	font-size: 0.9rem;
+	font-weight: 600;
+	color: var(--text-secondary);
+}
+
+.size-options {
+	display: flex;
+	gap: 6px;
+	background: var(--board-bg);
+	padding: 3px;
+	border-radius: 12px;
+	box-shadow: var(--shadow-inner-inset);
+}
+
+.size-btn {
+	border: none;
+	background: none;
+	width: 32px;
+	height: 32px;
+	border-radius: 8px;
+	font-family: inherit;
+	font-size: 0.85rem;
+	font-weight: 700;
+	cursor: pointer;
+	color: var(--text-secondary);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: all 0.2s ease;
+}
+
+.size-btn.active {
+	background: var(--card-bg);
+	color: var(--accent-color);
+	box-shadow: var(--shadow-inner-flat);
+}
+
+.action-buttons {
+	display: flex;
+	gap: 16px;
+}
+
+.btn {
+	flex: 1;
+	border: none;
+	background: var(--control-bg);
+	color: var(--text-color);
+	padding: 16px;
+	border-radius: 20px;
+	font-family: inherit;
+	font-size: 1rem;
+	font-weight: 700;
+	cursor: pointer;
+	box-shadow: var(--control-shadow);
+	transition: all 0.2s ease;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+}
+
+.btn-primary {
+	background: var(--accent-color);
+	color: var(--accent-text);
+	box-shadow: var(--control-shadow);
+}
+
+@media (hover: hover) {
+	.btn:hover {
+		transform: translateY(-2px);
+	}
+}
+
+.btn:active {
+	transform: translateY(1px);
+	box-shadow: var(--control-shadow-active);
+}
+
+/* ==========================================================================
+		Overlay & Clear Modal
+		========================================================================== */
+
+.solved-overlay {
+	position: absolute;
+	top: 16px;
+	left: 16px;
+	right: 16px;
+	bottom: 16px;
+	background: rgba(236, 230, 217, 0.35); /* 大幅に透過させて背後を見せる */
+	border-radius: 20px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.4s ease;
+	z-index: 10;
+	backdrop-filter: blur(4px); /* 適度なブラーで背景をぼかしつつ見せる */
+	-webkit-backdrop-filter: blur(4px);
+}
+
+.theme-dark .solved-overlay {
+	background: rgba(20, 23, 28, 0.35);
+}
+
+.theme-pop .solved-overlay {
+	background: rgba(225, 237, 248, 0.35);
+}
+
+.solved-overlay.active {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+/* 中央に浮かび上がるクリアダイアログカード */
+.solved-card {
+	background: var(--card-bg);
+	padding: 24px 32px;
+	border-radius: 24px;
+	box-shadow: var(--shadow-outer-flat);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 16px;
+	max-width: 90%;
+	width: 320px;
+	transform: scale(0.8) translateY(20px);
+	transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.solved-overlay.active .solved-card {
+	transform: scale(1) translateY(0);
+}
+
+.solved-title {
+	font-size: 1.8rem;
+	font-weight: 800;
+	color: var(--accent-color);
+	text-align: center;
+	margin: 0;
+}
+
+.solved-stats {
+	font-size: 0.95rem;
+	color: var(--text-color);
+	text-align: center;
+	line-height: 1.6;
+}
+
+.solved-stats p {
+	margin-bottom: 4px;
+}
+
+.solved-card .btn {
+	width: auto;
+	min-width: 160px;
+	padding: 12px 24px;
+	font-size: 0.95rem;
+	flex: none; /* flex伸縮を無効化して引き伸ばしを防止 */
+}
+
+/* ==========================================================================
+		Footer (シンプルなクレジット)
+		========================================================================== */
+
+footer {
+	text-align: center;
+	font-size: 0.8rem;
+	color: var(--text-secondary);
+	margin-top: 10px;
+}
+
+/* ==========================================================================
+		Milestone 2 -集約された設定パネル & 画像選択モーダル
+		========================================================================== */
+
+/* 設定パネル (サイズ選択 & 画像設定が1行で横並び) */
+.settings-panel {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	align-items: center;
+	background: var(--card-bg);
+	padding: 12px 20px;
+	border-radius: 24px;
+	box-shadow: var(--shadow-outer-flat);
+	gap: 16px;
+	flex-wrap: wrap; /* モバイル対応 */
+}
+
+/* ゲーム進行中のサイズ変更ボタン無効化 */
+.size-btn:disabled {
+	opacity: 0.25; /* 選択されていない非活性ボタンは大幅に存在感を薄める */
+	cursor: default;
+	pointer-events: none;
+	box-shadow: none !important;
+}
+
+/* ゲーム進行中の「アクティブ（選択中）」かつ「無効化」されたサイズボタンの強調表示 */
+.size-btn.active:disabled {
+	opacity: 0.85; /* 不透明度を高く保ち、視認性を維持 */
+	color: var(--accent-color);
+	background: var(--card-bg);
+	box-shadow: var(--shadow-inner-inset) !important; /* 凹み影をキープ */
+	border: 1px solid var(--accent-color); /* アクセント枠線でさらに強調 */
+}
+
+.image-settings-options {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	flex: 1;
+	justify-content: flex-end;
+}
+
+.image-settings-options .btn-sm {
+	flex: none;
+	min-width: 100px;
+	padding: 8px 16px;
+	font-size: 0.85rem;
+	border-radius: 12px;
+}
+
+/* Guide Numbers Checkbox Switch (活性/非活性) */
+.toggle-container {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	cursor: pointer;
+	transition: opacity 0.3s ease;
+}
+
+.toggle-container input[type="checkbox"] {
+	width: 16px;
+	height: 16px;
+	cursor: pointer;
+	accent-color: var(--accent-color);
+}
+
+.toggle-container input[type="checkbox"]:disabled {
+	cursor: default;
+}
+
+/* 非活性時の表示を薄くする */
+.toggle-container:has(input[type="checkbox"]:disabled) {
+	opacity: 0.4;
+	cursor: default;
+	pointer-events: none;
+}
+
+.toggle-label {
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: var(--text-secondary);
+	white-space: nowrap;
+}
+
+/* Image Tile Guide Numbers styling */
+.tile-image.hide-number {
+	color: transparent !important;
+	text-shadow: none !important;
+}
+
+/* ==========================================================================
+		Modal Dialog Layout (画像選択用モーダル)
+		========================================================================== */
+
+.modal-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: rgba(20, 23, 28, 0.5); /* 暗背景 */
+	backdrop-filter: blur(5px);
+	-webkit-backdrop-filter: blur(5px);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 100;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.3s ease;
+}
+
+.modal-overlay.active {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.modal-card {
+	background: var(--bg-color);
+	color: var(--text-color);
+	padding: 30px;
+	border-radius: 28px;
+	box-shadow: 0 20px 40px rgba(0,0,0,0.2), var(--shadow-outer-flat);
+	width: 380px;
+	max-width: 90%;
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	transform: translateY(30px) scale(0.95);
+	transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-overlay.active .modal-card {
+	transform: translateY(0) scale(1);
+}
+
+.modal-title {
+	font-size: 1.4rem;
+	font-weight: 700;
+	text-align: center;
+	color: var(--accent-color);
+	margin-bottom: 5px;
+}
+
+.modal-message {
+	font-size: 0.95rem;
+	line-height: 1.5;
+	text-align: center;
+	color: var(--text-color);
+	margin: 10px 0;
+	font-weight: 500;
+}
+
+/* モーダルプレビュー窓 */
+.modal-preview-wrapper {
+	width: 100%;
+	aspect-ratio: 1 / 1;
+	background: var(--card-bg);
+	border-radius: 20px;
+	padding: 12px;
+	box-shadow: var(--shadow-outer-inset);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.modal-preview-box {
+	width: 100%;
+	height: 100%;
+	border-radius: 12px;
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: var(--board-bg);
+	box-shadow: var(--shadow-inner-flat);
+	position: relative;
+	overflow: hidden;
+}
+
+.modal-preview-placeholder {
+	font-size: 0.9rem;
+	font-weight: 600;
+	color: var(--text-secondary);
+}
+
+/* アクションボタン領域 */
+.modal-actions {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 10px;
+	width: 100%;
+	margin-top: 10px;
+}
+
+.modal-action-group {
+	display: flex;
+	gap: 10px;
+}
+
+.modal-card .btn {
+	padding: 12px 18px;
+	font-size: 0.9rem;
+	font-weight: 700;
+	border-radius: 14px;
+	min-width: 80px;
+}
+
+.btn-danger {
+	background: #ff5252;
+	color: white;
+	box-shadow: 0 4px 10px rgba(255, 82, 82, 0.2);
+}
+
+.btn-danger:active {
+	box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* --- アプリ情報モーダル用スタイル --- */
+.info-card {
+	width: 320px;
+	text-align: center;
+	align-items: center;
+	gap: 22px;
+}
+
+.info-content {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	width: 100%;
+}
+
+.info-version-row {
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--text-color);
+}
+
+.info-copyright-row {
+	font-size: 0.85rem;
+	color: var(--text-secondary);
+}
+
+.info-card .btn {
+	width: auto;
+	min-width: 120px;
+	flex: none;
+}
+
+
+
