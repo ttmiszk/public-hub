@@ -30,10 +30,12 @@
 			<div class="status-item">
 				<span class="status-label">Moves</span>
 				<span class="status-value" id="moves-value">0</span>
+				<span class="status-best" id="moves-best">Best: --</span>
 			</div>
 			<div class="status-item">
 				<span class="status-label">Time</span>
 				<span class="status-value" id="timer-value">00:00</span>
+				<span class="status-best" id="timer-best">Best: --:--</span>
 			</div>
 		</div>
 
@@ -49,8 +51,8 @@
 					<h2 class="solved-title">Game Clear!</h2>
 					<div class="solved-stats">
 						<p>Congratulations!</p>
-						<p>Moves: <strong id="solved-moves">0</strong></p>
-						<p>Time: <strong id="solved-time">00:00</strong></p>
+						<p>Moves: <strong id="solved-moves">0</strong><span class="solved-best-badge" id="solved-moves-badge" style="display: none;">New Best!</span></p>
+						<p>Time: <strong id="solved-time">00:00</strong><span class="solved-best-badge" id="solved-time-badge" style="display: none;">New Best!</span></p>
 					</div>
 					<button class="btn btn-primary" id="btn-close-overlay">Close</button>
 				</div>
@@ -114,11 +116,11 @@
 		</div>
 	</div>
 
-	<!-- 独自リセット確認モーダル (オーバーレイ) -->
+	<!-- 独自確認モーダル (リセット・クリア確認で共有) -->
 	<div class="modal-overlay" id="reset-confirm-modal">
 		<div class="modal-card">
-			<h2 class="modal-title">Reset Game</h2>
-			<p class="modal-message">Are you sure you want to reset the current game?</p>
+			<h2 class="modal-title" id="reset-confirm-title">Reset Game</h2>
+			<p class="modal-message" id="reset-confirm-message">Are you sure you want to reset the current game?</p>
 			<div class="modal-actions">
 				<button class="btn" id="btn-reset-cancel">Cancel</button>
 				<button class="btn btn-danger" id="btn-reset-confirm">Yes, Reset</button>
@@ -133,6 +135,9 @@
 			<div class="info-content">
 				<p class="info-version-row">Version: <span class="version-display"></span></p>
 				<p class="info-copyright-row copyright-display"></p>
+				<div class="info-action-section">
+					<button class="btn-text-link" id="btn-clear-stats">Clear Best Scores</button>
+				</div>
 			</div>
 			<button class="btn btn-primary" id="btn-info-close">Close</button>
 		</div>

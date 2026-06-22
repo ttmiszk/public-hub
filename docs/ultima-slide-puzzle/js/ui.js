@@ -20,6 +20,7 @@ class PuzzleUI {
 		this.tempModalImage = null;
 
 		this.initElements();
+		this.loadBestScores();
 		this.resizeApp();
 		this.initEvents();
 		this.loadSavedTheme();
@@ -77,6 +78,7 @@ class PuzzleUI {
 		this.infoModal = document.getElementById('info-modal');
 		this.btnOpenInfoModal = document.getElementById('btn-open-info-modal');
 		this.btnInfoClose = document.getElementById('btn-info-close');
+		this.btnClearStats = document.getElementById('btn-clear-stats');
 	}
 
 	/**
@@ -112,24 +114,23 @@ class PuzzleUI {
 		this.btnShuffle.addEventListener('click', () => this.startNewGame());
 		
 		this.btnReset.addEventListener('click', () => {
-			// 進行中のリセットの場合は、独自モーダルを開く
+			// 進行中のリセットの場合は、独自確認モーダルを開く
 			if (this.game.isGameActive) {
-				this.resetConfirmModal.classList.add('active');
+				this.showConfirmModal(
+					'Reset Game',
+					'Are you sure you want to reset the current game?',
+					'Yes, Reset',
+					() => this.executeReset()
+				);
 			} else {
 				// 万が一待機状態の時（通常は非表示）はそのままリセット
 				this.executeReset();
 			}
 		});
 
-		// 独自リセットモーダルのキャンセルボタン
+		// 独自確認モーダルのキャンセルボタン
 		this.btnResetCancel.addEventListener('click', () => {
 			this.resetConfirmModal.classList.remove('active');
-		});
-
-		// 独自リセットモーダルの確定リセットボタン
-		this.btnResetConfirm.addEventListener('click', () => {
-			this.resetConfirmModal.classList.remove('active');
-			this.executeReset();
 		});
 		
 		this.btnCloseOverlay.addEventListener('click', () => {
@@ -210,6 +211,23 @@ class PuzzleUI {
 			this.closeImageModal();
 			this.render(); // 進行中のゲーム状態を壊さずにその場で再描画
 		});
+
+		// ベストスコアの完全消去
+		if (this.btnClearStats) {
+			this.btnClearStats.addEventListener('click', () => {
+				this.infoModal.classList.remove('active');
+				this.showConfirmModal(
+					'Clear Best Scores',
+					'Are you sure you want to clear all best scores? This cannot be undone.',
+					'Yes, Clear All',
+					() => {
+						this.bestScores = {};
+						this.saveBestScores();
+						this.updateBestScoresDisplay();
+					}
+				);
+			});
+		}
 	}
 
 	/**
@@ -508,11 +526,48 @@ class PuzzleUI {
 		if (!this.game.isGameActive && this.game.isSolved() && this.game.moves > 0) {
 			this.stopTimer();
 			
+			const currentMoves = this.game.moves;
+			const currentTime = this.game.elapsedTime;
+			const key = this.getBestScoreKey();
+			const oldScore = this.bestScores[key];
+			
+			let isNewBestMoves = false;
+			let isNewBestTime = false;
+			
+			if (!oldScore) {
+				this.bestScores[key] = {
+					moves: currentMoves,
+					time: currentTime
+				};
+				isNewBestMoves = true;
+				isNewBestTime = true;
+			} else {
+				if (currentMoves < oldScore.moves) {
+					oldScore.moves = currentMoves;
+					isNewBestMoves = true;
+				}
+				if (currentTime < oldScore.time) {
+					oldScore.time = currentTime;
+					isNewBestTime = true;
+				}
+			}
+			
+			if (isNewBestMoves || isNewBestTime) {
+				this.saveBestScores();
+				this.updateBestScoresDisplay();
+			}
+			
 			// クリア統計をセット
-			this.solvedMoves.textContent = this.game.moves;
-			const minutes = Math.floor(this.game.elapsedTime / 60);
-			const seconds = this.game.elapsedTime % 60;
-			this.solvedTime.textContent = `${minutes}m ${seconds}s`;
+			this.solvedMoves.textContent = currentMoves;
+			const minutes = Math.floor(currentTime / 60);
+			const seconds = currentTime % 60;
+			this.solvedTime.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+			
+			// 新記録バッジの表示制御
+			const movesBadge = document.getElementById('solved-moves-badge');
+			const timeBadge = document.getElementById('solved-time-badge');
+			if (movesBadge) movesBadge.style.display = isNewBestMoves ? 'inline-block' : 'none';
+			if (timeBadge) timeBadge.style.display = isNewBestTime ? 'inline-block' : 'none';
 			
 			// ロックの解除とShuffleボタンの再表示
 			this.updateActionButtons();
@@ -602,6 +657,7 @@ class PuzzleUI {
 		});
 
 		this.updateStatusDisplay();
+		this.updateBestScoresDisplay();
 	}
 
 	/**
@@ -615,10 +671,11 @@ class PuzzleUI {
 		const viewportWidth = window.innerWidth;
 		const viewportHeight = window.innerHeight;
 
-		// 上下左右に最低限確保するマージン（ピクセル）
-		const margin = 24;
-		const availableWidth = Math.max(200, viewportWidth - margin);
-		const availableHeight = Math.max(300, viewportHeight - margin);
+		// 左右マージンと上下マージン（ステータスバー・セーフエリア等）を分離して確保する
+		const marginX = 24;
+		const marginY = 80;
+		const availableWidth = Math.max(200, viewportWidth - marginX);
+		const availableHeight = Math.max(300, viewportHeight - marginY);
 
 		// スケール比率を計算
 		const scaleX = availableWidth / baseWidth;
@@ -670,6 +727,98 @@ class PuzzleUI {
 		
 		indicator.style.width = `${width}px`;
 		indicator.style.transform = `translateX(${left}px)`;
+	}
+
+	/**
+	 * localStorage からベストスコアデータを読み込む
+	 */
+	loadBestScores() {
+		try {
+			const data = localStorage.getItem('ultima-puzzle-best-scores');
+			this.bestScores = data ? JSON.parse(data) : {};
+		} catch (e) {
+			console.error('Failed to load best scores from localStorage', e);
+			this.bestScores = {};
+		}
+	}
+
+	/**
+	 * localStorage にベストスコアデータを保存する
+	 */
+	saveBestScores() {
+		try {
+			localStorage.setItem('ultima-puzzle-best-scores', JSON.stringify(this.bestScores));
+		} catch (e) {
+			console.error('Failed to save best scores to localStorage', e);
+		}
+	}
+
+	/**
+	 * 現在のサイズ・モードに対応するベストスコア用キーを取得する
+	 * @returns {string} キー名 (例: 'normal-5', 'image-3')
+	 */
+	getBestScoreKey() {
+		const mode = this.imageSettings.url ? 'image' : 'normal';
+		const size = this.game.size;
+		return `${mode}-${size}`;
+	}
+
+	/**
+	 * ステータスパネルのベストスコア表示を更新する
+	 */
+	updateBestScoresDisplay() {
+		const key = this.getBestScoreKey();
+		const score = this.bestScores[key];
+
+		const movesBestEl = document.getElementById('moves-best');
+		const timerBestEl = document.getElementById('timer-best');
+
+		if (!movesBestEl || !timerBestEl) return;
+
+		if (score) {
+			movesBestEl.textContent = `Best: ${score.moves}`;
+			
+			const minutes = Math.floor(score.time / 60);
+			const seconds = score.time % 60;
+			timerBestEl.textContent = `Best: ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+		} else {
+			movesBestEl.textContent = 'Best: --';
+			timerBestEl.textContent = 'Best: --:--';
+		}
+	}
+
+	/**
+	 * 独自デザインの共有確認モーダルを表示する
+	 * @param {string} title タイトルテキスト
+	 * @param {string} message メッセージ本文
+	 * @param {string} confirmText 確定ボタンのテキスト
+	 * @param {function} onConfirm 確定時に実行するコールバック関数
+	 */
+	showConfirmModal(title, message, confirmText, onConfirm) {
+		const titleEl = document.getElementById('reset-confirm-title');
+		const messageEl = document.getElementById('reset-confirm-message');
+		const confirmBtn = document.getElementById('btn-reset-confirm');
+
+		if (!titleEl || !messageEl || !confirmBtn) return;
+
+		titleEl.textContent = title;
+		messageEl.textContent = message;
+		confirmBtn.textContent = confirmText;
+
+		// 既存のイベントリスナーを剥がすため、ボタンをクローンして置き換える
+		const newConfirmBtn = confirmBtn.cloneNode(true);
+		confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+		
+		// 参照を更新
+		this.btnResetConfirm = newConfirmBtn;
+
+		// 確定ボタンのイベントバインド
+		this.btnResetConfirm.addEventListener('click', () => {
+			this.resetConfirmModal.classList.remove('active');
+			onConfirm();
+		});
+
+		this.resetConfirmModal.classList.add('active');
 	}
 }
 
