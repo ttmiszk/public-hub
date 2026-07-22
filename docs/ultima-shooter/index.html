@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultima Shooter</title>
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Three.js (Local) -->
+    <script src="js/lib/three.min.js"></script>
+    
+    <!-- Three.js Post-Processing (Local) -->
+    <script src="js/lib/EffectComposer.js"></script>
+    <script src="js/lib/RenderPass.js"></script>
+    <script src="js/lib/ShaderPass.js"></script>
+    <script src="js/lib/CopyShader.js"></script>
+    <script src="js/lib/LuminosityHighPassShader.js"></script>
+    <script src="js/lib/UnrealBloomPass.js"></script>
+</head>
+<body>
+    <!-- 画面フェード用要素 -->
+    <div id="screen-fade" class="screen-fade"></div>
+
+    <!-- ゲーム画面を描画するコンテナ -->
+    <div id="game-container"></div>
+    
+    <!-- UIなどのオーバーレイ -->
+    <div id="ui-container"></div>
+
+    
+    <!-- ボス接近アラート警告: ui-containerのinnerHTML書き換えに巻き込まれないよう独立配置 -->
+    <div id="boss-warning" class="boss-warning-flash">
+        WARNING<br><span style="font-size:1.6rem; color:#fff; font-weight:700; text-shadow:0 0 15px rgba(255,0,0,0.8);">BOSS APPROACHING</span>
+    </div>
+
+    <!-- DEBUG MENU -->
+    <div id="debug-menu" class="debug-menu hidden">
+        <h3>DEBUG PANEL</h3>
+        
+        <!-- グループ1: ゲーム設定 -->
+        <div class="debug-group">
+            <div class="debug-row">
+                <label for="debug-stage">Start Stage:</label>
+                <select id="debug-stage">
+                    <option value="0">STAGE 1</option>
+                    <option value="1">STAGE 2</option>
+                    <option value="2">STAGE 3 (CAVE)</option>
+                    <option value="3">STAGE 4 (BOSS)</option>
+                </select>
+            </div>
+            <div class="debug-row">
+                <label for="debug-loop">Start Loop:</label>
+                <input type="number" id="debug-loop" min="1" value="1">
+            </div>
+            <div class="debug-row">
+                <label for="debug-seed">Cave Seed:</label>
+                <input type="number" id="debug-seed" placeholder="Default">
+            </div>
+            
+            <div class="debug-checkbox-grid">
+                <label class="checkbox-label"><input type="checkbox" id="debug-invincible"> Invincible Mode</label>
+                <label class="checkbox-label"><input type="checkbox" id="debug-maxpower"> Max Power Shot</label>
+                <label class="checkbox-label"><input type="checkbox" id="debug-instantboss"> Instant Boss Mode</label>
+                <label class="checkbox-label"><input type="checkbox" id="debug-bosskill-key"> Boss Kill (K)</label>
+                <label class="checkbox-label"><input type="checkbox" id="debug-gamepad"> Enable Gamepad</label>
+                <label class="checkbox-label"><input type="checkbox" id="debug-fps"> Show FPS</label>
+            </div>
+            
+            <div class="debug-group-actions">
+                <span id="debug-score-warning" class="debug-desc" style="color: #ffaa00; margin-right: auto; display: none;">⚠️ SCORE RECORDING DISABLED</span>
+                <button id="debug-reset-btn" class="debug-btn debug-reset-btn debug-btn-small">RESET</button>
+            </div>
+        </div>
+
+
+        <!-- フッター -->
+        <div class="debug-footer">
+            <button id="debug-close-btn" class="debug-btn">CLOSE</button>
+        </div>
+    </div>
+
+    <!-- FPS表示用カウンター -->
+    <div id="fps-counter" style="position: absolute; left: 15px; bottom: 15px; color: #ffffff; font-size: 13px; font-family: Outfit, monospace; z-index: 999; pointer-events: none; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);" class="hidden"></div>
+
+    <!-- ランキングモーダル -->
+    <div id="ranking-modal" class="modal-overlay hidden">
+        <div class="modal-content ranking-modal-content">
+            <div class="ranking-header">
+                <h2>TOP 10 RANKING</h2>
+                <button id="ranking-clear-btn" class="debug-btn debug-danger-btn debug-btn-small" style="margin:0;">CLEAR DATA</button>
+            </div>
+            <table class="ranking-table">
+                <thead>
+                    <tr>
+                        <th style="width: 10%;">RANK</th>
+                        <th style="width: 20%;">SCORE</th>
+                        <th style="width: 20%;">NAME</th>
+                        <th style="width: 12%;">LOOP</th>
+                        <th style="width: 13%;">STAGE</th>
+                        <th style="width: 25%;">DATE</th>
+                    </tr>
+                </thead>
+                <tbody id="ranking-tbody">
+                    <!-- JSで動的に追加される -->
+                </tbody>
+            </table>
+            <div class="modal-actions" style="margin-top:20px; text-align:center;">
+                <button id="ranking-close-btn" class="debug-btn" style="min-width: 150px;">CLOSE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 汎用確認モーダル -->
+    <div id="confirm-modal" class="modal-overlay hidden" style="z-index: 3000;">
+        <div class="modal-content confirm-modal-content">
+            <div id="confirm-message" class="confirm-message">Are you sure?</div>
+            <div class="modal-actions" style="display: flex; gap: 20px; justify-content: center; margin-top: 30px;">
+                <button id="confirm-yes-btn" class="debug-btn debug-danger-btn" style="min-width: 120px; margin: 0;">YES</button>
+                <button id="confirm-no-btn" class="debug-btn" style="min-width: 120px; margin: 0;">NO</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JSファイルの読み込み (依存順) -->
+    <script src="js/audioData.js"></script>
+    <script src="js/audioManager.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/caveGenerator.js"></script>
+    <script src="js/inputManager.js"></script>
+    <script src="js/cameraController.js"></script>
+    <script src="js/objectPool.js"></script>
+    <script src="js/renderer.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/bullet.js"></script>
+    <script src="js/enemy.js"></script>
+    <script src="js/enemySpawner.js"></script>
+    <script src="js/item.js"></script>
+    <script src="js/effect.js"></script>
+    <script src="js/stageManager.js"></script>
+    <script src="js/obstacle.js"></script>
+    <script src="js/boss.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

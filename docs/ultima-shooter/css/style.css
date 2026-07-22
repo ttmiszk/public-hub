@@ -1,0 +1,1300 @@
+:root {
+    --copyright: "© 2026 Ultima Architect Inc.";
+    --version: "0.1.0";
+}
+
+/* リセットスタイルと基本設定 */
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #000;
+    font-family: 'Outfit', sans-serif;
+    color: #fff;
+    user-select: none;
+    
+    /* ブラウザのオーバースクロール・バウンス挙動を防止 (スクロール限界時のフォーカス乱れによるキー切断対策) */
+    overscroll-behavior: none;
+    /* モバイルブラウザでの不要なジェスチャーやスクロール動作を抑止 */
+    touch-action: none;
+}
+
+#game-container {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+}
+
+#ui-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    pointer-events: none; /* 下のキャンバスのクリックを邪魔しない */
+}
+
+/* UIオーバーレイ共通 */
+.ui-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(circle, rgba(10, 10, 25, 0.2) 0%, rgba(5, 5, 12, 0.8) 100%);
+    pointer-events: auto; /* UI上のインタラクションを可能に */
+    transition: opacity 0.6s ease-out;
+    opacity: 1;
+}
+
+/* フェードアウト用 */
+.ui-overlay.fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* タイトルロゴ */
+.title-logo {
+    font-size: 5rem;
+    font-weight: 900;
+    letter-spacing: 0.5rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #00f0ff 0%, #ff00ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 30px rgba(0, 240, 255, 0.5);
+    animation: titleGlow 4s ease-in-out infinite alternate;
+}
+
+/* タイトル画面のバージョン表示 */
+.title-version {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.2rem;
+    color: #88c0d0;
+    margin-bottom: 2.5rem;
+    text-shadow: 0 0 10px rgba(136, 192, 208, 0.5);
+}
+
+.title-version::before {
+    content: "v" var(--version);
+}
+
+/* タイトル画面フッター表示 */
+.title-footer {
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+}
+
+.title-copyright {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
+    letter-spacing: 0.1rem;
+}
+
+.title-copyright::after {
+    content: var(--copyright);
+}
+
+.title-footer .debug-btn {
+    position: absolute;
+    right: 20px;
+    pointer-events: auto;
+}
+
+/* タイトル画面用ハイスコア表示 */
+.title-highscore {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.3rem;
+    margin-bottom: 3rem;
+    color: #ffd700;
+    text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    justify-content: center;
+}
+.title-highscore span {
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+    font-weight: 900;
+}
+.title-highscore-detail {
+    font-size: 0.9rem;
+    font-weight: normal;
+    color: #88c0d0;
+    text-shadow: none;
+    letter-spacing: 0.1rem;
+    margin-left: 0.5rem;
+    opacity: 0.8;
+}
+
+/* スタート促しテキスト */
+.press-start {
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: 0.2rem;
+    color: #00ff88;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.6);
+}
+
+/* ポーズ・ゲームオーバー用ダイアログボックス (グラスモルフィズム) */
+.glass-panel {
+    background: rgba(10, 15, 30, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 40px 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.7);
+    text-align: center;
+}
+
+.panel-title {
+    font-size: 3.5rem;
+    font-weight: 900;
+    letter-spacing: 0.3rem;
+    margin-bottom: 1.5rem;
+}
+
+.panel-title.gameover {
+    color: #ff3344;
+    text-shadow: 0 0 20px rgba(255, 51, 68, 0.4);
+}
+
+.panel-title.pause {
+    color: #00f0ff;
+    text-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+}
+
+.panel-score {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ffd700;
+    margin-bottom: 2rem;
+}
+
+.panel-hint {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #a5b1c2;
+    letter-spacing: 0.1rem;
+}
+
+/* 点滅アニメーション */
+.blinking {
+    animation: blink 1.2s infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.2; }
+}
+
+@keyframes titleGlow {
+    0% {
+        filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.3));
+    }
+    100% {
+        filter: drop-shadow(0 0 25px rgba(255, 0, 255, 0.6));
+    }
+}
+
+/* ゲーム内 HUD */
+.game-hud {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #00ff88;
+    text-shadow: 0 0 5px rgba(0, 255, 136, 0.4);
+    background: rgba(10, 15, 30, 0.6);
+    padding: 15px 25px;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 255, 136, 0.3);
+    backdrop-filter: blur(5px);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+}
+
+.hud-item {
+    display: flex;
+    justify-content: space-between;
+    width: 200px;
+}
+
+.hud-value {
+    color: #fff;
+    text-shadow: none;
+    display: inline-block;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.2s ease-out, text-shadow 0.2s ease-out;
+}
+
+/* HUD値のアイテム獲得時フラッシュハイライト */
+.hud-flash-score {
+    color: #ffd700 !important; 
+    text-shadow: 0 0 15px #ffd700 !important;
+    transform: scale(1.22);
+}
+
+.hud-flash-life {
+    color: #00ff66 !important; 
+    text-shadow: 0 0 15px #00ff66 !important;
+    transform: scale(1.22);
+}
+
+.hud-flash-power {
+    color: #ff00ff !important; 
+    text-shadow: 0 0 15px #ff00ff !important;
+    transform: scale(1.28);
+}
+
+.hud-flash-ammo {
+    color: #00d2d3 !important; 
+    text-shadow: 0 0 15px #00d2d3 !important;
+    transform: scale(1.22);
+}
+
+/* ボス出現時のHUD
+   ※ ui-container の innerHTML 書き換えに巻き込まれないよう
+      ui-container の外に独立配置し、クラスだけで表示/非表示を切り替える */
+.boss-hud {
+    position: fixed;   /* ui-container の外にあるため fixed で画面基準に */
+    z-index: 10;       /* ui-container と同じ z-index */
+    box-sizing: border-box; /* width にパディングを含める（calc 計算を正確にするため） */
+    font-family: 'Outfit', sans-serif;
+    background: rgba(10, 5, 20, 0.75);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 0, 85, 0.45);
+    box-shadow: 0 0 24px rgba(255, 0, 85, 0.25);
+    backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    /* 入場時: 画面上部中央に大きく */
+    top: 20px;
+    left: 50%;
+    width: 60%;
+    max-width: 600px;
+    padding: 15px 25px;
+    transform: translateX(-50%);
+    opacity: 1;
+    pointer-events: none;
+    /* フェーズ切り替えに使うプロパティをすべて transition 対象に */
+    transition:
+        top      0.65s cubic-bezier(0.4, 0, 0.2, 1),
+        left     0.65s cubic-bezier(0.4, 0, 0.2, 1),
+        width    0.65s cubic-bezier(0.4, 0, 0.2, 1),
+        max-width 0.65s cubic-bezier(0.4, 0, 0.2, 1),
+        padding  0.65s cubic-bezier(0.4, 0, 0.2, 1),
+        transform 0.65s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity  0.5s ease-out;
+}
+
+/* 非表示（初期状態） */
+.boss-hud.boss-hud--hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* 右上HUDへ移動した後の状態
+   ※ left:auto は CSS が transition できないため、
+      right:20px 相当の位置を left:calc() で表現する。
+      250px(幅) + 20px(右余白) = 270px */
+.boss-hud.boss-hud--docked {
+    top: 20px;
+    left: calc(100% - 270px);
+    width: 250px;
+    max-width: 250px;
+    padding: 12px 18px;
+    transform: translateX(0);
+}
+
+/* フェードアウト退場 */
+.boss-hud.boss-hud--hide {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.boss-name {
+    font-size: 1.2rem;
+    font-weight: 900;
+    color: #ff0055;
+    letter-spacing: 0.12rem;
+    text-shadow: 0 0 10px rgba(255, 0, 85, 0.6);
+    /* 右上移動後はフォントを少し小さく */
+    transition: font-size 0.65s cubic-bezier(0.4, 0, 0.2, 1),
+                letter-spacing 0.65s;
+    white-space: nowrap;
+}
+
+.boss-hud--docked .boss-name {
+    font-size: 0.85rem;
+    letter-spacing: 0.08rem;
+}
+
+.boss-hp-container {
+    width: 100%;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: height 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.boss-hud--docked .boss-hp-container {
+    height: 9px;
+}
+
+.boss-hp-bar {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, #ff0055 0%, #ff5500 100%);
+    box-shadow: 0 0 10px rgba(255, 0, 85, 0.8);
+    transition: width 0.15s ease-out;
+}
+
+/* ステージ開始タイトル表示 */
+.stage-start-title {
+    font-size: 3rem;
+    font-weight: 900;
+    letter-spacing: 0.4rem;
+    color: #00f0ff;
+    text-shadow: 0 0 25px rgba(0, 240, 255, 0.6);
+    animation: stageTitleAnim 3s forwards;
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    top: 35%;
+}
+
+@keyframes stageTitleAnim {
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+        filter: blur(10px);
+    }
+    15% {
+        transform: scale(1);
+        opacity: 1;
+        filter: blur(0px);
+    }
+    85% {
+        transform: scale(1);
+        opacity: 1;
+        filter: blur(0px);
+    }
+    100% {
+        transform: scale(1.2);
+        opacity: 0;
+        filter: blur(15px);
+    }
+}
+
+/* ステージクリア・リザルト演出用 */
+.clear-text {
+    font-size: 4rem;
+    font-weight: 900;
+    letter-spacing: 0.5rem;
+    background: linear-gradient(135deg, #00ff88 0%, #00f0ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 35px rgba(0, 255, 136, 0.5);
+    margin-bottom: 2rem;
+    animation: titleGlow 3s ease-in-out infinite alternate;
+}
+
+.screen-fade {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000;
+    opacity: 0;
+    z-index: 100;
+    pointer-events: none;
+    transition: opacity 1.0s ease-in-out;
+}
+
+.screen-fade.active {
+    opacity: 1;
+}
+
+/* リザルトパネルのリスト */
+.result-list {
+    margin-top: 15px;
+    margin-bottom: 25px;
+    text-align: left;
+    font-size: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.result-item {
+    display: flex;
+    justify-content: space-between;
+    width: 280px;
+}
+
+/* デバッグパネル */
+.debug-menu {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 380px;
+    background: rgba(5, 10, 20, 0.95);
+    border: 2px solid #00ff88;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 0 35px rgba(0, 255, 136, 0.5);
+    z-index: 1000;
+    pointer-events: auto;
+    font-family: 'Outfit', sans-serif;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: opacity 0.3s ease-out;
+}
+
+.debug-menu.hidden {
+    display: none !important;
+}
+
+.debug-menu h3 {
+    margin: 0 0 5px 0;
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #00ff88;
+    text-align: center;
+    letter-spacing: 0.15rem;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+    border-bottom: 1px solid rgba(0, 255, 136, 0.3);
+    padding-bottom: 10px;
+}
+
+.debug-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.debug-row label {
+    color: #a5b1c2;
+}
+
+.debug-row select, .debug-row input[type="number"] {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(0, 255, 136, 0.5);
+    border-radius: 4px;
+    color: #fff;
+    padding: 5px 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    width: 180px;
+    box-sizing: border-box;
+}
+
+.debug-row input[type="number"] {
+    text-align: right;
+}
+
+.debug-row select:focus, .debug-row input[type="number"]:focus {
+    border-color: #00ff88;
+    box-shadow: 0 0 8px rgba(0, 255, 136, 0.6);
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    width: 100%;
+}
+
+.checkbox-label input[type="checkbox"] {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 1px solid rgba(0, 255, 136, 0.5);
+    border-radius: 3px;
+    outline: none;
+    background-color: rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    position: relative;
+}
+
+.checkbox-label input[type="checkbox"]:focus {
+    border-color: #00ff88;
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.8);
+}
+
+.checkbox-label input[type="checkbox"]:checked {
+    background-color: #00ff88;
+    border-color: #00ff88;
+}
+
+.checkbox-label input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    top: -2px;
+    left: 2px;
+    font-size: 11px;
+    color: #000;
+    font-weight: 900;
+}
+
+.debug-btn {
+    background: linear-gradient(135deg, #00ff88 0%, #00aaff 100%);
+    border: none;
+    border-radius: 6px;
+    color: #000;
+    font-weight: 900;
+    padding: 10px;
+    cursor: pointer;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 0.1rem;
+    transition: transform 0.1s ease, filter 0.2s;
+    margin-top: 10px;
+    outline: none;
+}
+
+.debug-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.debug-actions .debug-btn {
+    flex: 1;
+    margin-top: 0;
+}
+
+.debug-reset-btn {
+    background: linear-gradient(135deg, #ff5e62 0%, #ff9966 100%);
+    color: #fff;
+}
+
+.debug-reset-btn:focus {
+    outline: 2px solid #ff5e62;
+    box-shadow: 0 0 12px rgba(255, 94, 98, 0.6);
+}
+
+.debug-btn:hover {
+    filter: brightness(1.1);
+}
+
+.debug-btn:focus {
+    outline: 2px solid #00ff88;
+    box-shadow: 0 0 12px rgba(0, 255, 136, 0.6);
+}
+
+.debug-btn:active {
+    transform: scale(0.97);
+}
+
+.debug-group {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.debug-checkbox-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+.debug-group-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 15px;
+}
+
+.debug-data-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 15px;
+}
+
+.debug-desc {
+    font-size: 0.8rem;
+    color: #aaa;
+}
+
+.debug-btn-small {
+    font-size: 0.8rem;
+    padding: 5px 10px;
+    height: auto;
+}
+
+.debug-danger-btn {
+    background: linear-gradient(135deg, #aa2222 0%, #ff4444 100%);
+    color: #fff;
+}
+
+.debug-danger-btn:focus {
+    outline: 2px solid #ff4444;
+    box-shadow: 0 0 12px rgba(255, 68, 68, 0.6);
+}
+
+.debug-footer {
+    display: flex;
+    justify-content: center;
+    margin-top: 0;
+}
+.debug-footer .debug-btn {
+    min-width: 150px;
+}
+
+/* ポーズ画面ボタン */
+.pause-btn {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(0, 255, 136, 0.5);
+    border-radius: 6px;
+    color: #fff;
+    font-weight: 700;
+    padding: 12px;
+    cursor: pointer;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 0.1rem;
+    transition: all 0.2s;
+    outline: none;
+    width: 100%;
+}
+
+.pause-btn:hover, .pause-btn:focus {
+    border-color: #00ff88;
+    background: rgba(0, 255, 136, 0.1);
+    box-shadow: 0 0 12px rgba(0, 255, 136, 0.4);
+    color: #00ff88;
+}
+
+.pause-btn:active {
+    transform: scale(0.98);
+}
+
+/* ゲームオーバー画面ボタン */
+.gameover-btn {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 51, 68, 0.5);
+    border-radius: 6px;
+    color: #fff;
+    font-weight: 700;
+    padding: 12px;
+    cursor: pointer;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 0.1rem;
+    transition: all 0.2s;
+    outline: none;
+    width: 100%;
+}
+
+.gameover-btn:hover, .gameover-btn:focus {
+    border-color: #ff3344;
+    background: rgba(255, 51, 68, 0.15);
+    box-shadow: 0 0 12px rgba(255, 51, 68, 0.4);
+    color: #ff3344;
+}
+
+.gameover-btn:active {
+    transform: scale(0.98);
+}
+
+/* タイトル画面の下部にある開発メニュー操作ヒント */
+.debug-hint {
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.3);
+    letter-spacing: 0.05rem;
+}
+
+/* ゲームパッド切り替えボタン */
+.gamepad-toggle-container {
+    margin-top: 1.8rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #a5b1c2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    z-index: 100;
+    pointer-events: auto; /* クリック可能にする */
+}
+
+.gamepad-toggle-btn {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 900;
+    font-size: 0.85rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    outline: none;
+    pointer-events: auto;
+}
+
+.gamepad-toggle-btn.btn-active {
+    background: rgba(0, 255, 136, 0.2);
+    color: #00ff88;
+    border-color: #00ff88;
+    box-shadow: 0 0 12px rgba(0, 255, 136, 0.3);
+}
+
+.gamepad-toggle-btn.btn-inactive {
+    background: rgba(255, 51, 68, 0.2);
+    color: #ff3344;
+    border-color: #ff3344;
+    box-shadow: 0 0 12px rgba(255, 51, 68, 0.3);
+}
+
+.gamepad-toggle-btn:hover {
+    transform: scale(1.05);
+}
+
+/* 弾切れ警告表示 */
+.no-ammo-warning {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 3rem;
+    font-weight: 900;
+    letter-spacing: 0.2rem;
+    color: #ff3344;
+    text-shadow: 0 0 20px rgba(255, 51, 68, 0.8);
+    pointer-events: none;
+    z-index: 999;
+    animation: noAmmoAnim 1.0s forwards;
+    font-family: 'Outfit', sans-serif;
+}
+
+@keyframes noAmmoAnim {
+    0% {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 1;
+    }
+    12% {
+        transform: translate(-50%, -50%) scale(1.15);
+        opacity: 1;
+        filter: brightness(1.2);
+    }
+    80% {
+        transform: translate(-50%, -50%) scale(1.0);
+        opacity: 0.8;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(0.9);
+        opacity: 0;
+        filter: blur(5px);
+    }
+}
+
+/* --- HUD ゲージ用スタイル --- */
+.hud-item.bar-type {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    width: 200px;
+}
+
+.hud-label-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.0rem;
+    font-weight: 700;
+}
+
+.hud-bar-bg {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.hud-bar-fill {
+    height: 100%;
+    width: 100%;
+    transition: width 0.15s ease-out; /* カウントアップ回復アニメーション用 */
+}
+
+.hud-bar-fill.life {
+    background: linear-gradient(90deg, #00ff66 0%, #00ffaa 100%);
+    box-shadow: 0 0 8px rgba(0, 255, 102, 0.6);
+}
+
+.hud-bar-fill.ammo {
+    background: linear-gradient(90deg, #00d2d3 0%, #00a8ff 100%);
+    box-shadow: 0 0 8px rgba(0, 210, 211, 0.6);
+}
+
+/* --- ステージクリアリザルト演出用スタイル --- */
+.clear-result-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(5, 5, 12, 0.55);
+    z-index: 100;
+    opacity: 1;
+    transition: opacity 0.6s ease-out;
+    pointer-events: auto;
+}
+
+.clear-result-overlay.fade-out {
+    opacity: 0;
+}
+
+.clear-result-panel {
+    background: rgba(10, 20, 35, 0.85);
+    border: 2px solid rgba(0, 240, 255, 0.4);
+    border-radius: 16px;
+    padding: 35px 50px;
+    min-width: 380px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 0 35px rgba(0, 240, 255, 0.25), inset 0 0 15px rgba(255, 255, 255, 0.05);
+    text-align: center;
+    animation: clearPanelIntro 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes clearPanelIntro {
+    0% {
+        transform: scale(0.7);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.panel-header {
+    font-size: 2.8rem;
+    font-weight: 900;
+    letter-spacing: 0.3rem;
+    background: linear-gradient(135deg, #00ff88 0%, #00f0ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+    margin-bottom: 5px;
+    font-family: 'Outfit', sans-serif;
+}
+
+.panel-stage-name {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #a5b1c2;
+    letter-spacing: 0.15rem;
+    margin-bottom: 25px;
+}
+
+.result-row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #cbd5e1;
+}
+
+.result-row.total {
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    padding-top: 15px;
+    margin-top: 5px;
+    font-size: 1.35rem;
+}
+
+.val-green {
+    color: #00ff88;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.4);
+}
+
+.val-cyan {
+    color: #00d2d3;
+    text-shadow: 0 0 10px rgba(0, 210, 211, 0.4);
+}
+
+.val-gold {
+    color: #ffd700;
+    font-size: 1.55rem;
+    font-weight: 900;
+    text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+}
+
+/* ボス登場警告 */
+.boss-warning-flash {
+    font-size: 3.5rem;
+    font-weight: 900;
+    letter-spacing: 0.5rem;
+    color: #ff3333;
+    text-shadow: 0 0 25px rgba(255, 51, 51, 0.85);
+    pointer-events: none;
+    position: absolute;
+    top: 35%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20; /* 最前面に表示 */
+    text-align: center;
+    line-height: 4.5rem;
+    display: none;
+}
+
+.boss-warning-flash.active {
+    display: block;
+    animation: bossWarningAnim 3.5s forwards, bossWarningBlink 0.4s infinite alternate;
+}
+
+@keyframes bossWarningAnim {
+    0% {
+        transform: translateX(-50%) scale(0.8);
+        opacity: 0;
+        filter: blur(10px);
+    }
+    10% {
+        transform: translateX(-50%) scale(1);
+        opacity: 1;
+        filter: blur(0px);
+    }
+    90% {
+        transform: translateX(-50%) scale(1.05);
+        opacity: 1;
+        filter: blur(0px);
+    }
+    100% {
+        transform: translateX(-50%) scale(1.2);
+        opacity: 0;
+        filter: blur(5px);
+    }
+}
+
+@keyframes bossWarningBlink {
+    0% {
+        opacity: 0.35;
+    }
+    100% {
+        opacity: 1.0;
+    }
+}
+
+/* ランキングモーダル用 */
+.ranking-modal-content {
+    width: 650px;
+    max-width: 95%;
+}
+.ranking-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid rgba(0, 255, 136, 0.5);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+.ranking-header h2 {
+    margin: 0;
+    color: #00ff88;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+}
+.ranking-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 1rem;
+    text-align: left;
+}
+.ranking-table th {
+    color: #a5b1c2;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    font-weight: 700;
+}
+.ranking-table td {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-family: 'Outfit', monospace;
+}
+.ranking-table tr:nth-child(1) { color: #ffd700; font-weight: bold; text-shadow: 0 0 8px rgba(255, 215, 0, 0.5); }
+.ranking-no-data {
+    text-align: center;
+    padding: 30px;
+    color: #a5b1c2;
+    font-size: 1.2rem;
+}
+
+/* タイトル画面ボタン */
+.title-buttons {
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    position: relative;
+    z-index: 100;
+    pointer-events: auto;
+}
+.title-btn {
+    background: rgba(0, 0, 0, 0.6);
+    border: 2px solid #00ff88;
+    border-radius: 30px;
+    color: #00ff88;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 900;
+    padding: 12px 40px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.2) inset, 0 0 15px rgba(0, 255, 136, 0.2);
+    width: 280px;
+    letter-spacing: 0.2rem;
+}
+.title-btn:hover, .title-btn:focus, .title-btn.focused {
+    background: rgba(0, 255, 136, 0.15);
+    color: #00ff88;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.6) inset, 0 0 20px rgba(0, 255, 136, 0.6);
+    outline: none;
+    transform: scale(1.05);
+}
+
+/* ゲームオーバー時の名前入力 */
+.highscore-name-input-container {
+    margin-top: 25px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    background: rgba(0, 255, 136, 0.1);
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 255, 136, 0.3);
+}
+.highscore-congrats {
+    color: #ffd700;
+    font-size: 1.4rem;
+    font-weight: bold;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+    margin-bottom: 5px;
+}
+.highscore-name-input {
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid #00ff88;
+    border-radius: 5px;
+    color: #fff;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.5rem;
+    padding: 10px;
+    text-align: center;
+    width: 250px;
+    outline: none;
+    text-transform: uppercase;
+}
+.highscore-name-input:focus {
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.6);
+}
+.highscore-submit-btn {
+    background: #00ff88;
+    border: none;
+    border-radius: 5px;
+    color: #000;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 900;
+    padding: 12px 30px;
+    cursor: pointer;
+    width: 250px;
+    transition: all 0.2s ease;
+}
+.highscore-submit-btn:hover, .highscore-submit-btn:focus, .highscore-submit-btn.focused {
+    background: #fff;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+    outline: none;
+}
+
+/* ランキングモーダル */
+.modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: auto;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.modal-overlay.hidden {
+    display: none !important;
+}
+
+.ranking-modal-content {
+    background: rgba(5, 10, 20, 0.95);
+    border: 2px solid #00ff88;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 0 35px rgba(0, 255, 136, 0.5);
+    color: #fff;
+    font-family: 'Outfit', sans-serif;
+    width: 900px;
+    max-width: 95vw;
+}
+
+.ranking-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid rgba(0, 255, 136, 0.3);
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.ranking-header h2 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 900;
+    color: #00ff88;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+}
+
+.ranking-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.ranking-table th {
+    color: #a5b1c2;
+    font-size: 1rem;
+    font-weight: 700;
+    border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+    padding: 8px 10px;
+}
+
+.ranking-table td {
+    padding: 10px;
+    font-size: 1.2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-variant-numeric: tabular-nums;
+}
+
+.ranking-score {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 1px;
+}
+
+.ranking-loop, .ranking-stage, .ranking-date {
+    font-variant-numeric: tabular-nums;
+}
+
+.ranking-table th:nth-child(1),
+.ranking-table th:nth-child(4),
+.ranking-table th:nth-child(5),
+.ranking-num,
+.ranking-loop,
+.ranking-stage {
+    text-align: center;
+}
+
+.ranking-date {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 1rem;
+}
+
+.ranking-table tr:nth-child(1) td {
+    color: #ffd700;
+    font-weight: 900;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.ranking-no-data {
+    text-align: center;
+    padding: 30px !important;
+    color: #a5b1c2;
+    font-style: italic;
+}
+
+/* 汎用確認モーダル */
+.confirm-modal-content {
+    background: rgba(15, 5, 5, 0.95);
+    border: 2px solid #ff3344;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 0 35px rgba(255, 51, 68, 0.5);
+    color: #fff;
+    font-family: 'Outfit', sans-serif;
+    width: 400px;
+    max-width: 90%;
+    text-align: center;
+}
+
+.confirm-message {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #ffcccc;
+    margin-bottom: 25px;
+    text-shadow: 0 0 10px rgba(255, 51, 68, 0.5);
+}
