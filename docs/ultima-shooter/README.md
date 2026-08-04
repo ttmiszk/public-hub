@@ -1,4 +1,4 @@
-# Ultima Shooter (v0.1.0)
+# Ultima Shooter (v0.1.1)
 
 Webブラウザ上で動作する、Three.js を用いた 3D縦スクロールシューティングゲームです。
 
