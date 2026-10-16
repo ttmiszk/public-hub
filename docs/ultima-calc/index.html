@@ -1,0 +1,2306 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>Ultima Calc — Professional Calculator</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 88 126'%3E%3Crect x='3' y='4' width='82' height='118' rx='18' fill='%23101720' stroke='%2352657b' stroke-width='2.5'/%3E%3Crect x='11' y='12' width='66' height='28' rx='6' fill='%23394452'/%3E%3Ccircle cx='19' cy='57' r='8' fill='%23d5dbe3'/%3E%3Ccircle cx='44' cy='57' r='8' fill='%23d5dbe3'/%3E%3Ccircle cx='69' cy='57' r='8' fill='%23f6a623'/%3E%3Ccircle cx='19' cy='82' r='8' fill='%23d5dbe3'/%3E%3Ccircle cx='44' cy='82' r='8' fill='%23d5dbe3'/%3E%3Ccircle cx='69' cy='82' r='8' fill='%23f6a623'/%3E%3Crect x='11' y='99' width='41' height='16' rx='8' fill='%23d5dbe3'/%3E%3Ccircle cx='69' cy='107' r='8' fill='%23f6a623'/%3E%3C/svg%3E">
+<link rel="alternate icon" href="favicon.ico">
+<style>
+/* ==========================================================================
+   CSS変数（カラー・シャドウ・テーマ設定）
+   ========================================================================== */
+:root {
+  font-family: Inter,"Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif;
+  color-scheme: dark;
+  --bg: #0b0f17;
+  --panel: #111825;
+  --panel2: #151f2e;
+  --ink: #edf3ff;
+  --muted: #8996aa;
+  --line: #233047;
+  --accent: #78a9ff;
+  --accent2: #a7c6ff;
+  --key: #141e2b;
+  --key-hi: #1d2a3d;
+  --shadow: 8px 8px 18px #070a10,-5px -5px 14px #121a28;
+  --inset: inset 3px 3px 7px #080d15,inset -3px -3px 7px #172235;
+  --danger: #ff8290;
+  --good: #81dfb2;
+  --radius: 20px;
+}
+
+
+/* ==========================================================================
+   レスポンシブ・アクセシビリティ設定
+   ========================================================================== */
+@media(max-width:900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .side-column {
+    grid-template-columns: 1fr;
+  }
+
+  .history-panel {
+    min-height: 0;
+  }
+
+  .history-list {
+    max-height: 300px;
+  }
+
+}
+
+@media(max-width:520px) {
+  .app {
+    padding: 16px 11px 25px;
+  }
+
+  .topbar {
+    margin-bottom: 16px;
+  }
+
+  .brand h1 {
+    font-size: 18px;
+  }
+
+  .brand p {
+    font-size: 10px;
+  }
+
+  .calculator {
+    padding: 13px;
+  }
+
+  .display {
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  .keypad {
+    gap: 6px;
+  }
+
+  .key {
+    height: 48px;
+    border-radius: 11px;
+    font-size: 14px;
+  }
+
+  .key.subtle {
+    font-size: 11px;
+  }
+
+  .toolbar {
+    align-items: flex-start;
+  }
+
+  .memory-strip {
+    gap: 5px;
+  }
+
+  .memory-btn {
+    padding: 0 8px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tools-panel {
+    padding: 16px;
+  }
+
+  .tool-tabs {
+    gap: 6px;
+  }
+
+  .tab-btn {
+    padding: 0 10px;
+  }
+
+  .history-panel {
+    padding: 15px;
+  }
+
+}
+
+@media(prefers-reduced-motion:reduce) {
+  *,*::before,*::after {
+    transition: none!important;
+    scroll-behavior: auto!important;
+  }
+
+}
+
+
+/* ==========================================================================
+   ベース・リセットスタイル
+   ========================================================================== */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(ellipse at 20% 0%,#17243a 0,transparent 44%),var(--bg);
+  color: var(--ink);
+  transition: background .2s,color .2s;
+}
+
+body.light {
+  color-scheme: light;
+  --bg: #e8edf5;
+  --panel: #eef2f8;
+  --panel2: #e9eff8;
+  --ink: #172235;
+  --muted: #66758b;
+  --line: #d3dcea;
+  --accent: #356ed0;
+  --accent2: #245dbf;
+  --key: #edf2f9;
+  --key-hi: #fff;
+  --shadow: 8px 8px 18px #c7cfdd,-6px -6px 16px #fff;
+  --inset: inset 3px 3px 7px #d0d8e5,inset -3px -3px 7px #fff;
+  --danger: #bf4050;
+  background: radial-gradient(ellipse at 20% 0%,#fff 0,transparent 44%),var(--bg);
+}
+
+button,input,select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+
+/* ==========================================================================
+   レイアウト・ヘッダー（トップバー）
+   ========================================================================== */
+.app {
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 28px clamp(14px,3vw,40px) 36px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 0 0 auto;
+}
+
+.logo {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+}
+
+.brand h1 {
+  font-size: 20px;
+  letter-spacing: .02em;
+  margin: 0;
+}
+
+.brand p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.top-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.icon-btn,.tab-btn,.soft-btn {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  border-radius: 12px;
+  min-height: 42px;
+  padding: 0 14px;
+  color: var(--ink);
+}
+
+.icon-btn {
+  width: 44px;
+  padding: 0;
+  font-size: 18px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0,1.5fr) minmax(300px,.8fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid color-mix(in srgb,var(--line),transparent 18%);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.calculator {
+  padding: 22px;
+}
+
+
+/* ==========================================================================
+   ディスプレイ表示部
+   ========================================================================== */
+.display {
+  background: var(--panel2);
+  box-shadow: var(--inset);
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  padding: 16px 18px 18px;
+  margin-bottom: 16px;
+}
+
+.display-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 12px;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.status-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.pill {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 9px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.expression {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-family: ui-monospace,SFMono-Regular,Consolas,monospace;
+  font-size: clamp(20px,3vw,30px);
+  min-height: 44px;
+  color: var(--ink);
+  text-align: right;
+}
+
+.expression::placeholder {
+  color: var(--muted);
+  opacity: .6;
+}
+
+.result-row {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 42px;
+}
+
+.result {
+  font-size: clamp(25px,4vw,38px);
+  line-height: 1.15;
+  font-weight: 650;
+  letter-spacing: -.03em;
+  overflow-wrap: anywhere;
+  text-align: right;
+  flex: 1;
+}
+
+.result.error {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--danger);
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 13px;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mode-toggle {
+  display: flex;
+  background: var(--panel2);
+  box-shadow: var(--inset);
+  border-radius: 10px;
+  padding: 3px;
+}
+
+.mode-toggle button {
+  border: 0;
+  background: transparent;
+  border-radius: 8px;
+  color: var(--muted);
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.mode-toggle button.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 3px 10px #0002;
+}
+
+.small-label {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+
+/* ==========================================================================
+   電卓キーパッド・メモリー・科学計算キー
+   ========================================================================== */
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(6,minmax(0,1fr));
+  gap: 9px;
+}
+
+.key {
+  height: 54px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--key);
+  box-shadow: var(--shadow);
+  font-weight: 550;
+  transition: transform .12s,background .12s,border-color .12s;
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.key:hover,.soft-btn:hover,.icon-btn:hover {
+  background: var(--key-hi);
+  border-color: color-mix(in srgb,var(--accent),var(--line) 65%);
+}
+
+.key:active,.soft-btn:active,.icon-btn:active {
+  transform: translateY(1px);
+  box-shadow: var(--inset);
+}
+
+.key.subtle {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.key.operator {
+  color: var(--accent2);
+  font-size: 19px;
+}
+
+.key.accent {
+  background: linear-gradient(145deg,#6a9bf0,#4c78d0);
+  color: #fff;
+  border-color: #79a7fa;
+  font-size: 19px;
+  box-shadow: 0 7px 16px #376ec655;
+}
+
+.key.danger {
+  color: var(--danger);
+}
+
+.key.wide {
+  grid-column: span 2;
+}
+
+.memory-strip {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0 0 14px;
+  flex-wrap: wrap;
+}
+
+.memory-label {
+  font-size: 11px;
+  color: var(--muted);
+  margin-right: auto;
+}
+
+.memory-btn {
+  height: 33px;
+  padding: 0 11px;
+  font-size: 12px;
+  border-radius: 9px;
+}
+
+
+/* ==========================================================================
+   サイドカラム・履歴パネル
+   ========================================================================== */
+.side-column {
+  display: grid;
+  gap: 18px;
+}
+
+.history-panel {
+  padding: 18px;
+  min-height: 300px;
+}
+
+.panel-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.panel-heading h2 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.heading-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.text-btn {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  padding: 6px 7px;
+}
+
+.text-btn:hover {
+  color: var(--accent2);
+}
+
+.history-list {
+  display: grid;
+  gap: 8px;
+  max-height: 430px;
+  overflow: auto;
+  padding: 2px 4px 4px 0;
+}
+
+.history-item {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  gap: 5px 8px;
+  align-items: center;
+  border: 1px solid var(--line);
+  background: var(--panel2);
+  border-radius: 12px;
+  padding: 11px 10px;
+}
+
+.history-main {
+  min-width: 0;
+  cursor: pointer;
+}
+
+.history-expr {
+  font: 12px ui-monospace,SFMono-Regular,Consolas,monospace;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-result {
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 5px;
+  overflow-wrap: anywhere;
+}
+
+.history-date {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.history-tools {
+  display: flex;
+  gap: 2px;
+}
+
+.history-tools button {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  padding: 6px;
+  font-size: 14px;
+}
+
+.empty {
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+  padding: 46px 12px;
+}
+
+.tool-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 15px;
+  flex-wrap: wrap;
+}
+
+.tab-btn {
+  font-size: 13px;
+  box-shadow: none;
+}
+
+.tab-btn.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+
+/* ==========================================================================
+   ツールパネル（単位換算・日付計算・進数変換）
+   ========================================================================== */
+.tools-panel {
+  padding: 20px;
+}
+
+.tool-pane[hidden] {
+  display: none;
+}
+
+.tool-pane h2 {
+  font-size: 17px;
+  margin: 0 0 4px;
+}
+
+.tool-pane>p {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0 0 18px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 13px;
+}
+
+.field {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.field label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.field input,.field select {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--panel2);
+  box-shadow: var(--inset);
+  outline: none;
+}
+
+.field input:focus,.field select:focus {
+  border-color: var(--accent);
+}
+
+.tool-output {
+  margin-top: 15px;
+  padding: 13px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel2);
+  min-height: 50px;
+  overflow-wrap: anywhere;
+}
+
+.tool-output strong {
+  color: var(--accent2);
+  font-size: 18px;
+}
+
+.tool-note {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 10px;
+  line-height: 1.6;
+}
+
+.date-options {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.date-options label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.date-output {
+  display: grid;
+  gap: 4px;
+}
+
+.base-grid {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.base-result {
+  padding: 10px;
+  border-radius: 10px;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  min-width: 0;
+}
+
+.base-result span {
+  font-size: 10px;
+  color: var(--muted);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.base-result code {
+  font-size: 14px;
+  word-break: break-all;
+}
+
+
+/* ==========================================================================
+   トースト通知・フッター
+   ========================================================================== */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translate(-50%,14px);
+  opacity: 0;
+  pointer-events: none;
+  background: #202c3e;
+  color: #fff;
+  border: 1px solid #34445d;
+  padding: 11px 16px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px #0005;
+  z-index: 5;
+  transition: .2s;
+  font-size: 13px;
+  max-width: min(92vw,520px);
+  text-align: center;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%,0);
+}
+
+.footer {
+  color: var(--muted);
+  font-size: 11px;
+  text-align: center;
+  margin-top: 18px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+
+body.simple .science-only,body.simple .scientific-keys {
+  display: none!important;
+}
+
+.logo {
+  background: none;
+  box-shadow: none;
+  color: inherit;
+  font-size: 0;
+}
+
+.logo svg {
+  display: block;
+  width: 44px;
+  height: 44px;
+}
+
+.top-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+}
+
+.mode-switch {
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--panel2);
+  box-shadow: var(--inset);
+}
+
+.mode-switch button {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.mode-switch button.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 3px 10px #0002;
+}
+
+.top-toggle {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.top-toggle[aria-pressed="true"] {
+  color: var(--accent2);
+  border-color: var(--accent);
+}
+
+.expression-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.expression-wrap .expression {
+  min-width: 0;
+  flex: 1;
+}
+
+.display-meta {
+  min-height: 30px;
+  flex-wrap: wrap;
+}
+
+.input-tools {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+}
+
+.input-tools span {
+  font-size: 11px;
+}
+
+.input-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--muted);
+  transition: color .12s,border-color .12s,background .12s;
+}
+
+.input-tool:hover {
+  color: var(--accent2);
+  border-color: var(--accent);
+  background: var(--key-hi);
+}
+
+.input-tool svg,.copy-icon {
+  display: block;
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.history-tools .copy-button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+}
+
+.keypad {
+  grid-template-columns: repeat(4,minmax(0,1fr));
+  gap: 9px;
+}
+
+.keypad .key.wide {
+  grid-column: 1/-1;
+}
+
+.scientific-keys {
+  display: grid;
+  grid-template-columns: repeat(6,minmax(0,1fr));
+  gap: 9px;
+  margin: 0 0 13px;
+}
+
+.history-tools .copy-button {
+  padding: 0;
+}
+
+.layout.single-column {
+  grid-template-columns: minmax(0,1fr);
+  max-width: 820px;
+  margin-inline: auto;
+}
+
+.side-column[hidden],.side-column section[hidden] {
+  display: none!important;
+}
+
+.copyright {
+  margin: 26px auto 2px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: .04em;
+  opacity: .72;
+}
+
+@media(max-width:900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .side-column {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+@media(max-width:520px) {
+  .app {
+    padding: 16px 11px 25px;
+  }
+
+  .topbar {
+    margin-bottom: 16px;
+  }
+
+  .top-actions {
+    gap: 6px;
+  }
+
+  .mode-switch button {
+    min-height: 30px;
+    padding: 0 9px;
+    font-size: 11px;
+  }
+
+  .top-toggle {
+    min-height: 36px;
+    padding: 0 9px;
+    font-size: 11px;
+  }
+
+  .brand {
+    gap: 9px;
+  }
+
+  .brand h1 {
+    font-size: 18px;
+  }
+
+  .brand p {
+    font-size: 10px;
+  }
+
+  .logo {
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+  }
+
+  .logo svg {
+    width: 38px;
+    height: 38px;
+  }
+
+  .calculator {
+    padding: 13px;
+  }
+
+  .display {
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  .scientific-keys,.keypad {
+    gap: 6px;
+  }
+
+  .key {
+    height: 48px;
+    border-radius: 11px;
+    font-size: 14px;
+  }
+
+  .key.subtle {
+    font-size: 11px;
+  }
+
+  .memory-strip {
+    gap: 5px;
+  }
+
+  .memory-btn {
+    padding: 0 8px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tools-panel {
+    padding: 16px;
+  }
+
+  .tool-tabs {
+    gap: 6px;
+  }
+
+  .tab-btn {
+    padding: 0 10px;
+  }
+
+  .history-panel {
+    padding: 15px;
+  }
+
+}
+
+</style>
+</head>
+<body class="simple">
+<main class="app">
+  <header class="topbar"><div class="brand"><div class="logo"><svg viewBox="0 0 88 126" role="img" aria-label="Ultima Calc 電卓アイコン"><rect x="3" y="4" width="82" height="118" rx="18" fill="#101720" stroke="#52657b" stroke-width="2.5"/><rect x="11" y="12" width="66" height="28" rx="6" fill="#394452"/><circle cx="19" cy="57" r="8" fill="#d5dbe3"/><circle cx="44" cy="57" r="8" fill="#d5dbe3"/><circle cx="69" cy="57" r="8" fill="#f6a623"/><circle cx="19" cy="82" r="8" fill="#d5dbe3"/><circle cx="44" cy="82" r="8" fill="#d5dbe3"/><circle cx="69" cy="82" r="8" fill="#f6a623"/><rect x="11" y="99" width="41" height="16" rx="8" fill="#d5dbe3"/><circle cx="69" cy="107" r="8" fill="#f6a623"/></svg></div><div><h1>Ultima Calc</h1><p>Precision · Science · Conversion</p></div></div><div class="top-actions"><div class="mode-switch" role="group" aria-label="電卓モード"><button id="standardToggle" class="active" type="button" aria-pressed="true">標準</button><button id="advancedToggle" type="button" aria-pressed="false">拡張</button></div><button class="top-toggle" id="historyToggle" type="button" aria-pressed="false" title="計算履歴の表示・非表示を切り替え">履歴</button><button class="top-toggle" id="toolsToggle" type="button" aria-pressed="false" title="ツールペインの表示・非表示を切り替え">ツール</button><button class="icon-btn" id="themeBtn" type="button" aria-label="テーマを切り替え" title="テーマを切り替え">☼</button></div></header>
+  <div class="layout single-column" id="mainLayout">
+    <section class="panel calculator" aria-label="電卓">
+      <div class="display"><div class="display-meta"><div class="status-group"><span class="pill">ANS <span id="ansDisplay">0</span></span><span class="pill">M <span id="memoryDisplay">0</span></span><span id="statusText">式を入力してください</span></div><div class="input-tools"><button class="input-tool" id="copyResult" type="button" aria-label="計算結果をコピー" title="計算結果をクリップボードにコピー"><svg class="copy-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-2"/><rect x="4" y="8" width="12" height="12" rx="2"/></svg></button><button class="input-tool" id="backBtn" type="button" title="カーソルの前の文字を削除" aria-label="カーソルの前の文字を削除"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 5H9l-7 7 7 7h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg></button><button class="input-tool" id="cursorEnd" type="button" title="カーソルを入力欄の末尾へ移動" aria-label="カーソルを入力欄の末尾へ移動"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h11"/><path d="m11 7 5 5-5 5"/><path d="M20 5v14"/></svg></button></div></div><label class="sr-only" for="expression">数式入力</label><div class="expression-wrap"><input id="expression" class="expression" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="例: 2 + 3 × 4" aria-label="数式入力欄"></div><div class="result-row"><div id="result" class="result" aria-live="polite">0</div></div></div>
+      <div class="memory-strip"><span class="memory-label">MEMORY</span><button class="soft-btn memory-btn" data-memory="MC" type="button" title="メモリーをクリア">MC</button><button class="soft-btn memory-btn" data-memory="MR" type="button" title="メモリーの値を入力">MR</button><button class="soft-btn memory-btn" data-memory="M+" type="button" title="計算結果をメモリーに加算">M+</button><button class="soft-btn memory-btn" data-memory="M-" type="button" title="計算結果をメモリーから減算">M−</button></div>
+      <div class="scientific-keys" id="scientificKeys" aria-label="科学計算キー">
+        <button class="key subtle" data-function="sin" type="button" title="RADでサインを入力">sin</button><button class="key subtle" data-function="cos" type="button" title="RADでコサインを入力">cos</button><button class="key subtle" data-function="tan" type="button" title="RADでタンジェントを入力">tan</button><button class="key subtle" data-function="asin" type="button" title="逆サインをRADで入力">sin⁻¹</button><button class="key subtle" data-function="acos" type="button" title="逆コサインをRADで入力">cos⁻¹</button><button class="key subtle" data-function="atan" type="button" title="逆タンジェントをRADで入力">tan⁻¹</button>
+        <button class="key subtle" data-function="log" type="button" title="常用対数を入力">log</button><button class="key subtle" data-function="ln" type="button" title="自然対数を入力">ln</button><button class="key subtle" data-function="sqrt" type="button" title="平方根を入力">√</button><button class="key subtle" data-function="cbrt" type="button" title="立方根を入力">∛</button><button class="key subtle" data-function="abs" type="button" title="絶対値を入力">abs</button><button class="key subtle" data-insert="!" type="button" title="階乗を入力（0〜170の整数）">n!</button>
+        <button class="key subtle" data-insert="pi" type="button" title="円周率πを入力">π</button><button class="key subtle" data-insert="e" type="button" title="ネイピア数eを入力">e</button><button class="key subtle" data-insert="^" type="button" title="べき乗演算子を入力">xʸ</button><button class="key subtle" data-insert="ANS" type="button" title="前回の計算結果を入力">ANS</button><button class="key subtle" data-function="10^" type="button" title="10のべき乗を入力">10ˣ</button><button class="key subtle" data-function="e^" type="button" title="eのべき乗を入力">eˣ</button>
+      </div>
+      <div class="keypad" id="keypad" aria-label="電卓キー">
+        <button class="key danger" data-action="clear" type="button" title="式と計算結果をすべてクリア">AC</button><button class="key danger" data-action="clear-entry" type="button" title="入力中の数値・項目をクリア">C</button><button class="key subtle" data-pair="()" type="button" title="括弧を挿入して中にカーソルを置く">( )</button><button class="key operator" data-insert="%" type="button" title="整数の剰余を計算">mod</button>
+        <button class="key" data-insert="7" type="button">7</button><button class="key" data-insert="8" type="button">8</button><button class="key" data-insert="9" type="button">9</button><button class="key operator" data-insert="÷" type="button">÷</button>
+        <button class="key" data-insert="4" type="button">4</button><button class="key" data-insert="5" type="button">5</button><button class="key" data-insert="6" type="button">6</button><button class="key operator" data-insert="×" type="button">×</button>
+        <button class="key" data-insert="1" type="button">1</button><button class="key" data-insert="2" type="button">2</button><button class="key" data-insert="3" type="button">3</button><button class="key operator" data-insert="−" type="button">−</button>
+        <button class="key" data-insert="0" type="button">0</button><button class="key" data-insert="00" type="button">00</button><button class="key" data-insert="." type="button">.</button><button class="key operator" data-insert="+" type="button">+</button>
+        <button class="key wide accent" data-action="evaluate" type="button" title="式を計算">計算 =</button>
+      </div>
+      <div class="footer">Enter 計算 · Esc クリア · 四則演算は10進精度を保持</div>
+    </section>
+    <aside class="side-column" id="sideColumn" hidden><section class="panel history-panel" id="historyPanel" hidden><div class="panel-heading"><h2>計算履歴 <span id="historyCount" class="small-label">0 / 100</span></h2><div class="heading-actions"><button class="text-btn" id="copyAllHistory" type="button" title="すべての履歴をコピー">すべてコピー</button><button class="text-btn" id="clearHistory" type="button" title="計算履歴をすべて削除">全削除</button></div></div><div id="historyList" class="history-list"><div class="empty">計算履歴はまだありません</div></div></section>
+      <section class="panel tools-panel" id="toolsPanel" hidden><div class="panel-heading"><h2>ツール</h2></div><nav class="tool-tabs" role="tablist"><button class="tab-btn active" data-tab="unit" type="button" role="tab" aria-selected="true">単位換算</button><button class="tab-btn" data-tab="date" type="button" role="tab" aria-selected="false">日付計算</button><button class="tab-btn" data-tab="base" type="button" role="tab" aria-selected="false">進数変換</button></nav>
+        <section class="tool-pane" id="pane-unit"><h2>単位換算</h2><p>カテゴリ内の単位をすばやく変換します。</p><div class="field"><label for="unitCategory">カテゴリ</label><select id="unitCategory"><option value="length">長さ</option><option value="mass">重さ</option><option value="area">面積</option><option value="volume">体積</option><option value="data">データ容量</option><option value="angle">角度</option></select></div><div class="form-grid" style="margin-top:12px"><div class="field"><label for="unitValue">変換する値</label><input id="unitValue" type="number" step="any" value="1"></div><div class="field"><label for="unitFrom">変換元</label><select id="unitFrom"></select></div><div class="field"><label for="unitTo">変換先</label><select id="unitTo"></select></div></div><div class="tool-output" id="unitOutput" aria-live="polite">—</div><div class="tool-note">KB / MB は10進（1000基準）、KiB / MiB は2進（1024基準）です。角度はrad / degを相互変換できます。</div></section>
+        <section class="tool-pane" id="pane-date" hidden><h2>日付計算</h2><p>日付差または日数の加算・減算を計算します。</p><div class="field"><label for="dateMode">計算方法</label><select id="dateMode"><option value="diff">2つの日付の差</option><option value="add">日付に日数を加算・減算</option></select></div><div id="dateDiffFields"><div class="form-grid" style="margin-top:12px"><div class="field"><label for="dateStart">開始日</label><input id="dateStart" type="date"></div><div class="field"><label for="dateEnd">終了日</label><input id="dateEnd" type="date"></div></div><div class="date-options"><label><input id="inclusive" type="checkbox"> 両端を含める</label><span>前後を問わず日数差を表示</span></div></div><div id="dateAddFields" hidden><div class="form-grid" style="margin-top:12px"><div class="field"><label for="dateBase">基準日</label><input id="dateBase" type="date"></div><div class="field"><label for="dayOffset">加算 / 減算日数</label><input id="dayOffset" type="number" step="1" value="30"></div></div></div><div class="tool-output date-output" id="dateOutput" aria-live="polite">日付を選択してください。</div></section>
+        <section class="tool-pane" id="pane-base" hidden><h2>進数変換</h2><p>符号付きの任意精度整数を相互変換します。</p><div class="form-grid"><div class="field"><label for="baseInput">入力値</label><input id="baseInput" type="text" value="255" spellcheck="false"></div><div class="field"><label for="baseFrom">入力進数</label><select id="baseFrom"><option value="2">2進数</option><option value="8">8進数</option><option value="10" selected>10進数</option><option value="16">16進数</option></select></div></div><div id="baseOutput" class="base-grid" aria-live="polite"></div><div class="tool-note">負数と Number の安全な整数範囲を超える値に対応。小数は対象外です。</div></section>
+      </section></aside>
+  </div>
+  <footer class="copyright">Copyright © 2026 Ultima Archtect Inc.</footer>
+</main><div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+(() => {
+  'use strict';
+
+  /* ==========================================================================
+     定数・状態管理
+     ========================================================================== */
+
+  /** 式の最大文字数（入力過多・サービス妨害防止） */
+  const MAX_EXPR = 512;
+  /** 括弧・構文解析の最大再帰深度（スタックオーバーフロー防止） */
+  const MAX_DEPTH = 64;
+  /** 除算の計算精度（小数点以下の有効桁数） */
+  const DIV_SCALE = 18;
+
+  /** DOM要素取得のショートカット */
+  const $ = (id) => document.getElementById(id);
+
+  /** アプリケーションのグローバル状態 */
+  const state = {
+    ans: null,      // 直前の計算結果（Decimal）
+    memory: null,   // メモリー保存値（Decimal）
+    last: null,     // 最新の評価値
+    history: [],    // 計算履歴（最大100件）
+    angle: 'RAD'    // 角度単位（RAD固定・科学計算用）
+  };
+
+  /** 10のべき乗をBigIntで算出 */
+  const pow10 = (n) => 10n ** BigInt(n);
+
+  /* ==========================================================================
+     高精度10進数計算クラス（Decimal）
+     BigIntを用いて有限小数を誤差なく表現・演算する
+     ========================================================================== */
+  class Decimal {
+    /**
+     * @param {bigint|number|string} c 10進係数（仮数部）
+     * @param {number} s 小数点以下の桁数（スケール）
+     */
+    constructor(c, s = 0) {
+      if (!Number.isInteger(s) || s < 0 || s > 1000) {
+        throw Error('数値の桁数が上限を超えています。');
+      }
+      this.c = BigInt(c);
+      this.s = s;
+      this.norm();
+    }
+
+    /** 末尾の余分なゼロを除去して正規化 */
+    norm() {
+      while (this.s > 0 && this.c % 10n === 0n) {
+        this.c /= 10n;
+        this.s--;
+      }
+      if (this.c === 0n) {
+        this.s = 0;
+      }
+      return this;
+    }
+
+    /** 文字列からDecimalを生成 */
+    static parse(text) {
+      let t = String(text).toLowerCase();
+      let sign = 1n;
+
+      if (t[0] === '-') {
+        sign = -1n;
+        t = t.slice(1);
+      } else if (t[0] === '+') {
+        t = t.slice(1);
+      }
+
+      const [mant, ex = '0'] = t.split('e');
+      if (!/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(mant)) {
+        throw Error('数値の形式が正しくありません。');
+      }
+
+      const exp = Number(ex);
+      if (!Number.isInteger(exp) || Math.abs(exp) > 300) {
+        throw Error('数値の指数が上限を超えています。');
+      }
+
+      const parts = mant.split('.');
+      const frac = parts[1] || '';
+      const digits = (parts[0] || '0') + frac;
+
+      let c = sign * BigInt(digits || '0');
+      let s = frac.length - exp;
+
+      if (s < 0) {
+        c *= pow10(-s);
+        s = 0;
+      }
+
+      return new Decimal(c, s);
+    }
+
+    /** JavaScriptのNumberからDecimalを生成 */
+    static fromNumber(n) {
+      if (!Number.isFinite(n)) {
+        throw Error('有限の数値ではありません。');
+      }
+      return Decimal.parse(n.toString());
+    }
+
+    /** 加算 */
+    add(b) {
+      const s = Math.max(this.s, b.s);
+      return new Decimal(
+        this.c * pow10(s - this.s) + b.c * pow10(s - b.s),
+        s
+      );
+    }
+
+    /** 符号反転 */
+    neg() {
+      return new Decimal(-this.c, this.s);
+    }
+
+    /** 減算 */
+    sub(b) {
+      return this.add(b.neg());
+    }
+
+    /** 乗算 */
+    mul(b) {
+      return new Decimal(this.c * b.c, this.s + b.s);
+    }
+
+    /** 除算（四捨五入） */
+    div(b) {
+      if (b.c === 0n) {
+        throw Error('0で割ることはできません。');
+      }
+      const sign = (this.c < 0n) !== (b.c < 0n) ? -1n : 1n;
+      const a = this.c < 0n ? -this.c : this.c;
+      const d = b.c < 0n ? -b.c : b.c;
+      const shift = DIV_SCALE + b.s - this.s;
+
+      let num = a;
+      let den = d;
+      if (shift >= 0) {
+        num *= pow10(shift);
+      } else {
+        den *= pow10(-shift);
+      }
+
+      let q = num / den;
+      const r = num % den;
+      if (r * 2n >= den) {
+        q++;
+      }
+
+      return new Decimal(sign * q, DIV_SCALE);
+    }
+
+    /** 比較（-1: this < b, 0: this == b, 1: this > b） */
+    cmp(b) {
+      const s = Math.max(this.s, b.s);
+      const a = this.c * pow10(s - this.s);
+      const v = b.c * pow10(s - b.s);
+      return a < v ? -1 : a > v ? 1 : 0;
+    }
+
+    /** 整数判定 */
+    isInt() {
+      return this.s === 0;
+    }
+
+    /** BigIntへの変換 */
+    toBigInt() {
+      if (!this.isInt()) {
+        throw Error('整数ではありません。');
+      }
+      return this.c;
+    }
+
+    /** Number型への変換（科学計算ライブラリ連携用） */
+    toNumber() {
+      const n = Number(this.toString());
+      if (!Number.isFinite(n)) {
+        throw Error('数値が大きすぎます。');
+      }
+      return n;
+    }
+
+    /** 10進数文字列表現への変換 */
+    toString() {
+      const neg = this.c < 0n;
+      const abs = neg ? -this.c : this.c;
+      let digits = abs.toString();
+
+      if (this.s) {
+        digits = digits.padStart(this.s + 1, '0');
+        digits = digits.slice(0, -this.s) + '.' + digits.slice(-this.s);
+      }
+
+      return (neg ? '-' : '') + digits;
+    }
+  }
+
+  /** Decimal.fromNumber の短縮エイリアス */
+  const D = (n) => Decimal.fromNumber(n);
+
+  /* ==========================================================================
+     字句解析（Tokenizer）
+     入力文字列をトークン列（数値、識別子、演算子）に分解
+     ========================================================================== */
+  function tokenize(input) {
+    if (input.length > MAX_EXPR) {
+      throw Error('数式が長すぎます（512文字以内）。');
+    }
+
+    const tokens = [];
+    let i = 0;
+
+    while (i < input.length) {
+      const ch = input[i];
+
+      // 空白文字のスキップ
+      if (/\s/.test(ch)) {
+        i++;
+        continue;
+      }
+
+      // 数値リテラル（整数・小数・指数表記）
+      if (/[0-9.]/.test(ch)) {
+        let start = i;
+        let dots = 0;
+        while (i < input.length && /[0-9.]/.test(input[i])) {
+          if (input[i] === '.') dots++;
+          i++;
+        }
+        if (dots > 1) {
+          throw Error('小数点の位置が正しくありません。');
+        }
+        if (/[eE]/.test(input[i] || '')) {
+          let j = i + 1;
+          if (/[+-]/.test(input[j] || '')) j++;
+          const begin = j;
+          while (/[0-9]/.test(input[j] || '')) j++;
+          if (begin === j) {
+            throw Error('指数の形式が正しくありません。');
+          }
+          i = j;
+        }
+        tokens.push({ type: 'num', value: input.slice(start, i) });
+        continue;
+      }
+
+      // 関数名・識別子（sin, cos, pi, ans など）
+      if (/[a-zA-Z]/.test(ch)) {
+        let start = i++;
+        while (/[a-zA-Z0-9]/.test(input[i] || '')) i++;
+        tokens.push({ type: 'id', value: input.slice(start, i).toLowerCase() });
+        continue;
+      }
+
+      // 演算子および括弧
+      if ('+-−*/×÷^()%!,'.includes(ch)) {
+        tokens.push({ type: 'op', value: ch });
+        i++;
+        continue;
+      }
+
+      // 特殊文字のエイリアス変換
+      if (ch === 'π') {
+        tokens.push({ type: 'id', value: 'pi' });
+        i++;
+        continue;
+      }
+      if (ch === '√') {
+        tokens.push({ type: 'id', value: 'sqrt' });
+        i++;
+        continue;
+      }
+
+      throw Error(`使用できない文字「${ch}」があります。`);
+    }
+
+    tokens.push({ type: 'eof', value: '' });
+    return tokens;
+  }
+
+  /* ==========================================================================
+     構文解析・式評価（Parser）
+     再帰下降構文解析により演算子の優先順位に従って数式を評価する
+     ========================================================================== */
+  const unaryFns = {
+    sin: 1, cos: 1, tan: 1, asin: 1, acos: 1, atan: 1,
+    log: 1, ln: 1, sqrt: 1, cbrt: 1, abs: 1, '10^': 1, 'e^': 1
+  };
+
+  function parseExpression(source, ans, angle) {
+    const ts = tokenize(source);
+    let p = 0;
+    let depth = 0;
+
+    const peek = () => ts[p];
+    const take = () => ts[p++];
+
+    function expect(v) {
+      if (peek().value !== v) {
+        throw Error(`「${v}」が必要です。`);
+      }
+      return take();
+    }
+
+    /** 優先順位に基づき式を再帰解析 */
+    function expr(min = 0) {
+      if (++depth > MAX_DEPTH) {
+        throw Error('括弧または式の深さが上限を超えています。');
+      }
+
+      let t = take();
+      let left;
+
+      if (t.type === 'num') {
+        left = Decimal.parse(t.value);
+      } else if (t.value === '+' || t.value === '-' || t.value === '−') {
+        const x = expr(19);
+        left = t.value === '+' ? x : x.neg();
+      } else if (t.value === '(') {
+        left = expr(0);
+        expect(')');
+      } else if (t.type === 'id') {
+        const name = t.value;
+        if (name === 'pi') {
+          left = D(Math.PI);
+        } else if (name === 'e') {
+          left = D(Math.E);
+        } else if (name === 'ans') {
+          left = ans;
+        } else if (unaryFns[name]) {
+          expect('(');
+          const x = expr(0);
+          expect(')');
+          left = applyFn(name, x, angle);
+        } else {
+          throw Error(`未知の名前「${name}」です。`);
+        }
+      } else {
+        throw Error('数値、定数、関数または括弧が必要です。');
+      }
+
+      // 中置演算子・後置演算子の処理
+      while (true) {
+        const op = peek().value;
+
+        // 後置階乗演算子 (!)
+        if (op === '!') {
+          if (30 < min) break;
+          take();
+          left = factorial(left);
+          continue;
+        }
+
+        // 演算子の優先度設定
+        let prec = -1;
+        if (op === '^') {
+          prec = 20; // べき乗（右結合）
+        } else if (op === '*' || op === '×' || op === '/' || op === '÷' || op === '%') {
+          prec = 10;
+        } else if (op === '+' || op === '-' || op === '−') {
+          prec = 5;
+        }
+
+        if (prec < min) break;
+
+        take();
+        // べき乗のみ右結合、他は左結合
+        const right = expr(op === '^' ? prec : prec + 1);
+        left = operate(op, left, right);
+      }
+
+      depth--;
+      return left;
+    }
+
+    const result = expr();
+    if (peek().type !== 'eof') {
+      throw Error(
+        peek().value === ')'
+          ? '閉じ括弧の対応が正しくありません。'
+          : `「${peek().value}」の位置を確認してください。`
+      );
+    }
+    return result;
+  }
+
+  /* ==========================================================================
+     演算・数学関数処理
+     ========================================================================== */
+
+  /** 二項演算子の計算を実行 */
+  function operate(op, a, b) {
+    switch (op) {
+      case '+':
+        return a.add(b);
+      case '-':
+      case '−':
+        return a.sub(b);
+      case '*':
+      case '×':
+        return a.mul(b);
+      case '/':
+      case '÷':
+        return a.div(b);
+      case '%':
+        if (!a.isInt() || !b.isInt()) {
+          throw Error('剰余は整数のみ対応しています。');
+        }
+        if (b.c === 0n) {
+          throw Error('0による剰余はできません。');
+        }
+        return new Decimal(a.c % b.c);
+      case '^':
+        // 整数べき乗（高精度BigIntバイナリ累乗）
+        if (b.isInt() && b.c >= 0n && b.c <= 10000n) {
+          let n = b.c;
+          let x = a;
+          let out = new Decimal(1n);
+          while (n) {
+            if (n & 1n) out = out.mul(x);
+            n >>= 1n;
+            if (n) x = x.mul(x);
+            if (out.c.toString().length > 1000) {
+              throw Error('べき乗の結果が大きすぎます。');
+            }
+          }
+          return out;
+        }
+        // 実数べき乗（倍精度浮動小数点）
+        return D(Math.pow(a.toNumber(), b.toNumber()));
+      default:
+        throw Error('未対応の演算子です。');
+    }
+  }
+
+  /** 階乗計算（0!〜170!） */
+  function factorial(x) {
+    if (!x.isInt() || x.c < 0n) {
+      throw Error('階乗は0以上の整数のみ計算できます。');
+    }
+    if (x.c > 170n) {
+      throw Error('階乗は170以下の整数に対応しています。');
+    }
+    const n = Number(x.c);
+    let r = 1n;
+    for (let i = 2; i <= n; i++) {
+      r *= BigInt(i);
+    }
+    return new Decimal(r);
+  }
+
+  /** 単項数学関数の適用 */
+  function applyFn(name, x, angle) {
+    const n = x.toNumber();
+    const toRad = (v) => (angle === 'DEG' ? (v * Math.PI) / 180 : v);
+    const fromRad = (v) => (angle === 'DEG' ? (v * 180) / Math.PI : v);
+    let v;
+
+    switch (name) {
+      case 'sin':
+        v = Math.sin(toRad(n));
+        break;
+      case 'cos':
+        v = Math.cos(toRad(n));
+        break;
+      case 'tan':
+        v = Math.tan(toRad(n));
+        break;
+      case 'asin':
+        if (Math.abs(n) > 1) throw Error('asinの入力範囲は−1から1です。');
+        v = fromRad(Math.asin(n));
+        break;
+      case 'acos':
+        if (Math.abs(n) > 1) throw Error('acosの入力範囲は−1から1です。');
+        v = fromRad(Math.acos(n));
+        break;
+      case 'atan':
+        v = fromRad(Math.atan(n));
+        break;
+      case 'log':
+        if (n <= 0) throw Error('logの入力は0より大きい必要があります。');
+        v = Math.log10(n);
+        break;
+      case 'ln':
+        if (n <= 0) throw Error('lnの入力は0より大きい必要があります。');
+        v = Math.log(n);
+        break;
+      case 'sqrt':
+        if (n < 0) throw Error('負数の平方根は実数ではありません。');
+        v = Math.sqrt(n);
+        break;
+      case 'cbrt':
+        v = Math.cbrt(n);
+        break;
+      case 'abs':
+        return new Decimal(x.c < 0n ? -x.c : x.c, x.s);
+      case '10^':
+        v = Math.pow(10, n);
+        break;
+      case 'e^':
+        v = Math.exp(n);
+        break;
+      default:
+        throw Error('未対応の関数です。');
+    }
+    return D(v);
+  }
+
+  /* ==========================================================================
+     UIフォーマット・表示制御
+     ========================================================================== */
+
+  /** 計算結果の表示用フォーマット（長大な値は指数表記） */
+  function format(d) {
+    if (!(d instanceof Decimal)) d = D(d);
+    const raw = d.toString();
+    if (raw.length <= 24) return raw;
+
+    const n = d.toNumber();
+    return Number.isFinite(n)
+      ? n.toExponential(10).replace(/\.?(?:0+)e/, 'e').replace('e+', 'e')
+      : raw;
+  }
+
+  /** エラーメッセージの表示 */
+  function showError(message) {
+    $('result').textContent = message;
+    $('result').classList.add('error');
+    $('statusText').textContent = '計算できません';
+  }
+
+  /** エラー状態の解除 */
+  function clearError() {
+    $('result').classList.remove('error');
+  }
+
+  /** ANSおよびメモリー表示の更新 */
+  function renderState() {
+    $('ansDisplay').textContent = format(state.ans);
+    $('memoryDisplay').textContent = format(state.memory);
+  }
+
+  /** コピー用SVGアイコンを動的生成してボタンに設定 */
+  function setCopyIcon(button) {
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('class', 'copy-icon');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('aria-hidden', 'true');
+
+    const path = document.createElementNS(ns, 'path');
+    path.setAttribute('d', 'M8 8V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-2');
+
+    const rect = document.createElementNS(ns, 'rect');
+    rect.setAttribute('x', '4');
+    rect.setAttribute('y', '8');
+    rect.setAttribute('width', '12');
+    rect.setAttribute('height', '12');
+    rect.setAttribute('rx', '2');
+
+    svg.append(path, rect);
+    button.replaceChildren(svg);
+  }
+
+  /** 履歴一覧の描画 */
+  function renderHistory() {
+    const host = $('historyList');
+    host.replaceChildren();
+    $('historyCount').textContent = `${state.history.length} / 100`;
+
+    if (!state.history.length) {
+      const e = document.createElement('div');
+      e.className = 'empty';
+      e.textContent = '計算履歴はまだありません';
+      host.append(e);
+      return;
+    }
+
+    for (const h of state.history) {
+      const item = document.createElement('article');
+      item.className = 'history-item';
+
+      const main = document.createElement('div');
+      main.className = 'history-main';
+      main.title = 'クリックして数式を再利用';
+      main.tabIndex = 0;
+      main.setAttribute('role', 'button');
+
+      const ex = document.createElement('div');
+      ex.className = 'history-expr';
+      ex.textContent = h.expression;
+
+      const res = document.createElement('div');
+      res.className = 'history-result';
+      res.textContent = '= ' + h.result;
+
+      const date = document.createElement('div');
+      date.className = 'history-date';
+      date.textContent = h.date;
+
+      main.append(ex, res, date);
+      main.addEventListener('click', () => reuseHistory(h));
+      main.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          reuseHistory(h);
+        }
+      });
+
+      const tools = document.createElement('div');
+      tools.className = 'history-tools';
+
+      const copy = document.createElement('button');
+      copy.type = 'button';
+      copy.className = 'copy-button';
+      copy.title = 'この履歴をコピー';
+      copy.setAttribute('aria-label', 'この履歴をコピー');
+      setCopyIcon(copy);
+      copy.addEventListener('click', () => copyText(`${h.expression} = ${h.result}`));
+
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.textContent = '×';
+      del.title = 'この履歴を削除';
+      del.setAttribute('aria-label', 'この履歴を削除');
+      del.addEventListener('click', () => {
+        state.history = state.history.filter((x) => x.id !== h.id);
+        renderHistory();
+      });
+
+      tools.append(copy, del);
+      item.append(main, tools);
+      host.append(item);
+    }
+  }
+
+  /** 履歴の式を入力欄に復元 */
+  function reuseHistory(h) {
+    $('expression').value = h.expression;
+    $('expression').focus();
+    $('expression').setSelectionRange(h.expression.length, h.expression.length);
+    $('statusText').textContent = '履歴の式を再利用中';
+    clearError();
+  }
+
+  /** トースト通知の表示 */
+  function toast(message) {
+    const t = $('toast');
+    t.textContent = message;
+    t.classList.add('show');
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(() => t.classList.remove('show'), 2600);
+  }
+
+  /** クリップボードへのテキストコピー */
+  async function copyText(text) {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const area = document.createElement('textarea');
+        area.value = text;
+        area.style.position = 'fixed';
+        area.style.opacity = '0';
+        document.body.append(area);
+        area.select();
+        const ok = document.execCommand('copy');
+        area.remove();
+        if (!ok) throw Error('copy failed');
+      }
+      toast('クリップボードにコピーしました');
+    } catch {
+      toast('コピーできませんでした。ブラウザの権限を確認してください。');
+    }
+  }
+
+  /* ==========================================================================
+     電卓入力・計算制御
+     ========================================================================== */
+
+  /** 式の計算を実行 */
+  function evaluate() {
+    const source = $('expression').value.trim();
+    if (!source) {
+      showError('数式を入力してください。');
+      return;
+    }
+
+    try {
+      const ansSnapshot = state.ans;
+      const value = parseExpression(source, ansSnapshot, state.angle);
+      if (!Number.isFinite(value.toNumber())) {
+        throw Error('結果が有限の数値ではありません。');
+      }
+
+      state.ans = value;
+      state.last = value;
+      const out = format(value);
+
+      $('result').textContent = out;
+      clearError();
+      $('statusText').textContent = '計算完了';
+
+      state.history.unshift({
+        id: Date.now() + Math.random(),
+        expression: source,
+        result: out,
+        date: new Intl.DateTimeFormat('ja-JP', {
+          dateStyle: 'short',
+          timeStyle: 'short'
+        }).format(new Date())
+      });
+      state.history = state.history.slice(0, 100);
+
+      renderHistory();
+      renderState();
+    } catch (e) {
+      showError(e instanceof Error ? e.message : '計算中にエラーが発生しました。');
+    }
+  }
+
+  /** カーソル位置へテキストを挿入 */
+  function insertAtCursor(text) {
+    const input = $('expression');
+    const start = input.selectionStart ?? input.value.length;
+    const end = input.selectionEnd ?? input.value.length;
+    input.setRangeText(text, start, end, 'end');
+    input.focus();
+    clearError();
+    $('statusText').textContent = '入力中';
+  }
+
+  /** カーソル前の文字を1文字削除 */
+  function backspace() {
+    const input = $('expression');
+    const s = input.selectionStart ?? 0;
+    const e = input.selectionEnd ?? 0;
+
+    if (s !== e) {
+      input.setRangeText('', s, e, 'end');
+    } else if (s > 0) {
+      input.setRangeText('', s - 1, s, 'end');
+    }
+    input.focus();
+  }
+
+  /** 現在の入力式または直前結果の値を取得 */
+  function currentValue() {
+    if (state.last) return state.last;
+    try {
+      return parseExpression($('expression').value, state.ans, state.angle);
+    } catch {
+      return null;
+    }
+  }
+
+  /** 関数呼び出しを括弧付きで挿入し、カーソルを括弧内に移動 */
+  function insertFunction(name) {
+    const input = $('expression');
+    const start = input.selectionStart ?? input.value.length;
+    const end = input.selectionEnd ?? input.value.length;
+    const text = `${name}()`;
+
+    input.setRangeText(text, start, end, 'end');
+    const cursor = start + name.length + 1;
+    input.setSelectionRange(cursor, cursor);
+    input.focus();
+    clearError();
+    $('statusText').textContent = '入力中';
+  }
+
+  /** 括弧ペアを挿入し、カーソルを括弧内に移動 */
+  function insertPair(pair) {
+    const input = $('expression');
+    const start = input.selectionStart ?? input.value.length;
+    const end = input.selectionEnd ?? input.value.length;
+
+    input.setRangeText(pair, start, end, 'end');
+    const cursor = start + 1;
+    input.setSelectionRange(cursor, cursor);
+    input.focus();
+    clearError();
+    $('statusText').textContent = '入力中';
+  }
+
+  /** 直前のトークン／数値を消去（クリア・エントリ） */
+  function clearEntry() {
+    const input = $('expression');
+    const start = input.selectionStart ?? input.value.length;
+    const end = input.selectionEnd ?? input.value.length;
+
+    if (start !== end) {
+      input.setRangeText('', start, end, 'end');
+    } else {
+      let left = start;
+      let right = end;
+      while (left > 0 && /[A-Za-z0-9.π√]/.test(input.value[left - 1])) left--;
+      while (right < input.value.length && /[A-Za-z0-9.π√]/.test(input.value[right])) right++;
+      if (left === right) {
+        if (left > 0) left--;
+        else if (right < input.value.length) right++;
+      }
+      input.setRangeText('', left, right, 'end');
+    }
+    input.focus();
+    clearError();
+    $('statusText').textContent = input.value ? '入力中' : '式を入力してください';
+  }
+
+  /** 電卓の入力と表示を全消去（オールクリア） */
+  function clearCalculator() {
+    $('expression').value = '';
+    state.last = null;
+    $('result').textContent = '0';
+    $('result').classList.remove('error');
+    $('statusText').textContent = '式を入力してください';
+    $('expression').focus();
+  }
+
+  /* ==========================================================================
+     キーパッド・モード切替・画面イベントリスナー
+     ========================================================================== */
+
+  // 挿入系ボタンのイベント紐付け
+  document.querySelectorAll('[data-insert]').forEach((b) =>
+    b.addEventListener('click', () => insertAtCursor(b.dataset.insert))
+  );
+  document.querySelectorAll('[data-pair]').forEach((b) =>
+    b.addEventListener('click', () => insertPair(b.dataset.pair))
+  );
+  document.querySelectorAll('[data-function]').forEach((b) =>
+    b.addEventListener('click', () => insertFunction(b.dataset.function))
+  );
+
+  // 電卓キーパッドのアクション分岐
+  $('keypad').addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    if (b.dataset.action === 'evaluate') evaluate();
+    if (b.dataset.action === 'clear') clearCalculator();
+    if (b.dataset.action === 'clear-entry') clearEntry();
+  });
+
+  // バックスペースとカーソル末尾移動ボタン
+  $('backBtn').addEventListener('click', backspace);
+  $('cursorEnd').addEventListener('click', () => {
+    const input = $('expression');
+    const end = input.value.length;
+    input.focus();
+    input.setSelectionRange(end, end);
+  });
+
+  // 標準モード／拡張モード切り替え
+  function setAdvancedMode(enabled) {
+    document.body.classList.toggle('simple', !enabled);
+    $('advancedToggle').classList.toggle('active', enabled);
+    $('advancedToggle').setAttribute('aria-pressed', String(enabled));
+    $('standardToggle').classList.toggle('active', !enabled);
+    $('standardToggle').setAttribute('aria-pressed', String(!enabled));
+  }
+
+  $('standardToggle').addEventListener('click', () => setAdvancedMode(false));
+  $('advancedToggle').addEventListener('click', () => setAdvancedMode(true));
+
+  // サイドパネル（履歴・ツール）の開閉レイアウト制御
+  function updateSidePanels() {
+    const historyOn = !$('historyPanel').hidden;
+    const toolsOn = !$('toolsPanel').hidden;
+    $('sideColumn').hidden = !(historyOn || toolsOn);
+    $('mainLayout').classList.toggle('single-column', !historyOn && !toolsOn);
+  }
+
+  $('historyToggle').addEventListener('click', () => {
+    const panel = $('historyPanel');
+    panel.hidden = !panel.hidden;
+    $('historyToggle').setAttribute('aria-pressed', String(!panel.hidden));
+    updateSidePanels();
+  });
+
+  $('toolsToggle').addEventListener('click', () => {
+    const panel = $('toolsPanel');
+    panel.hidden = !panel.hidden;
+    $('toolsToggle').setAttribute('aria-pressed', String(!panel.hidden));
+    updateSidePanels();
+  });
+
+  // 数式入力欄のキーボードショートカット
+  $('expression').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      evaluate();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      clearCalculator();
+    } else if (e.key === '=' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      evaluate();
+    }
+  });
+
+  $('expression').addEventListener('input', () => {
+    if (!$('result').classList.contains('error')) {
+      $('statusText').textContent = '入力中';
+    }
+  });
+
+  // メモリー機能（MC, MR, M+, M-）
+  document.querySelectorAll('[data-memory]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const op = b.dataset.memory;
+      if (op === 'MC') {
+        state.memory = Decimal.parse('0');
+        renderState();
+        toast('メモリーをクリアしました');
+        return;
+      }
+      if (op === 'MR') {
+        insertAtCursor(`(${state.memory.toString()})`);
+        return;
+      }
+      const v = currentValue();
+      if (!v) {
+        toast('計算結果がありません');
+        return;
+      }
+      state.memory = op === 'M+' ? state.memory.add(v) : state.memory.sub(v);
+      renderState();
+      toast('メモリーを更新しました');
+    })
+  );
+
+  // コピー・クリア操作
+  $('copyResult').addEventListener('click', () => {
+    if (state.last) copyText(format(state.last));
+    else toast('コピーできる計算結果がありません');
+  });
+
+  $('copyAllHistory').addEventListener('click', () => {
+    if (!state.history.length) {
+      toast('コピーする履歴がありません');
+      return;
+    }
+    copyText(state.history.map((h) => `${h.expression} = ${h.result}`).join('\n'));
+  });
+
+  $('clearHistory').addEventListener('click', () => {
+    state.history = [];
+    renderHistory();
+    toast('履歴を削除しました');
+  });
+
+  // テーマ切り替え（ダーク／ライト）
+  $('themeBtn').addEventListener('click', () => {
+    document.body.classList.toggle('light');
+    $('themeBtn').textContent = document.body.classList.contains('light') ? '☾' : '☼';
+  });
+
+  // ツールタブ切り替え
+  document.querySelectorAll('[data-tab]').forEach((b) =>
+    b.addEventListener('click', () => {
+      document.querySelectorAll('[data-tab]').forEach((x) => {
+        x.classList.toggle('active', x === b);
+        x.setAttribute('aria-selected', x === b ? 'true' : 'false');
+      });
+      document.querySelectorAll('.tool-pane').forEach((p) => {
+        p.hidden = p.id !== `pane-${b.dataset.tab}`;
+      });
+    })
+  );
+
+  /* ==========================================================================
+     ツール機能：単位換算
+     ========================================================================== */
+  const unitSets = {
+    length: {
+      mm: 0.001, cm: 0.01, m: 1, km: 1000,
+      in: 0.0254, ft: 0.3048, yd: 0.9144, mi: 1609.344
+    },
+    mass: {
+      mg: 0.000001, g: 0.001, kg: 1, t: 1000,
+      oz: 0.028349523125, lb: 0.45359237
+    },
+    area: {
+      'mm²': 1e-6, 'cm²': 1e-4, 'm²': 1, 'km²': 1e6,
+      ha: 10000, a: 100, 'ft²': 0.09290304, acre: 4046.8564224
+    },
+    volume: {
+      mL: 0.001, L: 1, 'm³': 1000, 'cm³': 0.001, 'US gal': 3.785411784
+    },
+    data: {
+      bit: 1, B: 8, KB: 8000, MB: 8e6, GB: 8e9, TB: 8e12,
+      KiB: 8192, MiB: 8388608, GiB: 8589934592, TiB: 8796093022208
+    },
+    angle: {
+      rad: 1, deg: Math.PI / 180
+    }
+  };
+
+  const unitNames = {
+    mm: 'mm', cm: 'cm', m: 'm', km: 'km', in: 'in', ft: 'ft', yd: 'yd', mi: 'mi',
+    mg: 'mg', g: 'g', kg: 'kg', t: 't', oz: 'oz', lb: 'lb',
+    'mm²': 'mm²', 'cm²': 'cm²', 'm²': 'm²', 'km²': 'km²', ha: 'ha', a: 'a', 'ft²': 'ft²', acre: 'acre',
+    mL: 'mL', L: 'L', 'm³': 'm³', 'cm³': 'cm³', 'US gal': 'US gal',
+    bit: 'bit', B: 'B', KB: 'KB', MB: 'MB', GB: 'GB', TB: 'TB',
+    KiB: 'KiB', MiB: 'MiB', GiB: 'GiB', TiB: 'TiB',
+    rad: 'rad', deg: 'deg'
+  };
+
+  /** 選択されたカテゴリに応じて単位ドロップダウンを生成 */
+  function fillUnits() {
+    const cat = $('unitCategory').value;
+    const keys = Object.keys(unitSets[cat]);
+
+    for (const id of ['unitFrom', 'unitTo']) {
+      const s = $(id);
+      const prev = s.value;
+      s.replaceChildren();
+
+      for (const k of keys) {
+        const o = document.createElement('option');
+        o.value = k;
+        o.textContent = unitNames[k];
+        s.append(o);
+      }
+      if (keys.includes(prev)) {
+        s.value = prev;
+      }
+    }
+    convertUnit();
+  }
+
+  /** 単位換算の計算を実行 */
+  function convertUnit() {
+    const raw = $('unitValue').value;
+    const cat = $('unitCategory').value;
+    const from = $('unitFrom').value;
+    const to = $('unitTo').value;
+
+    if (raw === '' || !Number.isFinite(Number(raw))) {
+      $('unitOutput').textContent = '有限の数値を入力してください。';
+      return;
+    }
+
+    const result = (Number(raw) * unitSets[cat][from]) / unitSets[cat][to];
+    $('unitOutput').textContent = Number.isFinite(result)
+      ? `${new Intl.NumberFormat('ja-JP', { maximumSignificantDigits: 12 }).format(result)} ${to}`
+      : '変換結果が大きすぎます。';
+  }
+
+  $('unitCategory').addEventListener('change', fillUnits);
+  ['unitValue', 'unitFrom', 'unitTo'].forEach((id) =>
+    $(id).addEventListener('input', convertUnit)
+  );
+  $('unitFrom').addEventListener('change', convertUnit);
+  $('unitTo').addEventListener('change', convertUnit);
+
+  /* ==========================================================================
+     ツール機能：日付計算
+     ========================================================================== */
+  const today = new Date();
+  const localDate = new Date(today.getTime() - today.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 10);
+
+  $('dateStart').value = localDate;
+  $('dateEnd').value = localDate;
+  $('dateBase').value = localDate;
+
+  /** YYYY-MM-DD文字列をUTC基準のDateに変換（夏時間等のズレを防止） */
+  function dateParts(v) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v || '');
+    if (!m) return null;
+    const y = +m[1];
+    const mo = +m[2];
+    const d = +m[3];
+
+    const dt = new Date(0);
+    dt.setUTCHours(0, 0, 0, 0);
+    dt.setUTCFullYear(y, mo - 1, d);
+
+    if (
+      dt.getUTCFullYear() !== y ||
+      dt.getUTCMonth() !== mo - 1 ||
+      dt.getUTCDate() !== d
+    ) {
+      return null;
+    }
+    return dt;
+  }
+
+  /** DateオブジェクトをYYYY-MM-DDにフォーマット */
+  function formatDateUTC(dt) {
+    return `${String(dt.getUTCFullYear()).padStart(4, '0')}-${String(
+      dt.getUTCMonth() + 1
+    ).padStart(2, '0')}-${String(dt.getUTCDate()).padStart(2, '0')}`;
+  }
+
+  /** 日付計算の実行（日付差または日数加減算） */
+  function calcDates() {
+    if ($('dateMode').value === 'diff') {
+      $('dateDiffFields').hidden = false;
+      $('dateAddFields').hidden = true;
+
+      const a = dateParts($('dateStart').value);
+      const b = dateParts($('dateEnd').value);
+      if (!a || !b) {
+        $('dateOutput').textContent = '有効な開始日と終了日を選択してください。';
+        return;
+      }
+
+      const days = Math.abs((b - a) / 86400000);
+      const inclusive = $('inclusive').checked;
+
+      $('dateOutput').replaceChildren();
+      const p = document.createElement('span');
+      p.textContent = `日付差: ${days} 日`;
+      const q = document.createElement('span');
+      q.className = 'tool-note';
+      q.textContent = inclusive
+        ? `両端を含む場合: ${days + 1} 日`
+        : '開始日・終了日の差（両端の差）';
+      $('dateOutput').append(p, q);
+    } else {
+      $('dateDiffFields').hidden = true;
+      $('dateAddFields').hidden = false;
+
+      const base = dateParts($('dateBase').value);
+      const offset = Number($('dayOffset').value);
+      if (!base || !Number.isSafeInteger(offset)) {
+        $('dateOutput').textContent = '有効な日付と整数の日数を入力してください。';
+        return;
+      }
+
+      base.setUTCDate(base.getUTCDate() + offset);
+      if (!Number.isFinite(base.getTime())) {
+        $('dateOutput').textContent = '日付の範囲を超えています。';
+        return;
+      }
+      $('dateOutput').textContent = `結果: ${formatDateUTC(base)}`;
+    }
+  }
+
+  ['dateMode', 'dateStart', 'dateEnd', 'inclusive', 'dateBase', 'dayOffset'].forEach((id) =>
+    $(id).addEventListener('input', calcDates)
+  );
+  $('dateMode').addEventListener('change', calcDates);
+
+  /* ==========================================================================
+     ツール機能：進数変換（2進, 8進, 10進, 16進）
+     ========================================================================== */
+  function convertBase() {
+    const s = $('baseInput').value.trim();
+    const base = Number($('baseFrom').value);
+    const host = $('baseOutput');
+    host.replaceChildren();
+
+    if (!s) return;
+
+    try {
+      const negative = s.startsWith('-');
+      const digits = negative ? s.slice(1) : s;
+      if (!digits || digits.startsWith('+')) throw Error();
+
+      const valid =
+        base === 2
+          ? /^[01]+$/
+          : base === 8
+          ? /^[0-7]+$/
+          : base === 10
+          ? /^[0-9]+$/
+          : /^[0-9a-fA-F]+$/;
+      if (!valid.test(digits)) throw Error();
+
+      let value = BigInt(
+        (base === 16 ? '0x' : base === 8 ? '0o' : base === 2 ? '0b' : '') + digits
+      );
+      if (negative) value = -value;
+
+      const baseList = [
+        [2, '2進'],
+        [8, '8進'],
+        [10, '10進'],
+        [16, '16進']
+      ];
+
+      for (const [radix, label] of baseList) {
+        const tile = document.createElement('div');
+        tile.className = 'base-result';
+        const title = document.createElement('span');
+        title.textContent = label;
+        const code = document.createElement('code');
+        code.textContent = value.toString(radix).toUpperCase();
+        tile.append(title, code);
+        host.append(tile);
+      }
+    } catch {
+      $('baseOutput').textContent = '入力進数に合わない整数です。';
+    }
+  }
+
+  $('baseInput').addEventListener('input', convertBase);
+  $('baseFrom').addEventListener('change', convertBase);
+
+  /* ==========================================================================
+     初期化処理
+     ========================================================================== */
+  state.ans = Decimal.parse('0');
+  state.memory = Decimal.parse('0');
+  renderState();
+  renderHistory();
+  fillUnits();
+  calcDates();
+  convertBase();
+})();
+
+</script>
+</body>
+</html>
