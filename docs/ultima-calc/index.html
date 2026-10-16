@@ -1722,11 +1722,33 @@ body.simple .science-only,body.simple .scientific-keys {
     }
   }
 
+  /**
+   * タッチ操作環境（スマホ等）であるかを判定
+   */
+  const isTouchDevice = () => window.matchMedia('(pointer: coarse)').matches;
+
+  /**
+   * 計算式入力欄へのフォーカス制御
+   * PC環境ではキャレット表示・キー入力を可能にするためフォーカスする。
+   * スマホ等のタッチ環境ではボタン操作時にOSの仮想キーボードが競り上がってボタンを隠すのを防ぐため、
+   * ボタン操作時はフォーカスしない（手入力中にボタンを押した場合はキーボードを閉じる）。
+   */
+  function focusExpression() {
+    const input = $('expression');
+    if (isTouchDevice()) {
+      if (document.activeElement === input) {
+        input.blur();
+      }
+    } else {
+      input.focus();
+    }
+  }
+
   /** 履歴の式を入力欄に復元 */
   function reuseHistory(h) {
     $('expression').value = h.expression;
-    $('expression').focus();
     $('expression').setSelectionRange(h.expression.length, h.expression.length);
+    focusExpression();
     $('statusText').textContent = '履歴の式を再利用中';
     clearError();
   }
@@ -1813,7 +1835,7 @@ body.simple .science-only,body.simple .scientific-keys {
     const start = input.selectionStart ?? input.value.length;
     const end = input.selectionEnd ?? input.value.length;
     input.setRangeText(text, start, end, 'end');
-    input.focus();
+    focusExpression();
     clearError();
     $('statusText').textContent = '入力中';
   }
@@ -1829,7 +1851,7 @@ body.simple .science-only,body.simple .scientific-keys {
     } else if (s > 0) {
       input.setRangeText('', s - 1, s, 'end');
     }
-    input.focus();
+    focusExpression();
   }
 
   /** 現在の入力式または直前結果の値を取得 */
@@ -1852,7 +1874,7 @@ body.simple .science-only,body.simple .scientific-keys {
     input.setRangeText(text, start, end, 'end');
     const cursor = start + name.length + 1;
     input.setSelectionRange(cursor, cursor);
-    input.focus();
+    focusExpression();
     clearError();
     $('statusText').textContent = '入力中';
   }
@@ -1866,7 +1888,7 @@ body.simple .science-only,body.simple .scientific-keys {
     input.setRangeText(pair, start, end, 'end');
     const cursor = start + 1;
     input.setSelectionRange(cursor, cursor);
-    input.focus();
+    focusExpression();
     clearError();
     $('statusText').textContent = '入力中';
   }
@@ -1890,7 +1912,7 @@ body.simple .science-only,body.simple .scientific-keys {
       }
       input.setRangeText('', left, right, 'end');
     }
-    input.focus();
+    focusExpression();
     clearError();
     $('statusText').textContent = input.value ? '入力中' : '式を入力してください';
   }
@@ -1902,7 +1924,7 @@ body.simple .science-only,body.simple .scientific-keys {
     $('result').textContent = '0';
     $('result').classList.remove('error');
     $('statusText').textContent = '式を入力してください';
-    $('expression').focus();
+    focusExpression();
   }
 
   /* ==========================================================================
@@ -1934,8 +1956,8 @@ body.simple .science-only,body.simple .scientific-keys {
   $('cursorEnd').addEventListener('click', () => {
     const input = $('expression');
     const end = input.value.length;
-    input.focus();
     input.setSelectionRange(end, end);
+    focusExpression();
   });
 
   // 標準モード／拡張モード切り替え
