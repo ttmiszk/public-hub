@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Table Tennis Tools - 卓球ツール集</title>
+	<style>
+		:root {
+			--bg-color: #0b0f19;
+			--card-bg: #1e293b;
+			--card-border: #334155;
+			--text-main: #f8fafc;
+			--text-muted: #94a3b8;
+			--accent: #3b82f6;
+			--accent-hover: #2563eb;
+			--badge-bg: #1e3a8a;
+			--badge-text: #bfdbfe;
+		}
+
+		* {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0;
+		}
+
+		body {
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "BIZ UDPGothic", Meiryo, sans-serif;
+			background-color: var(--bg-color);
+			color: var(--text-main);
+			min-height: 100vh;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			padding: 40px 20px;
+		}
+
+		header {
+			text-align: center;
+			margin-bottom: 36px;
+			max-width: 600px;
+		}
+
+		h1 {
+			font-size: 2rem;
+			font-weight: 800;
+			margin-bottom: 8px;
+			letter-spacing: -0.02em;
+		}
+
+		p.desc {
+			color: var(--text-muted);
+			font-size: 1rem;
+			line-height: 1.5;
+		}
+
+		main {
+			width: 100%;
+			max-width: 720px;
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+			gap: 20px;
+		}
+
+		.tool-card {
+			display: block;
+			text-decoration: none;
+			color: inherit;
+			background-color: var(--card-bg);
+			border: 1px solid var(--card-border);
+			border-radius: 12px;
+			padding: 24px;
+			transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+		}
+
+		.tool-card:hover {
+			transform: translateY(-2px);
+			border-color: var(--accent);
+			box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+		}
+
+		.tool-card.disabled {
+			opacity: 0.6;
+			pointer-events: none;
+			border-style: dashed;
+		}
+
+		.card-header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: 12px;
+		}
+
+		.tool-icon {
+			font-size: 1.8rem;
+		}
+
+		.badge {
+			font-size: 0.75rem;
+			font-weight: 700;
+			padding: 4px 8px;
+			border-radius: 6px;
+			background-color: var(--badge-bg);
+			color: var(--badge-text);
+		}
+
+		.badge.planned {
+			background-color: #334155;
+			color: #94a3b8;
+		}
+
+		.tool-title {
+			font-size: 1.25rem;
+			font-weight: 700;
+			margin-bottom: 8px;
+			color: var(--text-main);
+		}
+
+		.tool-desc {
+			font-size: 0.9rem;
+			color: var(--text-muted);
+			line-height: 1.5;
+		}
+
+		footer {
+			margin-top: auto;
+			padding-top: 48px;
+			color: var(--text-muted);
+			font-size: 0.85rem;
+		}
+	</style>
+</head>
+<body>
+	<header>
+		<h1>🏓 Table Tennis Tools</h1>
+		<p class="desc">卓球の試合や練習をサポートするシンプルなWebツール集です。オフラインでも単一ファイルで軽快に動作します。</p>
+	</header>
+
+	<main>
+		<!-- 卓球スコアボード -->
+		<a href="table_tennis_scoreboard.html" class="tool-card">
+			<div class="card-header">
+				<span class="tool-icon">📋</span>
+				<span class="badge">公開中</span>
+			</div>
+			<h2 class="tool-title">卓球スコアボード</h2>
+			<p class="tool-desc">英語音声コール、スプリットフラップ式パネル、サーブ権管理、スコア推移グラフ、試合履歴保存に対応した高機能スコアボード。</p>
+		</a>
+
+		<!-- 今後のツール用プレースホルダー -->
+		<div class="tool-card disabled">
+			<div class="card-header">
+				<span class="tool-icon">⏱️</span>
+				<span class="badge planned">準備中</span>
+			</div>
+			<h2 class="tool-title">タイマー / インターバル</h2>
+			<p class="tool-desc">タイムアウト（1分）やチェンジエンド時、練習時のインターバル計測用ツール（予定）。</p>
+		</div>
+
+		<div class="tool-card disabled">
+			<div class="card-header">
+				<span class="tool-icon">🔄</span>
+				<span class="badge planned">準備中</span>
+			</div>
+			<h2 class="tool-title">リーグ戦・トーナメント表</h2>
+			<p class="tool-desc">総当たり戦の対戦表生成や順位計算を行うツール（予定）。</p>
+		</div>
+	</main>
+
+	<footer>
+		&copy; 2026 Table Tennis Tools
+	</footer>
+</body>
+</html>

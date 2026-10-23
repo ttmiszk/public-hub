@@ -1,0 +1,3327 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+	<title>卓球スコアボード - Table Tennis Scoreboard</title>
+	<style>
+		:root {
+			--bg-black: #050507;
+			--card-bg-top: #202228;
+			--card-bg-bottom: #181a1f;
+			--card-border: rgba(255, 255, 255, 0.11);
+			--text-white: #ffffff;
+			--text-yellow: #facc15;
+			--serve-red: #dc2626;
+			--accent-blue: #2563eb;
+			--accent-gold: #facc15;
+		}
+
+		* {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0;
+			user-select: none;
+			-webkit-user-select: none;
+			-webkit-touch-callout: none;
+			-webkit-tap-highlight-color: transparent;
+		}
+
+		html, body {
+			width: 100%;
+			height: 100%;
+			height: 100dvh;
+			overflow: hidden;
+			background-color: var(--bg-black);
+			color: var(--text-white);
+			font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Hiragino Kaku Gothic ProN', 'BIZ UDPGothic', Meiryo, sans-serif;
+			touch-action: none;
+		}
+
+		#app {
+			position: relative;
+			width: 100%;
+			height: 100%;
+			height: 100dvh;
+			display: flex;
+			flex-direction: column;
+			justify-content: space-between;
+			padding-top: max(clamp(12px, 2.2vh, 24px), calc(env(safe-area-inset-top, 0px) + 12px));
+			padding-bottom: max(clamp(14px, 2.6vh, 28px), calc(env(safe-area-inset-bottom, 0px) + 14px));
+			padding-left: max(clamp(10px, 2.5vw, 28px), calc(env(safe-area-inset-left, 0px) + 10px));
+			padding-right: max(clamp(10px, 2.5vw, 28px), calc(env(safe-area-inset-right, 0px) + 10px));
+		}
+
+		/* =========================================================
+		   1. Top Header Area:
+		      Left Player Name | Subtle Center Change-Court Button | Right Player Name
+		      (Placed directly above the Scoreboard Panels inside .scoreboard-wrapper)
+		========================================================= */
+		.top-header-bar {
+			position: relative;
+			z-index: 20;
+			display: grid;
+			grid-template-columns: 34fr 14fr 14fr 34fr;
+			align-items: center;
+			gap: clamp(5px, 1.8vw, 24px);
+			flex-shrink: 0;
+			width: 100%;
+			max-width: 1400px;
+			margin: 0 auto;
+		}
+
+		.player-header-col {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			min-width: 0;
+			width: 100%;
+		}
+
+		.player-header-col.left { grid-column: 1; }
+		.player-header-col.right { grid-column: 4; }
+
+		.player-name-input {
+			background: transparent;
+			border: 2px solid transparent;
+			color: #ffffff;
+			font-size: clamp(1.3rem, 3.8vw, 2.3rem);
+			font-weight: 900;
+			text-align: center;
+			width: 100%;
+			max-width: 100%;
+			padding: 2px 4px;
+			border-radius: 10px;
+			outline: none;
+			transition: border-color 0.2s, background-color 0.2s;
+			user-select: text;
+			-webkit-user-select: text;
+			touch-action: manipulation;
+		}
+
+		.player-name-input:focus {
+			background: rgba(255, 255, 255, 0.12);
+			border-color: var(--accent-blue);
+		}
+
+		/* Subtle, low-profile Change-Court ("⇄") Button */
+		.swap-top-btn {
+			grid-column: 2 / 4;
+			justify-self: center;
+			min-width: 42px;
+			height: 36px;
+			padding: 0 10px;
+			background: transparent;
+			border: none;
+			border-radius: 8px;
+			color: rgba(255, 255, 255, 0.35);
+			font-size: clamp(1.1rem, 2.2vw, 1.45rem);
+			font-weight: 600;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			cursor: pointer;
+			transition: color 0.15s, background 0.15s, transform 0.1s;
+		}
+
+		.swap-top-btn:hover {
+			color: rgba(255, 255, 255, 0.7);
+			background: rgba(255, 255, 255, 0.06);
+		}
+
+		.swap-top-btn:active {
+			transform: scale(0.92);
+			color: #ffffff;
+			background: rgba(255, 255, 255, 0.12);
+		}
+
+		/* =========================================================
+		   2. Pure CSS Scoreboard Stage
+		      - Always fills full horizontal width
+		      - Height never exceeds a landscape ratio (even in portrait mode)
+		      - Player Names + Change-Court Button sit immediately above Score Panels
+		========================================================= */
+		.scoreboard-wrapper {
+			flex: 1;
+			min-height: 0;
+			width: 100%;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			gap: clamp(6px, 1.2vh, 12px);
+			padding: clamp(4px, 1vh, 10px) 0;
+		}
+
+		.scoreboard-stage {
+			width: 100%;
+			max-width: 1400px;
+			flex: 0 1 auto;
+			height: min(calc(100% - clamp(44px, 7vh, 64px)), 56vw);
+			max-height: 760px;
+			min-height: 0;
+			display: grid;
+			grid-template-columns: 34fr 14fr 14fr 34fr;
+			align-items: stretch;
+			gap: clamp(5px, 1.8vw, 24px);
+			perspective: 1400px;
+			transition: transform 0.36s cubic-bezier(0.34, 1.56, 0.64, 1);
+		}
+
+		.scoreboard-stage.swapping {
+			transform: rotateY(16deg) scale(0.97);
+		}
+
+		/* Point Column: Serve Bar matched to Point Panel width + Point Card */
+		.point-col {
+			grid-row: 1;
+			height: 100%;
+			width: 100%;
+			min-width: 0;
+			display: flex;
+			flex-direction: column;
+			gap: clamp(6px, 1.2vh, 12px);
+		}
+
+		.point-col.left { grid-column: 1; }
+		.point-col.right { grid-column: 4; }
+
+		/* Serve Marker Bar directly above the Point Panel (100% matched to Point Panel width) */
+		.serve-panel-bar {
+			width: 100%;
+			height: clamp(12px, 1.8vh, 18px);
+			border-radius: 999px;
+			background: rgba(255, 255, 255, 0.1);
+			border: 1.5px solid rgba(255, 255, 255, 0.22);
+			flex-shrink: 0;
+			cursor: pointer;
+			transition: background 0.22s, box-shadow 0.22s, border-color 0.22s, transform 0.15s;
+		}
+
+		.serve-panel-bar:active {
+			transform: scale(0.98);
+		}
+
+		.serve-panel-bar.active {
+			background: var(--serve-red);
+			border-color: #fca5a5;
+			box-shadow: 0 0 18px rgba(220, 38, 38, 0.95);
+		}
+
+		/* Center Columns Wrapper (Spans columns 2 & 3 so we can place the Start Button / Elapsed Time in the lower empty area) */
+		.center-cols-area {
+			grid-column: 2 / 4;
+			grid-row: 1;
+			height: 100%;
+			width: 100%;
+			min-width: 0;
+			display: flex;
+			flex-direction: column;
+			justify-content: flex-start;
+			padding-top: calc(clamp(12px, 1.8vh, 18px) + clamp(6px, 1.2vh, 12px));
+		}
+
+		.game-panels-pair {
+			width: 100%;
+			min-width: 0;
+			height: 62%;
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: clamp(5px, 1.8vw, 24px);
+		}
+
+		.game-subcol {
+			height: 100%;
+			width: 100%;
+			min-width: 0;
+			display: flex;
+			flex-direction: column;
+			align-items: stretch;
+			justify-content: flex-start;
+			gap: clamp(4px, 1.4vh, 14px);
+		}
+
+		/* Lower empty area under the Game Panels & Dots: Houses "START" button or subtle elapsed timer (mm:ss) */
+		.center-lower-slot {
+			flex: 1;
+			width: 100%;
+			min-width: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding-top: 4px;
+		}
+
+		.start-match-btn {
+			padding: clamp(6px, 1.5vh, 12px) clamp(10px, 2.5vw, 24px);
+			max-width: 100%;
+			border-radius: 999px;
+			background: rgba(37, 99, 235, 0.22);
+			border: 2px solid rgba(96, 165, 250, 0.65);
+			color: #eff6ff;
+			font-size: clamp(0.78rem, 2vw, 1.2rem);
+			font-weight: 900;
+			letter-spacing: 0.04em;
+			cursor: pointer;
+			box-shadow: 0 4px 16px rgba(37, 99, 235, 0.3);
+			transition: transform 0.12s, background 0.15s, border-color 0.15s;
+			white-space: nowrap;
+		}
+
+		.start-match-btn:hover {
+			background: rgba(37, 99, 235, 0.35);
+			border-color: #93c5fd;
+		}
+
+		.start-match-btn:active {
+			transform: scale(0.94);
+		}
+
+		.match-elapsed-timer {
+			font-size: clamp(1.05rem, 3.4vw, 2.25rem);
+			font-weight: 800;
+			color: rgba(255, 255, 255, 0.48);
+			font-variant-numeric: tabular-nums;
+			letter-spacing: 0.06em;
+			display: none;
+		}
+
+		/* --- 3D Split-Flap Card Unit --- */
+		.flip-card {
+			position: relative;
+			width: 100%;
+			min-width: 0;
+			container-type: size;
+			border-radius: clamp(12px, 2vw, 26px);
+			background: #141519;
+			box-shadow:
+				0 14px 34px rgba(0, 0, 0, 0.8),
+				inset 0 1px 0 rgba(255, 255, 255, 0.12);
+			cursor: pointer;
+			transform-style: preserve-3d;
+			perspective: 1100px;
+			transition: box-shadow 0.15s, transform 0.1s;
+			--digit-size: clamp(5rem, min(28vw, 54vh), 26rem);
+			--digit-scale-y: 1.14;
+			--digit-color: #ffffff;
+		}
+
+		.flip-card.point-card {
+			flex: 1;
+			min-height: 0;
+			--digit-size: clamp(5rem, min(28vw, 54vh), 26rem);
+			--digit-scale-y: 1.15;
+		}
+
+		.flip-card.game-card {
+			flex: 1;
+			min-height: 0;
+			border-radius: clamp(10px, 1.5vw, 20px);
+			--digit-size: clamp(2.8rem, min(12.5vw, 30vh), 14rem);
+			--digit-scale-y: 1.14;
+		}
+
+		/* Use container query units when supported so digits fill ~82% of card height with minimal top/bottom margin */
+		@supports (font-size: 1cqh) {
+			.flip-card.point-card {
+				--digit-size: min(82cqh, 88cqw);
+			}
+			.flip-card.game-card {
+				--digit-size: min(82cqh, 88cqw);
+			}
+		}
+
+		/* 10+ Points turns digit yellow */
+		.flip-card.yellow-digits {
+			--digit-color: var(--text-yellow);
+		}
+
+		/* Visual feedback while pressing down on a panel */
+		.flip-card.pressing {
+			box-shadow:
+				0 0 0 4px rgba(59, 130, 246, 0.85),
+				0 14px 34px rgba(0, 0, 0, 0.85);
+		}
+
+		/* Static & Animated Half-Leaves (Split at the exact horizontal center crease) */
+		.half-leaf {
+			position: absolute;
+			left: 0;
+			right: 0;
+			height: 50%;
+			overflow: hidden;
+			background: var(--card-bg-top);
+			border-left: 1.5px solid var(--card-border);
+			border-right: 1.5px solid var(--card-border);
+			backface-visibility: hidden;
+			-webkit-backface-visibility: hidden;
+			pointer-events: none;
+		}
+
+		.half-leaf.top {
+			top: 0;
+			border-radius: inherit;
+			border-bottom-left-radius: 0;
+			border-bottom-right-radius: 0;
+			border-top: 1.5px solid var(--card-border);
+			background: linear-gradient(180deg, #23252c 0%, #1c1e24 100%);
+		}
+
+		.half-leaf.bottom {
+			bottom: 0;
+			border-radius: inherit;
+			border-top-left-radius: 0;
+			border-top-right-radius: 0;
+			border-bottom: 1.5px solid var(--card-border);
+			background: linear-gradient(180deg, #181a20 0%, #13151a 100%);
+		}
+
+		.leaf-inner {
+			position: absolute;
+			left: 0;
+			width: 100%;
+			height: 200%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: var(--digit-size);
+			font-weight: 800;
+			line-height: 1;
+			color: var(--digit-color);
+			font-variant-numeric: tabular-nums;
+			letter-spacing: -0.04em;
+			--digit-scale-x: 1;
+			transform: scale(var(--digit-scale-x), var(--digit-scale-y));
+			text-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+		}
+
+		/* 10以上の2桁表示時は縦幅(font-size・scaleY)を0〜9と完全に同一に保ったまま、横幅のみ収まるよう圧縮 */
+		.leaf-inner.two-digits-text {
+			--digit-scale-x: 0.75;
+			letter-spacing: -0.06em;
+		}
+
+		.half-leaf.top .leaf-inner {
+			top: 0;
+		}
+
+		.half-leaf.bottom .leaf-inner {
+			top: -100%;
+		}
+
+		/* Center Horizontal Hinge Slit Line */
+		.center-crease {
+			position: absolute;
+			left: 0;
+			right: 0;
+			top: calc(50% - 2px);
+			height: 4px;
+			background: rgba(0, 0, 0, 0.85);
+			box-shadow: 0 1px 0 rgba(255, 255, 255, 0.07);
+			z-index: 10;
+			pointer-events: none;
+		}
+
+		/* 3D Rotating Flap Leaves (Pivot strictly on the center crease!) */
+		.flap-front,
+		.flap-back {
+			z-index: 6;
+			will-change: transform, filter;
+		}
+
+		.half-leaf.top.flap-front,
+		.half-leaf.top.flap-back {
+			transform-origin: 50% 100%;
+		}
+
+		.half-leaf.bottom.flap-front,
+		.half-leaf.bottom.flap-back {
+			transform-origin: 50% 0%;
+		}
+
+		@keyframes flipDownFront {
+			0% { transform: rotateX(0deg); filter: brightness(1.05); }
+			50% { filter: brightness(0.75); }
+			100% { transform: rotateX(-180deg); filter: brightness(0.45); }
+		}
+		@keyframes flipDownBack {
+			0% { transform: rotateX(180deg); filter: brightness(0.45); }
+			50% { filter: brightness(1.15); }
+			100% { transform: rotateX(0deg); filter: brightness(1); }
+		}
+
+		@keyframes flipUpFront {
+			0% { transform: rotateX(0deg); filter: brightness(1.05); }
+			50% { filter: brightness(0.75); }
+			100% { transform: rotateX(180deg); filter: brightness(0.45); }
+		}
+		@keyframes flipUpBack {
+			0% { transform: rotateX(-180deg); filter: brightness(0.45); }
+			50% { filter: brightness(1.15); }
+			100% { transform: rotateX(0deg); filter: brightness(1); }
+		}
+
+		.anim-down-front {
+			animation: flipDownFront 0.44s cubic-bezier(0.32, 0.08, 0.24, 1) forwards;
+		}
+		.anim-down-back {
+			animation: flipDownBack 0.44s cubic-bezier(0.32, 0.08, 0.24, 1) forwards;
+		}
+		.anim-up-front {
+			animation: flipUpFront 0.44s cubic-bezier(0.32, 0.08, 0.24, 1) forwards;
+		}
+		.anim-up-back {
+			animation: flipUpBack 0.44s cubic-bezier(0.32, 0.08, 0.24, 1) forwards;
+		}
+
+		/* --- Won-Game Circles ("〇〇〇") matched to the Game Card's width --- */
+		.game-dots-bar {
+			width: 100%;
+			min-width: 0;
+			container-type: inline-size;
+			display: flex;
+			align-items: center;
+			justify-content: space-evenly;
+			gap: clamp(2px, 0.5vw, 5px);
+			padding: 2px 0;
+			flex-shrink: 0;
+		}
+
+		.game-dot {
+			flex: 0 1 auto;
+			width: clamp(7px, 2.6vw, 28px);
+			aspect-ratio: 1 / 1;
+			border-radius: 50%;
+			background: rgba(255, 255, 255, 0.14);
+			border: clamp(1.5px, 0.35vw, 3.5px) solid rgba(255, 255, 255, 0.55);
+			transition: background 0.22s, transform 0.22s, box-shadow 0.22s, border-color 0.22s;
+		}
+
+		.game-dots-bar[data-count="4"] .game-dot {
+			width: clamp(6px, 2.2vw, 23px);
+		}
+
+		@supports (width: 1cqw) {
+			.game-dot {
+				width: min(26cqw, 28px);
+				border-width: clamp(1.5px, 3cqw, 3.5px);
+			}
+			.game-dots-bar[data-count="4"] .game-dot {
+				width: min(20cqw, 23px);
+			}
+		}
+
+		.game-dot.won {
+			background: #ffffff;
+			border-color: #ffffff;
+			box-shadow: 0 0 14px rgba(255, 255, 255, 0.9);
+			transform: scale(1.08);
+		}
+
+		/* =========================================================
+		   3. Game/Match Finished Overlay & Action Bar
+		========================================================= */
+		.inboard-overlay {
+			position: fixed;
+			inset: 0;
+			z-index: 65;
+			background: rgba(0, 0, 0, 0.15);
+			display: flex;
+			flex-direction: column;
+			justify-content: flex-end;
+			align-items: center;
+			padding-bottom: max(clamp(76px, 14vh, 114px), calc(env(safe-area-inset-bottom, 0px) + 76px));
+			opacity: 0;
+			pointer-events: none;
+			transition: opacity 0.22s ease;
+		}
+
+		.inboard-overlay.active {
+			opacity: 1;
+			pointer-events: auto;
+		}
+
+		.inboard-action-bar {
+			width: min(94vw, 680px);
+			background: rgba(15, 23, 42, 0.96);
+			border: 3px solid var(--accent-gold);
+			border-radius: 20px;
+			padding: clamp(12px, 2.2vh, 18px) clamp(14px, 3vw, 24px);
+			box-shadow: 0 16px 45px rgba(0, 0, 0, 0.9);
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 12px;
+			transform: translateY(24px);
+			transition: transform 0.22s ease;
+		}
+
+		.inboard-overlay.active .inboard-action-bar {
+			transform: translateY(0);
+		}
+
+		.inboard-title {
+			font-size: clamp(1.15rem, 2.8vw, 1.45rem);
+			font-weight: 900;
+			color: #fef08a;
+			text-align: center;
+			overflow-wrap: anywhere;
+			word-break: break-word;
+		}
+
+		.inboard-btn-row {
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: center;
+			gap: 10px;
+			width: 100%;
+		}
+
+		.inboard-btn {
+			flex: 1 1 180px;
+			min-height: 54px;
+			padding: 12px 18px;
+			border-radius: 14px;
+			border: 2px solid rgba(255, 255, 255, 0.22);
+			font-size: clamp(1.05rem, 2.4vw, 1.25rem);
+			font-weight: 900;
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 8px;
+			transition: transform 0.1s;
+		}
+
+		.inboard-btn:active {
+			transform: scale(0.96);
+		}
+
+		.inboard-btn.primary {
+			background: var(--accent-blue);
+			border-color: #93c5fd;
+			color: #ffffff;
+		}
+
+		.inboard-btn.gold {
+			background: var(--accent-gold);
+			border-color: #fef08a;
+			color: #0f172a;
+		}
+
+		.inboard-btn.secondary {
+			background: #334155;
+			color: #f8fafc;
+		}
+
+		/* =========================================================
+		   4. Bottom Circular Controls
+		========================================================= */
+		.bottom-controls-layer {
+			position: relative;
+			z-index: 25;
+			display: grid;
+			grid-template-columns: 1fr auto 1fr;
+			align-items: center;
+			gap: clamp(6px, 1.4vw, 16px);
+			flex-shrink: 0;
+			width: 100%;
+			max-width: 1400px;
+			margin: 0 auto;
+			pointer-events: none;
+		}
+
+		@media (max-width: 520px) {
+			.bottom-controls-layer {
+				display: flex;
+				justify-content: space-between;
+			}
+		}
+
+		.left-controls,
+		.center-controls,
+		.right-controls {
+			display: flex;
+			align-items: center;
+			gap: clamp(6px, 1.6vw, 14px);
+			pointer-events: auto;
+		}
+
+		.left-controls { justify-self: start; }
+		.center-controls { justify-self: center; }
+		.right-controls { justify-self: end; }
+
+		.circle-btn {
+			width: clamp(42px, 6.6vw, 62px);
+			height: clamp(42px, 6.6vw, 62px);
+			border-radius: 50%;
+			background: rgba(26, 28, 35, 0.95);
+			border: 2px solid rgba(255, 255, 255, 0.24);
+			color: #ffffff;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			cursor: pointer;
+			box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7);
+			transition: transform 0.12s, background 0.15s, border-color 0.15s;
+			padding: 0;
+		}
+
+		.circle-btn:active {
+			transform: scale(0.92);
+			background: rgba(48, 52, 64, 0.98);
+		}
+
+		.circle-btn.off-state {
+			color: #6b7280;
+			border-color: rgba(255, 255, 255, 0.1);
+		}
+
+		.circle-btn svg {
+			width: clamp(20px, 2.8vw, 26px);
+			height: clamp(20px, 2.8vw, 26px);
+			stroke: currentColor;
+			fill: none;
+			stroke-width: 2.3;
+			stroke-linecap: round;
+			stroke-linejoin: round;
+		}
+
+		.btn-subtext {
+			font-size: clamp(0.62rem, 1.05vw, 0.74rem);
+			font-weight: 900;
+			letter-spacing: 0.02em;
+			line-height: 1;
+			margin-top: 2px;
+		}
+
+		/* =========================================================
+		   5. Toast Notification Banner
+		========================================================= */
+		.toast-banner {
+			position: fixed;
+			top: max(16px, calc(env(safe-area-inset-top, 0px) + 14px));
+			left: 50%;
+			transform: translateX(-50%) translateY(-25px);
+			z-index: 95;
+			background: rgba(15, 23, 42, 0.96);
+			border: 2.5px solid var(--accent-gold);
+			color: #ffffff;
+			padding: 12px 26px;
+			border-radius: 999px;
+			font-weight: 900;
+			font-size: clamp(1.05rem, 2.5vw, 1.35rem);
+			box-shadow: 0 12px 32px rgba(0, 0, 0, 0.8);
+			opacity: 0;
+			pointer-events: none;
+			transition: opacity 0.22s, transform 0.22s;
+			white-space: nowrap;
+		}
+
+		.toast-banner.show {
+			opacity: 1;
+			transform: translateX(-50%) translateY(0);
+		}
+
+		/* =========================================================
+		   6. Full-Screen Views: 1) 試合結果一覧 & 2) スコア推移
+		========================================================= */
+		.overlay-screen {
+			position: fixed;
+			inset: 0;
+			height: 100%;
+			height: 100dvh;
+			z-index: 75;
+			background: #f1f5f9;
+			color: #0f172a;
+			display: flex;
+			flex-direction: column;
+			opacity: 0;
+			pointer-events: none;
+			transform: translateY(15px);
+			transition: opacity 0.22s ease, transform 0.22s ease;
+			touch-action: pan-x pan-y;
+		}
+
+		.overlay-screen.active {
+			opacity: 1;
+			pointer-events: auto;
+			transform: translateY(0);
+		}
+
+		.screen-topbar {
+			background: #061224;
+			color: #ffffff;
+			display: grid;
+			grid-template-columns: auto 1fr auto;
+			align-items: center;
+			padding-top: max(12px, calc(env(safe-area-inset-top, 0px) + 12px));
+			padding-bottom: 12px;
+			padding-left: max(18px, calc(env(safe-area-inset-left, 0px) + 18px));
+			padding-right: max(18px, calc(env(safe-area-inset-right, 0px) + 18px));
+			min-height: 60px;
+			box-shadow: 0 3px 12px rgba(0, 0, 0, 0.25);
+			flex-shrink: 0;
+		}
+
+		.screen-close-btn {
+			background: rgba(255, 255, 255, 0.14);
+			border: 2px solid rgba(255, 255, 255, 0.28);
+			color: #ffffff;
+			border-radius: 12px;
+			min-width: 52px;
+			min-height: 44px;
+			padding: 6px 16px;
+			font-size: 1.1rem;
+			font-weight: 900;
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 6px;
+		}
+
+		.screen-close-btn:active {
+			transform: scale(0.95);
+		}
+
+		.screen-danger-btn {
+			background: #dc2626;
+			border: 2px solid #fca5a5;
+			color: #ffffff;
+			border-radius: 12px;
+			min-height: 44px;
+			padding: 6px 16px;
+			font-size: 1rem;
+			font-weight: 800;
+			cursor: pointer;
+		}
+
+		.screen-danger-btn:active {
+			transform: scale(0.95);
+		}
+
+		.screen-danger-btn:disabled {
+			opacity: 0.4;
+			pointer-events: none;
+		}
+
+		.screen-title-center {
+			text-align: center;
+			font-size: clamp(1.2rem, 3vw, 1.6rem);
+			font-weight: 900;
+			letter-spacing: 0.04em;
+		}
+
+		.screen-body {
+			flex: 1;
+			overflow-y: auto;
+			-webkit-overflow-scrolling: touch;
+			padding-top: 20px;
+			padding-bottom: max(40px, calc(env(safe-area-inset-bottom, 0px) + 32px));
+			padding-left: max(16px, calc(env(safe-area-inset-left, 0px) + 16px));
+			padding-right: max(16px, calc(env(safe-area-inset-right, 0px) + 16px));
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: flex-start;
+			gap: 24px;
+		}
+
+		/* --- Match Result History Cards List --- */
+		.results-list-container {
+			width: 100%;
+			max-width: 880px;
+			display: flex;
+			flex-direction: column;
+			gap: 24px;
+		}
+
+		.result-table-card {
+			width: 100%;
+			background: #ffffff;
+			border: 2px solid #cbd5e1;
+			border-radius: 14px;
+			overflow: hidden;
+			box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+		}
+
+		/* Match Metadata Bar (Start/End Datetime, Duration, and Score Progression Button) */
+		.result-meta-bar {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			justify-content: space-between;
+			gap: 10px;
+			padding: 12px 16px;
+			background: #f8fafc;
+			border-bottom: 2px solid #cbd5e1;
+		}
+
+		.result-meta-info {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: 8px 16px;
+			font-size: clamp(0.92rem, 2vw, 1.08rem);
+			font-weight: 800;
+			color: #334155;
+		}
+
+		.meta-duration-badge {
+			background: #e2e8f0;
+			color: #0f172a;
+			padding: 3px 10px;
+			border-radius: 999px;
+			font-weight: 900;
+		}
+
+		.result-meta-actions {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+		}
+
+		.result-to-progression-btn {
+			background: #2563eb;
+			border: 2px solid #60a5fa;
+			color: #ffffff;
+			border-radius: 10px;
+			padding: 8px 16px;
+			font-size: clamp(0.95rem, 2vw, 1.1rem);
+			font-weight: 900;
+			cursor: pointer;
+			transition: transform 0.1s, background 0.15s;
+			white-space: nowrap;
+		}
+
+		.result-to-progression-btn:active {
+			transform: scale(0.96);
+			background: #1d4ed8;
+		}
+
+		.result-delete-one-btn {
+			background: #fee2e2;
+			border: 2px solid #f87171;
+			color: #b91c1c;
+			border-radius: 10px;
+			padding: 8px 14px;
+			font-size: clamp(0.95rem, 2vw, 1.1rem);
+			font-weight: 900;
+			cursor: pointer;
+			transition: transform 0.1s, background 0.15s;
+			white-space: nowrap;
+		}
+
+		.result-delete-one-btn:active {
+			transform: scale(0.96);
+			background: #fecaca;
+		}
+
+		.result-header-grid {
+			display: grid;
+			grid-template-columns: 32% 36% 32%;
+			background: #2b6cb0;
+			color: #ffffff;
+			font-size: clamp(1rem, 2.3vw, 1.3rem);
+			font-weight: 800;
+			text-align: center;
+			border-bottom: 2px solid #cbd5e1;
+		}
+
+		.result-header-cell {
+			padding: 10px 8px;
+			border-right: 1px solid rgba(255, 255, 255, 0.28);
+		}
+
+		.result-header-cell:last-child {
+			border-right: none;
+		}
+
+		.result-body-grid {
+			display: grid;
+			grid-template-columns: 32% 10% 16% 10% 32%;
+			align-items: stretch;
+			min-height: clamp(150px, 34vh, 240px);
+			background: #ffffff;
+		}
+
+		.result-cell {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			padding: 14px 8px;
+			border-right: 1.5px solid #e2e8f0;
+			text-align: center;
+		}
+
+		.result-cell:last-child {
+			border-right: none;
+		}
+
+		.result-player-name {
+			font-size: clamp(1.2rem, 3vw, 1.75rem);
+			font-weight: 900;
+			color: #1e293b;
+			word-break: break-word;
+		}
+
+		.result-player-name-input {
+			width: 96%;
+			max-width: 240px;
+			font-family: inherit;
+			font-size: clamp(1.1rem, 2.8vw, 1.65rem);
+			font-weight: 900;
+			line-height: 1.28;
+			color: #1e293b;
+			text-align: center;
+			background: transparent;
+			border: 2px solid transparent;
+			border-radius: 8px;
+			padding: 4px 6px;
+			outline: none;
+			resize: none;
+			overflow: hidden;
+			white-space: pre-wrap;
+			overflow-wrap: anywhere;
+			word-break: break-word;
+			transition: border-color 0.2s, background-color 0.2s;
+			user-select: text;
+			-webkit-user-select: text;
+			touch-action: manipulation;
+		}
+
+		.result-player-name-input:focus {
+			background: #f8fafc;
+			border-color: var(--accent-blue);
+		}
+
+		.result-games-num {
+			font-size: clamp(2.2rem, 5.5vw, 3.5rem);
+			font-weight: 900;
+			color: #64748b;
+		}
+
+		.result-games-num.winner {
+			color: #e11d48;
+		}
+
+		.result-set-list {
+			display: flex;
+			flex-direction: column;
+			gap: 5px;
+			width: 100%;
+		}
+
+		.result-set-row {
+			display: grid;
+			grid-template-columns: 1fr auto 1fr;
+			align-items: center;
+			gap: 8px;
+			font-size: clamp(1.1rem, 2.6vw, 1.45rem);
+			font-weight: 800;
+			color: #64748b;
+		}
+
+		.result-set-row .pt-left {
+			text-align: right;
+		}
+
+		.result-set-row .pt-right {
+			text-align: left;
+		}
+
+		.result-set-row .pt-win {
+			color: #f43f5e;
+			font-weight: 900;
+		}
+
+		/* --- Score History View --- */
+		.history-header-summary {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+			align-items: center;
+			justify-items: center;
+			gap: clamp(8px, 2vw, 20px);
+			font-size: clamp(1rem, 2.5vw, 1.45rem);
+			font-weight: 900;
+			width: 100%;
+			min-width: 0;
+			padding: 0 6px;
+		}
+
+		.history-header-name {
+			max-width: 100%;
+			text-align: center;
+			line-height: 1.22;
+			overflow-wrap: anywhere;
+			word-break: break-word;
+		}
+
+		.history-header-summary .score-pill {
+			font-size: clamp(1.3rem, 3.2vw, 1.85rem);
+			letter-spacing: 0.05em;
+			white-space: nowrap;
+			flex-shrink: 0;
+		}
+
+		.history-header-summary .lead {
+			color: #ef4444;
+		}
+
+		.history-list-container {
+			width: 100%;
+			max-width: 1100px;
+			display: flex;
+			flex-direction: column;
+			gap: 20px;
+		}
+
+		.game-history-card {
+			background: #ffffff;
+			border-radius: 16px;
+			border: 2px solid #cbd5e1;
+			box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+			padding: 12px 14px 16px;
+			width: 100%;
+		}
+
+		.game-history-heading {
+			text-align: center;
+			font-size: clamp(1.25rem, 3vw, 1.55rem);
+			font-weight: 900;
+			color: #0f172a;
+			margin-bottom: 10px;
+		}
+
+		.timeline-swipe-area {
+			width: 100%;
+			overflow-x: auto;
+			-webkit-overflow-scrolling: touch;
+			padding-bottom: 6px;
+		}
+
+		.empty-state-box {
+			background: #ffffff;
+			border: 2px dashed #cbd5e1;
+			border-radius: 16px;
+			padding: 40px 24px;
+			text-align: center;
+			font-size: clamp(1.15rem, 2.8vw, 1.4rem);
+			font-weight: 800;
+			color: #475569;
+			margin: auto;
+			max-width: 600px;
+		}
+
+		/* =========================================================
+		   7. Large Touch-Friendly Modal Dialog
+		========================================================= */
+		.modal-backdrop {
+			position: fixed;
+			inset: 0;
+			z-index: 90;
+			background: rgba(0, 0, 0, 0.8);
+			backdrop-filter: blur(6px);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 14px;
+			opacity: 0;
+			pointer-events: none;
+			transition: opacity 0.2s ease;
+		}
+
+		.modal-backdrop.active {
+			opacity: 1;
+			pointer-events: auto;
+		}
+
+		.modal-card {
+			background: #181b23;
+			border: 2.5px solid rgba(255, 255, 255, 0.25);
+			border-radius: 22px;
+			max-width: 640px;
+			width: 96vw;
+			max-height: 92vh;
+			overflow-y: auto;
+			padding: clamp(18px, 4vh, 28px) clamp(16px, 4vw, 28px);
+			box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9);
+			text-align: center;
+			transform: scale(0.95);
+			transition: transform 0.2s ease;
+		}
+
+		.modal-backdrop.active .modal-card {
+			transform: scale(1);
+		}
+
+		.modal-title {
+			font-size: clamp(1.35rem, 3.5vw, 1.8rem);
+			font-weight: 900;
+			margin-bottom: 8px;
+			color: #ffffff;
+		}
+
+		.modal-desc {
+			font-size: clamp(1.05rem, 2.5vw, 1.25rem);
+			color: #cbd5e1;
+			line-height: 1.5;
+			margin-bottom: 18px;
+			white-space: pre-line;
+		}
+
+		.modal-actions {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+			gap: 12px;
+		}
+
+		.modal-actions.two-cols-row {
+			grid-template-columns: 1fr 1fr;
+		}
+
+		.modal-btn {
+			width: 100%;
+			min-height: 58px;
+			padding: 14px 18px;
+			border-radius: 16px;
+			border: 2px solid rgba(255, 255, 255, 0.2);
+			font-size: clamp(1.08rem, 2.6vw, 1.3rem);
+			font-weight: 900;
+			cursor: pointer;
+			transition: transform 0.1s;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		.modal-btn:active {
+			transform: scale(0.97);
+		}
+
+		.modal-btn:disabled {
+			opacity: 0.35;
+			pointer-events: none;
+			cursor: not-allowed;
+		}
+
+		.modal-btn.primary {
+			background: var(--accent-blue);
+			border-color: #93c5fd;
+			color: #ffffff;
+		}
+
+		.modal-btn.danger {
+			background: #dc2626;
+			border-color: #fca5a5;
+			color: #ffffff;
+		}
+
+		.modal-btn.secondary {
+			background: #2d323e;
+			color: #f8fafc;
+		}
+
+		.modal-btn.cancel-full {
+			grid-column: 1 / -1;
+			background: #1f242d;
+			border-color: rgba(255, 255, 255, 0.3);
+			color: #cbd5e1;
+		}
+	</style>
+</head>
+<body>
+	<div id="app">
+		<!-- Pure CSS 3D Split-Flap Scoreboard Stage (Always Landscape-Proportioned!)
+		     Top Header Area (Player Names + Subtle Change-Court Button) sits directly above the Score Panels -->
+		<div class="scoreboard-wrapper">
+			<header class="top-header-bar">
+				<div class="player-header-col left">
+					<input id="left-name-input" class="player-name-input" type="text" value="Player1" maxlength="16" aria-label="Left Player Name">
+				</div>
+
+				<button id="btn-swap-top" class="swap-top-btn" title="チェンジコート (左右入れ替え)">
+					⇄
+				</button>
+
+				<div class="player-header-col right">
+					<input id="right-name-input" class="player-name-input" type="text" value="Player2" maxlength="16" aria-label="Right Player Name">
+				</div>
+			</header>
+
+			<main id="scoreboard-stage" class="scoreboard-stage">
+				<!-- Left Point Column: Serve Bar (100% matched to Point Panel width) + Point Panel -->
+				<div class="point-col left">
+					<div id="left-serve-bar" class="serve-panel-bar active" title="タップしてサーブ権を切り替え"></div>
+					<div id="card-left-point" class="flip-card point-card" data-role="point" data-side="left">
+						<div class="half-leaf top"><div class="leaf-inner">0</div></div>
+						<div class="half-leaf bottom"><div class="leaf-inner">0</div></div>
+						<div class="center-crease"></div>
+					</div>
+				</div>
+
+				<!-- Center Columns (Spans cols 2 & 3): Left/Right Game Panels + Won-Game Dots + Lower Slot (Start Match Button / Elapsed Time) -->
+				<div class="center-cols-area">
+					<div class="game-panels-pair">
+						<div class="game-subcol">
+							<div id="card-left-game" class="flip-card game-card" data-role="game" data-side="left">
+								<div class="half-leaf top"><div class="leaf-inner">0</div></div>
+								<div class="half-leaf bottom"><div class="leaf-inner">0</div></div>
+								<div class="center-crease"></div>
+							</div>
+							<div id="left-dots-bar" class="game-dots-bar"></div>
+						</div>
+
+						<div class="game-subcol">
+							<div id="card-right-game" class="flip-card game-card" data-role="game" data-side="right">
+								<div class="half-leaf top"><div class="leaf-inner">0</div></div>
+								<div class="half-leaf bottom"><div class="leaf-inner">0</div></div>
+								<div class="center-crease"></div>
+							</div>
+							<div id="right-dots-bar" class="game-dots-bar"></div>
+						</div>
+					</div>
+
+					<!-- Lower empty area under Game Panels: Displays "START" button before match starts, and elapsed "mm:ss" timer once started -->
+					<div class="center-lower-slot">
+						<button id="btn-start-match" class="start-match-btn" title="試合を開始してタイマーをスタート">
+							START
+						</button>
+						<div id="match-elapsed-timer" class="match-elapsed-timer" aria-label="経過時間">
+							00:00
+						</div>
+					</div>
+				</div>
+
+				<!-- Right Point Column: Serve Bar (100% matched to Point Panel width) + Point Panel -->
+				<div class="point-col right">
+					<div id="right-serve-bar" class="serve-panel-bar" title="タップしてサーブ権を切り替え"></div>
+					<div id="card-right-point" class="flip-card point-card" data-role="point" data-side="right">
+						<div class="half-leaf top"><div class="leaf-inner">0</div></div>
+						<div class="half-leaf bottom"><div class="leaf-inner">0</div></div>
+						<div class="center-crease"></div>
+					</div>
+				</div>
+			</main>
+		</div>
+
+		<!-- Game/Match Finished Overlay (Blocks background buttons while keeping Scoreboard 100% visible!) -->
+		<div id="inboard-overlay" class="inboard-overlay" role="dialog" aria-modal="true" aria-live="polite">
+			<div class="inboard-action-bar">
+				<div id="inboard-title" class="inboard-title">Player1 がこのゲームを獲得！</div>
+				<div id="inboard-btn-row" class="inboard-btn-row"></div>
+			</div>
+		</div>
+
+		<!-- Bottom Floating Circular Controls -->
+		<footer class="bottom-controls-layer">
+			<!-- Bottom Left: Undo (-1) & Match Format -->
+			<div class="left-controls">
+				<button id="btn-undo" class="circle-btn" title="直前の操作を1つ戻す (Undo)">
+					<svg viewBox="0 0 24 24">
+						<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+						<path d="M3 3v5h5"/>
+					</svg>
+					<span class="btn-subtext">UNDO</span>
+				</button>
+
+				<button id="btn-match-format" class="circle-btn" title="マッチ形式の選択 (1G / 3G / 5G / 7G)">
+					<span style="font-size:clamp(1.05rem, 2.2vw, 1.25rem); font-weight:900; line-height:1;" id="format-main-label">5G</span>
+					<span class="btn-subtext">MATCH</span>
+				</button>
+			</div>
+
+			<!-- Bottom Center: Reset (×) -->
+			<div class="center-controls">
+				<button id="btn-reset" class="circle-btn" title="ゲームまたはマッチをリセット">
+					<svg viewBox="0 0 24 24">
+						<line x1="18" y1="6" x2="6" y2="18"/>
+						<line x1="6" y1="6" x2="18" y2="18"/>
+					</svg>
+					<span class="btn-subtext">RESET</span>
+				</button>
+			</div>
+
+			<!-- Bottom Right: Match Result Table, Current Match Score History Chart, Voice Toggle -->
+			<div class="right-controls">
+				<button id="btn-result" class="circle-btn" title="試合結果履歴を表示">
+					<svg viewBox="0 0 24 24">
+						<rect x="3" y="3" width="18" height="18" rx="2"/>
+						<line x1="3" y1="9" x2="21" y2="9"/>
+						<line x1="9" y1="21" x2="9" y2="9"/>
+						<line x1="15" y1="21" x2="15" y2="9"/>
+					</svg>
+					<span class="btn-subtext">結果</span>
+				</button>
+
+				<button id="btn-history" class="circle-btn" title="現在のマッチのスコア推移を表示">
+					<svg viewBox="0 0 24 24">
+						<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+					</svg>
+					<span class="btn-subtext">推移</span>
+				</button>
+
+				<button id="btn-voice" class="circle-btn" title="英語音声読み上げ ON/OFF">
+					<svg id="voice-svg-on" viewBox="0 0 24 24">
+						<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+						<path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+						<path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+					</svg>
+					<svg id="voice-svg-off" viewBox="0 0 24 24" style="display:none;">
+						<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+						<line x1="23" y1="9" x2="17" y2="15"/>
+						<line x1="17" y1="9" x2="23" y2="15"/>
+					</svg>
+					<span class="btn-subtext" id="voice-state-text">VOICE</span>
+				</button>
+			</div>
+		</footer>
+	</div>
+
+	<!-- Floating Toast Notification -->
+	<div id="toast-banner" class="toast-banner">Change Ends</div>
+
+	<!-- =========================================================
+	     1) 試合結果ビュー (Multiple Completed Matches History + Clear Results Button)
+	========================================================= -->
+	<section id="result-view" class="overlay-screen" aria-label="試合結果">
+		<header class="screen-topbar">
+			<button id="btn-result-close" class="screen-close-btn">✕ 閉じる</button>
+			<div class="screen-title-center">試合結果</div>
+			<button id="btn-clear-results" class="screen-danger-btn">全て削除</button>
+		</header>
+		<div class="screen-body">
+			<div id="results-list-container" class="results-list-container"></div>
+		</div>
+	</section>
+
+	<!-- =========================================================
+	     2) スコア推移グラフビュー (Displays Current Match or Selected Past Match)
+	========================================================= -->
+	<section id="history-view" class="overlay-screen" aria-label="スコア推移グラフ">
+		<header class="screen-topbar">
+			<button id="btn-history-close" class="screen-close-btn">‹ 戻る</button>
+			<div class="history-header-summary">
+				<span id="hist-name-0" class="history-header-name">Player1</span>
+				<span id="hist-games-score" class="score-pill">0 - 0</span>
+				<span id="hist-name-1" class="history-header-name">Player2</span>
+			</div>
+			<div style="width:78px;"></div>
+		</header>
+		<div class="screen-body">
+			<div id="history-content" class="history-list-container"></div>
+		</div>
+	</section>
+
+	<!-- =========================================================
+	     Large Touch Modal (For Format Selection, Reset Confirm & Clear Results Confirm)
+	========================================================= -->
+	<div id="modal-backdrop" class="modal-backdrop" role="dialog" aria-modal="true">
+		<div class="modal-card">
+			<h2 id="modal-title" class="modal-title">タイトル</h2>
+			<p id="modal-desc" class="modal-desc">説明</p>
+			<div id="modal-actions" class="modal-actions"></div>
+		</div>
+	</div>
+
+	<script>
+		// ============================================================================
+		// 1. アプリケーション状態管理 & localStorage 永続化 (安全フォールバック付き)
+		// ============================================================================
+		const STORAGE_KEY = 'tt_scoreboard_match_records_v1';
+		const ACTIVE_STATE_STORAGE_KEY = 'tt_scoreboard_active_state_v1';
+
+		const state = {
+			bestOf: 5, // 1, 3, 5, 7
+			teams: [
+				{ id: 0, name: 'Player1', points: 0, games: 0 },
+				{ id: 1, name: 'Player2', points: 0, games: 0 }
+			],
+			leftTeamIdx: 0,
+			rightTeamIdx: 1,
+			initialServerTeamIdx: 0,
+			decidingSwapped: false,
+			voiceEnabled: true,
+			modalOpen: false,
+			autoSwapPending: false,
+			pendingPhase: 'none', // 'none' | 'game_end' | 'match_end'
+			pendingWinnerIdx: -1,
+			// 試合開始状態 & 時刻管理
+			matchStarted: false,
+			matchStartTime: null, // timestamp (ms)
+			matchEndTime: null,   // timestamp (ms)
+			currentSavedMatchId: null, // マッチ終了時に保存されたレコードID（Undoで戻した際に取り消せるように保持）
+			// 現在のマッチの操作履歴・ゲーム履歴
+			actionUndoStack: [],
+			currentGameRallyLog: [],
+			completedGamesHistory: [],
+			// 過去の全マッチ結果リスト (新しい順)
+			matchRecords: [],
+			// スコア推移画面の遷移元 ('scoreboard' | 'results')
+			historyReturnTarget: 'scoreboard'
+		};
+
+		// localStorage 読み込み (アクセス不可環境でもエラーにしない)
+		function loadMatchRecordsFromStorage() {
+			try {
+				const raw = window.localStorage.getItem(STORAGE_KEY);
+				if (!raw) return;
+				const parsed = JSON.parse(raw);
+				if (Array.isArray(parsed)) {
+					state.matchRecords = parsed;
+				}
+			} catch (e) {
+				// localStorage unavailable or blocked (private browsing, file:// restriction, etc.)
+			}
+		}
+
+		// localStorage 保存 (アクセス不可環境でもエラーにしない)
+		function saveMatchRecordsToStorage() {
+			try {
+				window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state.matchRecords));
+			} catch (e) {
+				// Ignore storage errors gracefully
+			}
+		}
+
+		// 進行中の試合＆推移データを localStorage から復元 (リロード・誤終了対策)
+		function loadActiveMatchFromStorage() {
+			try {
+				const raw = window.localStorage.getItem(ACTIVE_STATE_STORAGE_KEY);
+				if (!raw) return;
+				const parsed = JSON.parse(raw);
+				if (!parsed || typeof parsed !== 'object') return;
+
+				if ([1, 3, 5, 7].includes(parsed.bestOf)) {
+					state.bestOf = parsed.bestOf;
+				}
+				if (Array.isArray(parsed.teams) && parsed.teams.length === 2) {
+					state.teams[0] = {
+						id: 0,
+						name: String(parsed.teams[0].name || 'Player1'),
+						points: Math.max(0, Number(parsed.teams[0].points) || 0),
+						games: Math.max(0, Number(parsed.teams[0].games) || 0)
+					};
+					state.teams[1] = {
+						id: 1,
+						name: String(parsed.teams[1].name || 'Player2'),
+						points: Math.max(0, Number(parsed.teams[1].points) || 0),
+						games: Math.max(0, Number(parsed.teams[1].games) || 0)
+					};
+				}
+				if (parsed.leftTeamIdx === 0 || parsed.leftTeamIdx === 1) {
+					state.leftTeamIdx = parsed.leftTeamIdx;
+					state.rightTeamIdx = 1 - parsed.leftTeamIdx;
+				}
+				if (parsed.initialServerTeamIdx === 0 || parsed.initialServerTeamIdx === 1) {
+					state.initialServerTeamIdx = parsed.initialServerTeamIdx;
+				}
+				state.decidingSwapped = Boolean(parsed.decidingSwapped);
+				if (typeof parsed.voiceEnabled === 'boolean') {
+					state.voiceEnabled = parsed.voiceEnabled;
+				}
+				if (['none', 'game_end', 'match_end'].includes(parsed.pendingPhase)) {
+					state.pendingPhase = parsed.pendingPhase;
+				}
+				if (typeof parsed.pendingWinnerIdx === 'number') {
+					state.pendingWinnerIdx = parsed.pendingWinnerIdx;
+				}
+				state.matchStarted = Boolean(parsed.matchStarted);
+				state.matchStartTime = typeof parsed.matchStartTime === 'number' ? parsed.matchStartTime : null;
+				state.matchEndTime = typeof parsed.matchEndTime === 'number' ? parsed.matchEndTime : null;
+				state.currentSavedMatchId = typeof parsed.currentSavedMatchId === 'string' ? parsed.currentSavedMatchId : null;
+				if (Array.isArray(parsed.actionUndoStack)) {
+					state.actionUndoStack = parsed.actionUndoStack;
+				}
+				if (Array.isArray(parsed.currentGameRallyLog)) {
+					state.currentGameRallyLog = parsed.currentGameRallyLog;
+				}
+				if (Array.isArray(parsed.completedGamesHistory)) {
+					state.completedGamesHistory = parsed.completedGamesHistory;
+				}
+			} catch (e) {
+				// Ignore storage errors gracefully
+			}
+		}
+
+		// 進行中の試合＆推移データをリアルタイムで localStorage に保存
+		function saveActiveMatchToStorage() {
+			try {
+				// 5点チェンジエンドの音声読み上げ待機中にリロードされた場合でもコート入れ替え状態が維持されるよう補正
+				const effectiveLeftIdx = state.autoSwapPending ? state.rightTeamIdx : state.leftTeamIdx;
+				const effectiveRightIdx = state.autoSwapPending ? state.leftTeamIdx : state.rightTeamIdx;
+				const snapshot = {
+					bestOf: state.bestOf,
+					teams: state.teams,
+					leftTeamIdx: effectiveLeftIdx,
+					rightTeamIdx: effectiveRightIdx,
+					initialServerTeamIdx: state.initialServerTeamIdx,
+					decidingSwapped: state.decidingSwapped,
+					voiceEnabled: state.voiceEnabled,
+					pendingPhase: state.pendingPhase,
+					pendingWinnerIdx: state.pendingWinnerIdx,
+					matchStarted: state.matchStarted,
+					matchStartTime: state.matchStartTime,
+					matchEndTime: state.matchEndTime,
+					currentSavedMatchId: state.currentSavedMatchId,
+					actionUndoStack: state.actionUndoStack,
+					currentGameRallyLog: state.currentGameRallyLog,
+					completedGamesHistory: state.completedGamesHistory
+				};
+				window.localStorage.setItem(ACTIVE_STATE_STORAGE_KEY, JSON.stringify(snapshot));
+			} catch (e) {
+				// Ignore storage errors gracefully
+			}
+		}
+
+		loadMatchRecordsFromStorage();
+		loadActiveMatchFromStorage();
+
+		let autoSwapTimerId = null;
+
+		function cancelPendingAutoSwap() {
+			if (autoSwapTimerId) {
+				clearTimeout(autoSwapTimerId);
+				autoSwapTimerId = null;
+			}
+			state.autoSwapPending = false;
+		}
+
+		function isInteractionLocked() {
+			return (
+				state.modalOpen ||
+				state.autoSwapPending ||
+				state.pendingPhase !== 'none' ||
+				document.getElementById('history-view').classList.contains('active') ||
+				document.getElementById('result-view').classList.contains('active')
+			);
+		}
+
+		// ============================================================================
+		// 2. 試合時間（経過時間 mm:ss）管理 & 日時フォーマットヘルパー
+		// ============================================================================
+		const btnStartMatchEl = document.getElementById('btn-start-match');
+		const matchElapsedTimerEl = document.getElementById('match-elapsed-timer');
+
+		function formatElapsedMMSS(ms) {
+			const totalSec = Math.max(0, Math.floor(ms / 1000));
+			const mm = Math.floor(totalSec / 60);
+			const ss = totalSec % 60;
+			return `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+		}
+
+		function formatDateTimeJP(ts) {
+			if (!ts) return '-';
+			const d = new Date(ts);
+			const yyyy = d.getFullYear();
+			const mo = String(d.getMonth() + 1).padStart(2, '0');
+			const da = String(d.getDate()).padStart(2, '0');
+			const hh = String(d.getHours()).padStart(2, '0');
+			const mi = String(d.getMinutes()).padStart(2, '0');
+			const ss = String(d.getSeconds()).padStart(2, '0');
+			return `${yyyy}/${mo}/${da} ${hh}:${mi}:${ss}`;
+		}
+
+		function formatTimeOnlyJP(ts) {
+			if (!ts) return '-';
+			const d = new Date(ts);
+			const hh = String(d.getHours()).padStart(2, '0');
+			const mi = String(d.getMinutes()).padStart(2, '0');
+			const ss = String(d.getSeconds()).padStart(2, '0');
+			return `${hh}:${mi}:${ss}`;
+		}
+
+		function updateMatchTimerUI() {
+			if (!state.matchStarted || !state.matchStartTime) {
+				btnStartMatchEl.style.display = 'inline-flex';
+				matchElapsedTimerEl.style.display = 'none';
+				matchElapsedTimerEl.textContent = '00:00';
+				return;
+			}
+
+			btnStartMatchEl.style.display = 'none';
+			matchElapsedTimerEl.style.display = 'block';
+
+			const endRef = state.matchEndTime || Date.now();
+			const elapsedMs = Math.max(0, endRef - state.matchStartTime);
+			matchElapsedTimerEl.textContent = formatElapsedMMSS(elapsedMs);
+		}
+
+		// 1秒ごとに経過時間表示を更新
+		setInterval(updateMatchTimerUI, 500);
+
+		// 試合開始処理（明示的に「試合開始」ボタンを押したとき、または最初のカウントアップ時に呼ばれる）
+		function startMatchNow(withVoiceAnnouncement = false) {
+			if (state.matchStarted) return;
+			state.matchStarted = true;
+			state.matchStartTime = Date.now();
+			state.matchEndTime = null;
+			state.currentSavedMatchId = null;
+			updateMatchTimerUI();
+			saveActiveMatchToStorage();
+			if (withVoiceAnnouncement) {
+				sound.playChime('change');
+				sound.speakEnglishCall('Love All');
+			}
+		}
+
+		// ============================================================================
+		// 3. 英語カウント音声読み上げ & 効果音エンジン
+		// ============================================================================
+		const ENGLISH_NUMBERS = [
+			'Love', 'One', 'Two', 'Three', 'Four', 'Five',
+			'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven',
+			'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen',
+			'Seventeen', 'Eighteen', 'Nineteen', 'Twenty',
+			'Twenty-One', 'Twenty-Two', 'Twenty-Three', 'Twenty-Four', 'Twenty-Five',
+			'Twenty-Six', 'Twenty-Seven', 'Twenty-Eight', 'Twenty-Nine', 'Thirty'
+		];
+
+		function numberToEnglishWord(n) {
+			if (n >= 0 && n < ENGLISH_NUMBERS.length) {
+				return ENGLISH_NUMBERS[n];
+			}
+			return String(n);
+		}
+
+		class SoundSystem {
+			constructor() {
+				this.ctx = null;
+				this.voices = [];
+				if ('speechSynthesis' in window) {
+					const loadVoices = () => {
+						this.voices = window.speechSynthesis.getVoices();
+					};
+					loadVoices();
+					window.speechSynthesis.onvoiceschanged = loadVoices;
+				}
+			}
+
+			initContext() {
+				if (!this.ctx) {
+					const AudioCtx = window.AudioContext || window.webkitAudioContext;
+					if (AudioCtx) this.ctx = new AudioCtx();
+				}
+				if (this.ctx && this.ctx.state === 'suspended') {
+					this.ctx.resume();
+				}
+			}
+
+			playFlipSound(isUp = true) {
+				try {
+					this.initContext();
+					if (!this.ctx) return;
+					const now = this.ctx.currentTime;
+					const osc = this.ctx.createOscillator();
+					const gain = this.ctx.createGain();
+
+					osc.type = 'triangle';
+					osc.frequency.setValueAtTime(isUp ? 195 : 140, now);
+					osc.frequency.exponentialRampToValueAtTime(isUp ? 420 : 95, now + 0.065);
+
+					gain.gain.setValueAtTime(0.2, now);
+					gain.gain.exponentialRampToValueAtTime(0.001, now + 0.075);
+
+					osc.connect(gain);
+					gain.connect(this.ctx.destination);
+					osc.start(now);
+					osc.stop(now + 0.08);
+				} catch (e) {}
+			}
+
+			playChime(type = 'change') {
+				try {
+					this.initContext();
+					if (!this.ctx) return;
+					const now = this.ctx.currentTime;
+					const notes = type === 'match' ? [523.25, 659.25, 783.99, 1046.5] : [587.33, 880];
+					notes.forEach((freq, idx) => {
+						const osc = this.ctx.createOscillator();
+						const gain = this.ctx.createGain();
+						osc.type = 'sine';
+						osc.frequency.setValueAtTime(freq, now + idx * 0.11);
+						gain.gain.setValueAtTime(0.16, now + idx * 0.11);
+						gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.11 + 0.28);
+						osc.connect(gain);
+						gain.connect(this.ctx.destination);
+						osc.start(now + idx * 0.11);
+						osc.stop(now + idx * 0.11 + 0.3);
+					});
+				} catch (e) {}
+			}
+
+			speakEnglishCall(enText, onComplete = null) {
+				if (!state.voiceEnabled || !('speechSynthesis' in window)) {
+					if (onComplete) {
+						autoSwapTimerId = setTimeout(onComplete, 650);
+					}
+					return;
+				}
+
+				let finished = false;
+				const done = () => {
+					if (finished) return;
+					finished = true;
+					if (autoSwapTimerId) {
+						clearTimeout(autoSwapTimerId);
+						autoSwapTimerId = null;
+					}
+					if (onComplete) onComplete();
+				};
+
+				try {
+					window.speechSynthesis.cancel();
+					const utter = new SpeechSynthesisUtterance(enText);
+					const enVoice = this.voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en-us'))
+						|| this.voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en'));
+					if (enVoice) {
+						utter.voice = enVoice;
+						utter.lang = enVoice.lang;
+					} else {
+						utter.lang = 'en-US';
+					}
+					utter.rate = 1.0;
+					utter.pitch = 1.0;
+
+					if (onComplete) {
+						utter.onend = () => {
+							autoSwapTimerId = setTimeout(done, 180);
+						};
+						utter.onerror = () => {
+							autoSwapTimerId = setTimeout(done, 180);
+						};
+						autoSwapTimerId = setTimeout(done, 2100);
+					}
+
+					window.speechSynthesis.speak(utter);
+				} catch (e) {
+					if (onComplete) {
+						autoSwapTimerId = setTimeout(done, 650);
+					}
+				}
+			}
+
+			/**
+			 * ゲーム終了・マッチ終了時コール:
+			 * プレイヤー名に日本語等の非ASCII文字が含まれている場合でも、
+			 * 「Game」「Game and Match」が日本語アクセント（カタカナ発音）にならないよう、
+			 * 英語フレーズとプレイヤー名を2つのSpeechSynthesisUtteranceに分割して連続再生する。
+			 */
+			speakWinnerCall(prefixEnText, playerName) {
+				if (!state.voiceEnabled || !('speechSynthesis' in window)) {
+					return;
+				}
+				try {
+					window.speechSynthesis.cancel();
+					const enVoice = this.voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en-us'))
+						|| this.voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en'));
+
+					const prefixUtter = new SpeechSynthesisUtterance(prefixEnText);
+					if (enVoice) {
+						prefixUtter.voice = enVoice;
+						prefixUtter.lang = enVoice.lang;
+					} else {
+						prefixUtter.lang = 'en-US';
+					}
+					prefixUtter.rate = 1.0;
+					prefixUtter.pitch = 1.0;
+
+					const cleanName = String(playerName || '').trim();
+					if (cleanName) {
+						const hasNonAscii = /[^\x00-\x7F]/.test(cleanName);
+						const nameUtter = new SpeechSynthesisUtterance(cleanName);
+						if (hasNonAscii) {
+							const jaVoice = this.voices.find(v => v.lang && v.lang.toLowerCase().startsWith('ja'));
+							if (jaVoice) {
+								nameUtter.voice = jaVoice;
+								nameUtter.lang = jaVoice.lang;
+							} else {
+								nameUtter.lang = 'ja-JP';
+							}
+						} else if (enVoice) {
+							nameUtter.voice = enVoice;
+							nameUtter.lang = enVoice.lang;
+						} else {
+							nameUtter.lang = 'en-US';
+						}
+						nameUtter.rate = 1.0;
+						nameUtter.pitch = 1.0;
+
+						let nameSpoken = false;
+						const speakNameNext = () => {
+							if (nameSpoken) return;
+							nameSpoken = true;
+							try {
+								window.speechSynthesis.speak(nameUtter);
+							} catch (e) {}
+						};
+
+						prefixUtter.onend = () => {
+							setTimeout(speakNameNext, 80);
+						};
+					}
+
+					window.speechSynthesis.speak(prefixUtter);
+				} catch (e) {}
+			}
+		}
+
+		const sound = new SoundSystem();
+
+		function buildEnglishScoreCall(extraNotice = '') {
+			const p0 = state.teams[0].points;
+			const p1 = state.teams[1].points;
+
+			if (p0 === 0 && p1 === 0 && !extraNotice) {
+				return 'Love All';
+			}
+
+			const serverIdx = getCurrentServerTeamIdx();
+			const receiverIdx = 1 - serverIdx;
+			const sPts = state.teams[serverIdx].points;
+			const rPts = state.teams[receiverIdx].points;
+
+			let scorePhrase = '';
+			if (sPts === rPts) {
+				scorePhrase = `${numberToEnglishWord(sPts)} All`;
+			} else {
+				scorePhrase = `${numberToEnglishWord(sPts)}, ${numberToEnglishWord(rPts)}`;
+			}
+
+			return [scorePhrase, extraNotice].filter(Boolean).join('. ');
+		}
+
+		// ============================================================================
+		// 4. 卓球ルール判定ヘルパー
+		// ============================================================================
+		function isDecidingGame() {
+			if (state.bestOf === 1) return true;
+			const needed = Math.ceil(state.bestOf / 2);
+			return state.teams[0].games === needed - 1 && state.teams[1].games === needed - 1;
+		}
+
+		function getServerForScore(p0, p1, initialServer) {
+			const total = p0 + p1;
+			const switches = total < 20 ? Math.floor(total / 2) : 10 + (total - 20);
+			return switches % 2 === 0 ? initialServer : 1 - initialServer;
+		}
+
+		function getCurrentServerTeamIdx() {
+			return getServerForScore(state.teams[0].points, state.teams[1].points, state.initialServerTeamIdx);
+		}
+
+		function checkGameWinnerTeamIdx() {
+			const p0 = state.teams[0].points;
+			const p1 = state.teams[1].points;
+			if ((p0 >= 11 || p1 >= 11) && Math.abs(p0 - p1) >= 2) {
+				return p0 > p1 ? 0 : 1;
+			}
+			return -1;
+		}
+
+		function checkMatchWinnerTeamIdx() {
+			const needed = Math.ceil(state.bestOf / 2);
+			if (state.teams[0].games >= needed) return 0;
+			if (state.teams[1].games >= needed) return 1;
+			return -1;
+		}
+
+		// ============================================================================
+		// 5. CSS 3D スプリットフラップ・パネルクラス
+		// ============================================================================
+		class CSSSplitFlapCard {
+			constructor(el) {
+				this.el = el;
+				this.role = el.dataset.role; // 'point' | 'game'
+				this.side = el.dataset.side; // 'left' | 'right'
+				this.staticTopInner = el.querySelector('.half-leaf.top .leaf-inner');
+				this.staticBottomInner = el.querySelector('.half-leaf.bottom .leaf-inner');
+				this.currentVal = null;
+				this.activeFlapEls = [];
+				this.cleanupTimer = null;
+			}
+
+			setPressedHighlight(isPressed) {
+				this.el.classList.toggle('pressing', isPressed);
+			}
+
+			createFlapLeaf(halfType, extraClass, val, isYellow) {
+				const leaf = document.createElement('div');
+				leaf.className = `half-leaf ${halfType} ${extraClass}`;
+				const inner = document.createElement('div');
+				const isTwoDigits = String(val).length >= 2;
+				inner.className = 'leaf-inner' + (isTwoDigits ? ' two-digits-text' : '');
+				inner.textContent = String(val);
+				inner.style.color = isYellow ? 'var(--text-yellow)' : '#ffffff';
+				leaf.appendChild(inner);
+				return leaf;
+			}
+
+			clearActiveFlaps() {
+				if (this.cleanupTimer) {
+					clearTimeout(this.cleanupTimer);
+					this.cleanupTimer = null;
+				}
+				while (this.activeFlapEls.length > 0) {
+					const node = this.activeFlapEls.pop();
+					node.remove();
+				}
+				if (this.currentVal !== null) {
+					const isYellow = this.role === 'point' && this.currentVal >= 10;
+					const isTwoDigits = String(this.currentVal).length >= 2;
+					this.el.classList.toggle('yellow-digits', isYellow);
+					this.el.classList.toggle('two-digits', isTwoDigits);
+					this.staticTopInner.textContent = String(this.currentVal);
+					this.staticBottomInner.textContent = String(this.currentVal);
+					this.staticTopInner.classList.toggle('two-digits-text', isTwoDigits);
+					this.staticBottomInner.classList.toggle('two-digits-text', isTwoDigits);
+					this.staticTopInner.style.color = '';
+					this.staticBottomInner.style.color = '';
+				}
+			}
+
+			updateVisual(newVal, animateFlip = true, direction = 1) {
+				const isFirstInit = this.currentVal === null;
+				if (this.currentVal === newVal) return;
+
+				const oldVal = this.currentVal;
+				this.currentVal = newVal;
+
+				const newIsYellow = this.role === 'point' && newVal >= 10;
+				const oldIsYellow = this.role === 'point' && oldVal >= 10;
+				const newIsTwoDigits = String(newVal).length >= 2;
+				const oldIsTwoDigits = String(oldVal).length >= 2;
+				this.el.classList.toggle('two-digits', newIsTwoDigits);
+
+				if (isFirstInit || !animateFlip || oldVal === null) {
+					this.clearActiveFlaps();
+					return;
+				}
+
+				if (this.cleanupTimer) {
+					clearTimeout(this.cleanupTimer);
+					this.cleanupTimer = null;
+				}
+				while (this.activeFlapEls.length > 0) {
+					this.activeFlapEls.pop().remove();
+				}
+
+				if (direction >= 0) {
+					this.staticTopInner.textContent = String(newVal);
+					this.staticTopInner.classList.toggle('two-digits-text', newIsTwoDigits);
+					this.staticTopInner.style.color = newIsYellow ? 'var(--text-yellow)' : '#ffffff';
+
+					this.staticBottomInner.textContent = String(oldVal);
+					this.staticBottomInner.classList.toggle('two-digits-text', oldIsTwoDigits);
+					this.staticBottomInner.style.color = oldIsYellow ? 'var(--text-yellow)' : '#ffffff';
+
+					const flapFront = this.createFlapLeaf('top', 'flap-front anim-down-front', oldVal, oldIsYellow);
+					const flapBack = this.createFlapLeaf('bottom', 'flap-back anim-down-back', newVal, newIsYellow);
+
+					this.el.appendChild(flapFront);
+					this.el.appendChild(flapBack);
+					this.activeFlapEls.push(flapFront, flapBack);
+				} else {
+					this.staticTopInner.textContent = String(oldVal);
+					this.staticTopInner.classList.toggle('two-digits-text', oldIsTwoDigits);
+					this.staticTopInner.style.color = oldIsYellow ? 'var(--text-yellow)' : '#ffffff';
+
+					this.staticBottomInner.textContent = String(newVal);
+					this.staticBottomInner.classList.toggle('two-digits-text', newIsTwoDigits);
+					this.staticBottomInner.style.color = newIsYellow ? 'var(--text-yellow)' : '#ffffff';
+
+					const flapFront = this.createFlapLeaf('bottom', 'flap-front anim-up-front', oldVal, oldIsYellow);
+					const flapBack = this.createFlapLeaf('top', 'flap-back anim-up-back', newVal, newIsYellow);
+
+					this.el.appendChild(flapFront);
+					this.el.appendChild(flapBack);
+					this.activeFlapEls.push(flapFront, flapBack);
+				}
+
+				this.cleanupTimer = setTimeout(() => {
+					this.clearActiveFlaps();
+				}, 450);
+			}
+		}
+
+		const units = {
+			leftPoint: new CSSSplitFlapCard(document.getElementById('card-left-point')),
+			leftGame: new CSSSplitFlapCard(document.getElementById('card-left-game')),
+			rightGame: new CSSSplitFlapCard(document.getElementById('card-right-game')),
+			rightPoint: new CSSSplitFlapCard(document.getElementById('card-right-point'))
+		};
+		const allUnits = Object.values(units);
+
+		// ============================================================================
+		// 6. UI同期 & ゲーム終了・マッチ終了オーバーレイ制御
+		// ============================================================================
+		const scoreboardStageEl = document.getElementById('scoreboard-stage');
+		const leftNameInputEl = document.getElementById('left-name-input');
+		const rightNameInputEl = document.getElementById('right-name-input');
+		const leftServeBarEl = document.getElementById('left-serve-bar');
+		const rightServeBarEl = document.getElementById('right-serve-bar');
+		const leftDotsBarEl = document.getElementById('left-dots-bar');
+		const rightDotsBarEl = document.getElementById('right-dots-bar');
+		const formatMainLabelEl = document.getElementById('format-main-label');
+		const toastBannerEl = document.getElementById('toast-banner');
+
+		const inboardOverlayEl = document.getElementById('inboard-overlay');
+		const inboardTitleEl = document.getElementById('inboard-title');
+		const inboardBtnRowEl = document.getElementById('inboard-btn-row');
+
+		let toastTimer = null;
+		function showToast(msg) {
+			toastBannerEl.textContent = msg;
+			toastBannerEl.classList.add('show');
+			if (toastTimer) clearTimeout(toastTimer);
+			toastTimer = setTimeout(() => {
+				toastBannerEl.classList.remove('show');
+			}, 2400);
+		}
+
+		let textMeasureCtx = null;
+		function measureTextWidthPx(text, fontWeight, fontSizePx, fontFamily) {
+			if (!textMeasureCtx) {
+				const canvas = document.createElement('canvas');
+				textMeasureCtx = canvas.getContext('2d');
+			}
+			if (!textMeasureCtx) return text.length * fontSizePx;
+			textMeasureCtx.font = `${fontWeight} ${fontSizePx}px ${fontFamily}`;
+			return textMeasureCtx.measureText(text).width;
+		}
+
+		// スコアボード上部のプレイヤー名入力欄: 長い名前の場合は横幅に収まるようフォントサイズを自動縮小
+		function fitScoreboardNameInput(inputEl) {
+			if (!inputEl) return;
+			inputEl.style.fontSize = '';
+			const availW = inputEl.clientWidth - 12;
+			if (availW <= 20) return;
+			const computed = window.getComputedStyle(inputEl);
+			const baseFontPx = parseFloat(computed.fontSize) || 24;
+			const text = inputEl.value || 'Player1';
+			const measuredW = measureTextWidthPx(
+				text,
+				computed.fontWeight || '900',
+				baseFontPx,
+				computed.fontFamily || 'sans-serif'
+			);
+			if (measuredW > availW) {
+				const scaledPx = Math.max(7.5, Math.floor((baseFontPx * availW / measuredW) * 10) / 10);
+				inputEl.style.fontSize = `${scaledPx}px`;
+			}
+		}
+
+		// 試合結果画面のプレイヤー名欄(textarea): 文字数・折り返し行数に応じて高さを自動調整
+		function autoResizeResultNameTextarea(el) {
+			if (!el) return;
+			el.style.height = 'auto';
+			el.style.height = `${el.scrollHeight}px`;
+		}
+
+		function renderGameDots(containerEl, gamesWon, neededGames) {
+			containerEl.dataset.count = String(neededGames);
+			containerEl.innerHTML = '';
+			for (let i = 0; i < neededGames; i++) {
+				const dot = document.createElement('span');
+				dot.className = 'game-dot' + (i < gamesWon ? ' won' : '');
+				containerEl.appendChild(dot);
+			}
+		}
+
+		function syncUIAndBoard({ animate = true, direction = 1 } = {}) {
+			const leftTeam = state.teams[state.leftTeamIdx];
+			const rightTeam = state.teams[state.rightTeamIdx];
+
+			units.leftPoint.updateVisual(leftTeam.points, animate, direction);
+			units.leftGame.updateVisual(leftTeam.games, animate, direction);
+			units.rightGame.updateVisual(rightTeam.games, animate, direction);
+			units.rightPoint.updateVisual(rightTeam.points, animate, direction);
+
+			const serverTeamIdx = getCurrentServerTeamIdx();
+			leftServeBarEl.classList.toggle('active', serverTeamIdx === state.leftTeamIdx);
+			rightServeBarEl.classList.toggle('active', serverTeamIdx === state.rightTeamIdx);
+
+			const neededGames = Math.ceil(state.bestOf / 2);
+			renderGameDots(leftDotsBarEl, leftTeam.games, neededGames);
+			renderGameDots(rightDotsBarEl, rightTeam.games, neededGames);
+
+			if (document.activeElement !== leftNameInputEl) {
+				leftNameInputEl.value = leftTeam.name;
+			}
+			if (document.activeElement !== rightNameInputEl) {
+				rightNameInputEl.value = rightTeam.name;
+			}
+			fitScoreboardNameInput(leftNameInputEl);
+			fitScoreboardNameInput(rightNameInputEl);
+
+			formatMainLabelEl.textContent = `${state.bestOf}G`;
+			updateMatchTimerUI();
+			saveActiveMatchToStorage();
+		}
+
+		// 完了したマッチを履歴リスト＆localStorageに保存する
+		function recordCompletedMatch() {
+			const endTime = Date.now();
+			const startTime = state.matchStartTime || endTime;
+			state.matchEndTime = endTime;
+			updateMatchTimerUI();
+
+			const matchId = `match_${endTime}_${Math.random().toString(36).slice(2, 7)}`;
+			const record = {
+				id: matchId,
+				bestOf: state.bestOf,
+				startTime,
+				endTime,
+				durationMs: Math.max(0, endTime - startTime),
+				player0Name: state.teams[0].name,
+				player1Name: state.teams[1].name,
+				games0: state.teams[0].games,
+				games1: state.teams[1].games,
+				gamesHistory: JSON.parse(JSON.stringify(state.completedGamesHistory))
+			};
+
+			// 最新の試合が先頭に来るように unshift で追加
+			state.matchRecords.unshift(record);
+			state.currentSavedMatchId = matchId;
+			saveMatchRecordsToStorage();
+			saveActiveMatchToStorage();
+		}
+
+		// 万一マッチ終了直後に「1つ戻す」が押された場合は、今保存したばかりのマッチ完了レコードを取り消す
+		function removeJustSavedMatchRecord() {
+			if (!state.currentSavedMatchId) return;
+			const idx = state.matchRecords.findIndex(r => r.id === state.currentSavedMatchId);
+			if (idx !== -1) {
+				state.matchRecords.splice(idx, 1);
+				saveMatchRecordsToStorage();
+			}
+			state.currentSavedMatchId = null;
+			state.matchEndTime = null;
+			updateMatchTimerUI();
+			saveActiveMatchToStorage();
+		}
+
+		function showInboardBar(phase, winnerTeamIdx) {
+			state.pendingPhase = phase;
+			state.pendingWinnerIdx = winnerTeamIdx;
+			const winner = state.teams[winnerTeamIdx];
+			inboardBtnRowEl.innerHTML = '';
+
+			if (phase === 'game_end') {
+				inboardTitleEl.textContent = `${winner.name} がこのゲームを獲得！`;
+
+				const nextBtn = document.createElement('button');
+				nextBtn.className = 'inboard-btn primary';
+				nextBtn.textContent = '次のゲームへ';
+				nextBtn.addEventListener('click', () => {
+					hideInboardBar();
+					proceedToNextGame();
+				});
+
+				const undoBtn = document.createElement('button');
+				undoBtn.className = 'inboard-btn secondary';
+				undoBtn.textContent = '1つ戻す';
+				undoBtn.addEventListener('click', () => {
+					undoCompletedGamePoint();
+				});
+
+				inboardBtnRowEl.appendChild(nextBtn);
+				inboardBtnRowEl.appendChild(undoBtn);
+			} else if (phase === 'match_end') {
+				inboardTitleEl.textContent = `試合終了！ 勝者: ${winner.name}`;
+
+				const resultBtn = document.createElement('button');
+				resultBtn.className = 'inboard-btn primary';
+				resultBtn.textContent = '試合結果を見る';
+				resultBtn.addEventListener('click', () => {
+					openResultView();
+				});
+
+				const newMatchBtn = document.createElement('button');
+				newMatchBtn.className = 'inboard-btn gold';
+				newMatchBtn.textContent = '新しい試合を開始';
+				newMatchBtn.addEventListener('click', () => {
+					hideInboardBar();
+					resetEntireMatch();
+				});
+
+				const undoBtn = document.createElement('button');
+				undoBtn.className = 'inboard-btn secondary';
+				undoBtn.textContent = '1つ戻す';
+				undoBtn.addEventListener('click', () => {
+					undoCompletedGamePoint();
+				});
+
+				inboardBtnRowEl.appendChild(resultBtn);
+				inboardBtnRowEl.appendChild(newMatchBtn);
+				inboardBtnRowEl.appendChild(undoBtn);
+			}
+
+			inboardOverlayEl.classList.add('active');
+			saveActiveMatchToStorage();
+		}
+
+		function hideInboardBar() {
+			state.pendingPhase = 'none';
+			state.pendingWinnerIdx = -1;
+			inboardOverlayEl.classList.remove('active');
+			saveActiveMatchToStorage();
+		}
+
+		function proceedToNextGame() {
+			state.teams[0].points = 0;
+			state.teams[1].points = 0;
+			state.currentGameRallyLog = [];
+			state.actionUndoStack = [];
+			state.decidingSwapped = false;
+			state.initialServerTeamIdx = 1 - state.initialServerTeamIdx;
+			swapCourts('Change Ends - Next Game');
+			syncUIAndBoard({ animate: true, direction: -1 });
+			sound.speakEnglishCall('Change Ends. Love All');
+		}
+
+		function undoCompletedGamePoint() {
+			if (state.pendingPhase === 'match_end') {
+				removeJustSavedMatchRecord();
+			}
+			const lastAction = state.actionUndoStack[state.actionUndoStack.length - 1];
+			if (state.pendingWinnerIdx !== -1 && lastAction && lastAction.type === 'point') {
+				const winner = state.teams[state.pendingWinnerIdx];
+				winner.games = Math.max(0, winner.games - 1);
+				state.completedGamesHistory.pop();
+			}
+			hideInboardBar();
+			undoLastAction();
+		}
+
+		// ============================================================================
+		// 7. スコア操作 & 最終ゲーム自動チェンジエンドの段階的シーケンス
+		// ============================================================================
+		function swapCourts(announceText = 'Change Ends') {
+			const tmp = state.leftTeamIdx;
+			state.leftTeamIdx = state.rightTeamIdx;
+			state.rightTeamIdx = tmp;
+
+			scoreboardStageEl.classList.add('swapping');
+			setTimeout(() => {
+				scoreboardStageEl.classList.remove('swapping');
+			}, 260);
+
+			sound.playChime('change');
+			showToast(announceText);
+		}
+
+		function incrementPanelValue(unit) {
+			if (isInteractionLocked()) return;
+
+			// まだ「試合開始」ボタンを押さずにパネルをタップした場合、このタイミングで自動的に試合開始とする
+			if (!state.matchStarted) {
+				startMatchNow(false);
+			}
+
+			const teamIdx = unit.side === 'left' ? state.leftTeamIdx : state.rightTeamIdx;
+			const team = state.teams[teamIdx];
+
+			if (unit.role === 'point') {
+				const nextPoints = team.points + 1;
+				if (nextPoints > 99) return;
+
+				const serverBeforePoint = getCurrentServerTeamIdx();
+				team.points = nextPoints;
+
+				state.currentGameRallyLog.push({
+					scorer: teamIdx,
+					p0: state.teams[0].points,
+					p1: state.teams[1].points,
+					server: serverBeforePoint
+				});
+				state.actionUndoStack.push({ type: 'point', teamIdx });
+
+				sound.playFlipSound(true);
+				syncUIAndBoard({ animate: true, direction: 1 });
+
+				const gameWinnerIdx = checkGameWinnerTeamIdx();
+				if (gameWinnerIdx !== -1) {
+					handleGameFinished(gameWinnerIdx);
+					return;
+				}
+
+				// 最終ゲーム（セットオール）の5点自動チェンジエンド判定
+				const shouldAutoSwapAtFive = (
+					isDecidingGame() &&
+					!state.decidingSwapped &&
+					(state.teams[0].points === 5 || state.teams[1].points === 5) &&
+					state.teams[0].points + state.teams[1].points < 10
+				);
+
+				const scoreCallText = buildEnglishScoreCall();
+
+				if (shouldAutoSwapAtFive) {
+					state.decidingSwapped = true;
+					state.autoSwapPending = true;
+					saveActiveMatchToStorage();
+
+					sound.speakEnglishCall(scoreCallText, () => {
+						if (!state.autoSwapPending) return;
+						state.autoSwapPending = false;
+
+						swapCourts('Change Ends (5 Points)');
+						syncUIAndBoard({ animate: true, direction: 1 });
+						sound.speakEnglishCall('Change Ends');
+					});
+				} else {
+					sound.speakEnglishCall(scoreCallText);
+				}
+			} else if (unit.role === 'game') {
+				const maxWins = Math.ceil(state.bestOf / 2);
+				const nextGames = team.games + 1;
+				if (nextGames > maxWins) return;
+
+				team.games = nextGames;
+				state.actionUndoStack.push({ type: 'game', teamIdx });
+
+				sound.playFlipSound(true);
+				syncUIAndBoard({ animate: true, direction: 1 });
+
+				const matchWinnerIdx = checkMatchWinnerTeamIdx();
+				if (matchWinnerIdx !== -1) {
+					recordCompletedMatch();
+					showInboardBar('match_end', matchWinnerIdx);
+				}
+			}
+		}
+
+		function undoLastAction() {
+			if (state.modalOpen || state.pendingPhase !== 'none') return;
+
+			const wasAutoSwapPending = state.autoSwapPending;
+			cancelPendingAutoSwap();
+
+			if (state.actionUndoStack.length === 0) {
+				showToast('戻せる操作がありません');
+				return;
+			}
+
+			const lastAction = state.actionUndoStack.pop();
+			if (lastAction.type === 'point') {
+				state.currentGameRallyLog.pop();
+				const scorerTeam = state.teams[lastAction.teamIdx];
+				scorerTeam.points = Math.max(0, scorerTeam.points - 1);
+
+				if (state.decidingSwapped && state.teams[0].points < 5 && state.teams[1].points < 5) {
+					state.decidingSwapped = false;
+					if (!wasAutoSwapPending) {
+						swapCourts('Undo 5-Point Change Ends');
+					}
+				}
+			} else if (lastAction.type === 'game') {
+				const team = state.teams[lastAction.teamIdx];
+				team.games = Math.max(0, team.games - 1);
+			}
+
+			sound.playFlipSound(false);
+			syncUIAndBoard({ animate: true, direction: -1 });
+		}
+
+		function handleGameFinished(winnerTeamIdx) {
+			const winner = state.teams[winnerTeamIdx];
+			winner.games += 1;
+
+			const gameNum = state.completedGamesHistory.length + 1;
+			state.completedGamesHistory.push({
+				gameNumber: gameNum,
+				winner: winnerTeamIdx,
+				p0: state.teams[0].points,
+				p1: state.teams[1].points,
+				log: [...state.currentGameRallyLog]
+			});
+
+			syncUIAndBoard({ animate: true, direction: 1 });
+
+			const matchWinnerIdx = checkMatchWinnerTeamIdx();
+			if (matchWinnerIdx !== -1) {
+				sound.playChime('match');
+				sound.speakWinnerCall('Game and Match', winner.name);
+				recordCompletedMatch();
+				showInboardBar('match_end', matchWinnerIdx);
+			} else {
+				sound.playChime('change');
+				sound.speakWinnerCall('Game', winner.name);
+				showInboardBar('game_end', winnerTeamIdx);
+			}
+		}
+
+		// ============================================================================
+		// 8. 試合結果画面 (過去マッチの履歴一覧・開始/終了日時・試合時間・各マッチのスコア推移遷移・結果クリア)
+		// ============================================================================
+		const resultViewEl = document.getElementById('result-view');
+		const resultsListContainerEl = document.getElementById('results-list-container');
+		const btnClearResultsEl = document.getElementById('btn-clear-results');
+
+		function openResultView() {
+			closeHistoryView();
+			renderResultView();
+			resultViewEl.classList.add('active');
+		}
+
+		function closeResultView() {
+			resultViewEl.classList.remove('active');
+		}
+
+		function renderResultView() {
+			resultsListContainerEl.innerHTML = '';
+			btnClearResultsEl.disabled = state.matchRecords.length === 0;
+
+			if (state.matchRecords.length === 0) {
+				const emptyDiv = document.createElement('div');
+				emptyDiv.className = 'empty-state-box';
+				emptyDiv.textContent = 'まだ完了した試合結果がありません。試合が終了するとここに履歴が保存されます。';
+				resultsListContainerEl.appendChild(emptyDiv);
+				return;
+			}
+
+			state.matchRecords.forEach((rec) => {
+				const card = document.createElement('div');
+				card.className = 'result-table-card';
+
+				// 上部メタ情報バー (開始〜終了日時、試合時間、スコア推移ボタン)
+				const metaBar = document.createElement('div');
+				metaBar.className = 'result-meta-bar';
+
+				const metaInfo = document.createElement('div');
+				metaInfo.className = 'result-meta-info';
+
+				const startStr = formatDateTimeJP(rec.startTime);
+				const endStr = formatTimeOnlyJP(rec.endTime);
+				const durStr = formatElapsedMMSS(rec.durationMs || 0);
+
+				const dateSpan = document.createElement('span');
+				dateSpan.textContent = `${startStr} 〜 ${endStr}`;
+				const durBadge = document.createElement('span');
+				durBadge.className = 'meta-duration-badge';
+				durBadge.textContent = `試合時間 ${durStr}`;
+
+				metaInfo.appendChild(dateSpan);
+				metaInfo.appendChild(durBadge);
+
+				const actionsWrap = document.createElement('div');
+				actionsWrap.className = 'result-meta-actions';
+
+				const progBtn = document.createElement('button');
+				progBtn.className = 'result-to-progression-btn';
+				progBtn.textContent = 'スコア推移';
+				progBtn.addEventListener('click', () => {
+					openHistoryViewForRecord(rec);
+				});
+
+				const delBtn = document.createElement('button');
+				delBtn.className = 'result-delete-one-btn';
+				delBtn.textContent = '削除';
+				delBtn.addEventListener('click', () => {
+					showDeleteResultConfirmModal(rec.id);
+				});
+
+				actionsWrap.appendChild(progBtn);
+				actionsWrap.appendChild(delBtn);
+
+				metaBar.appendChild(metaInfo);
+				metaBar.appendChild(actionsWrap);
+				card.appendChild(metaBar);
+
+				// 青ヘッダー行
+				const headerGrid = document.createElement('div');
+				headerGrid.className = 'result-header-grid';
+				headerGrid.innerHTML = `
+					<div class="result-header-cell">対戦相手</div>
+					<div class="result-header-cell">結果</div>
+					<div class="result-header-cell">対戦相手</div>
+				`;
+				card.appendChild(headerGrid);
+
+				// 本体グリッド
+				const bodyGrid = document.createElement('div');
+				bodyGrid.className = 'result-body-grid';
+
+				const cellName0 = document.createElement('div');
+				cellName0.className = 'result-cell';
+				const name0Input = document.createElement('textarea');
+				name0Input.rows = 1;
+				name0Input.maxLength = 16;
+				name0Input.className = 'result-player-name-input';
+				name0Input.value = rec.player0Name;
+				name0Input.title = 'タップしてプレイヤー名を変更';
+				name0Input.setAttribute('aria-label', '左プレイヤー名');
+				name0Input.addEventListener('keydown', (e) => {
+					if (e.key === 'Enter') {
+						e.preventDefault();
+						name0Input.blur();
+					}
+				});
+				name0Input.addEventListener('input', () => {
+					const cleanVal = name0Input.value.replace(/[\r\n]+/g, '');
+					if (name0Input.value !== cleanVal) {
+						name0Input.value = cleanVal;
+					}
+					autoResizeResultNameTextarea(name0Input);
+					const newName = cleanVal.trim() || 'Player1';
+					rec.player0Name = newName;
+					saveMatchRecordsToStorage();
+					if (state.currentSavedMatchId === rec.id) {
+						state.teams[0].name = newName;
+						if (state.pendingPhase === 'match_end' && state.pendingWinnerIdx === 0) {
+							inboardTitleEl.textContent = `試合終了！ 勝者: ${newName}`;
+						}
+						syncUIAndBoard({ animate: false });
+					}
+				});
+				name0Input.addEventListener('blur', () => {
+					name0Input.value = rec.player0Name;
+					autoResizeResultNameTextarea(name0Input);
+				});
+				cellName0.appendChild(name0Input);
+
+				const cellGames0 = document.createElement('div');
+				cellGames0.className = 'result-cell';
+				const games0Div = document.createElement('div');
+				games0Div.className = 'result-games-num' + (rec.games0 > rec.games1 ? ' winner' : '');
+				games0Div.textContent = String(rec.games0);
+				cellGames0.appendChild(games0Div);
+
+				const cellSets = document.createElement('div');
+				cellSets.className = 'result-cell';
+				const setListDiv = document.createElement('div');
+				setListDiv.className = 'result-set-list';
+
+				if (Array.isArray(rec.gamesHistory) && rec.gamesHistory.length > 0) {
+					rec.gamesHistory.forEach(g => {
+						const row = document.createElement('div');
+						row.className = 'result-set-row';
+						const c0 = g.p0 > g.p1 ? 'pt-left pt-win' : 'pt-left';
+						const c1 = g.p1 > g.p0 ? 'pt-right pt-win' : 'pt-right';
+						row.innerHTML = `<span class="${c0}">${g.p0}</span><span>-</span><span class="${c1}">${g.p1}</span>`;
+						setListDiv.appendChild(row);
+					});
+				} else {
+					const row = document.createElement('div');
+					row.className = 'result-set-row';
+					row.innerHTML = `<span class="pt-left">-</span><span>-</span><span class="pt-right">-</span>`;
+					setListDiv.appendChild(row);
+				}
+				cellSets.appendChild(setListDiv);
+
+				const cellGames1 = document.createElement('div');
+				cellGames1.className = 'result-cell';
+				const games1Div = document.createElement('div');
+				games1Div.className = 'result-games-num' + (rec.games1 > rec.games0 ? ' winner' : '');
+				games1Div.textContent = String(rec.games1);
+				cellGames1.appendChild(games1Div);
+
+				const cellName1 = document.createElement('div');
+				cellName1.className = 'result-cell';
+				const name1Input = document.createElement('textarea');
+				name1Input.rows = 1;
+				name1Input.maxLength = 16;
+				name1Input.className = 'result-player-name-input';
+				name1Input.value = rec.player1Name;
+				name1Input.title = 'タップしてプレイヤー名を変更';
+				name1Input.setAttribute('aria-label', '右プレイヤー名');
+				name1Input.addEventListener('keydown', (e) => {
+					if (e.key === 'Enter') {
+						e.preventDefault();
+						name1Input.blur();
+					}
+				});
+				name1Input.addEventListener('input', () => {
+					const cleanVal = name1Input.value.replace(/[\r\n]+/g, '');
+					if (name1Input.value !== cleanVal) {
+						name1Input.value = cleanVal;
+					}
+					autoResizeResultNameTextarea(name1Input);
+					const newName = cleanVal.trim() || 'Player2';
+					rec.player1Name = newName;
+					saveMatchRecordsToStorage();
+					if (state.currentSavedMatchId === rec.id) {
+						state.teams[1].name = newName;
+						if (state.pendingPhase === 'match_end' && state.pendingWinnerIdx === 1) {
+							inboardTitleEl.textContent = `試合終了！ 勝者: ${newName}`;
+						}
+						syncUIAndBoard({ animate: false });
+					}
+				});
+				name1Input.addEventListener('blur', () => {
+					name1Input.value = rec.player1Name;
+					autoResizeResultNameTextarea(name1Input);
+				});
+				cellName1.appendChild(name1Input);
+
+				bodyGrid.appendChild(cellName0);
+				bodyGrid.appendChild(cellGames0);
+				bodyGrid.appendChild(cellSets);
+				bodyGrid.appendChild(cellGames1);
+				bodyGrid.appendChild(cellName1);
+
+				card.appendChild(bodyGrid);
+				resultsListContainerEl.appendChild(card);
+				autoResizeResultNameTextarea(name0Input);
+				autoResizeResultNameTextarea(name1Input);
+			});
+		}
+
+		// ============================================================================
+		// 9. スコア推移グラフ画面 (現在のマッチ または 選択した過去マッチの推移を表示)
+		// ============================================================================
+		const historyViewEl = document.getElementById('history-view');
+		const historyContentEl = document.getElementById('history-content');
+		const histName0El = document.getElementById('hist-name-0');
+		const histName1El = document.getElementById('hist-name-1');
+		const histGamesScoreEl = document.getElementById('hist-games-score');
+
+		// スコアボード右下の「推移」ボタンから現在のマッチのスコア推移を開く
+		function openCurrentMatchHistoryView() {
+			state.historyReturnTarget = 'scoreboard';
+			closeResultView();
+
+			const t0 = state.teams[0];
+			const t1 = state.teams[1];
+			const gamesToRender = [...state.completedGamesHistory];
+			if (state.pendingPhase === 'none' && state.currentGameRallyLog.length > 0) {
+				gamesToRender.push({
+					gameNumber: gamesToRender.length + 1,
+					winner: -1,
+					p0: t0.points,
+					p1: t1.points,
+					log: state.currentGameRallyLog,
+					inProgress: true
+				});
+			}
+
+			renderHistoryTarget({
+				player0Name: t0.name,
+				player1Name: t1.name,
+				games0: t0.games,
+				games1: t1.games,
+				gamesList: gamesToRender
+			});
+			historyViewEl.classList.add('active');
+		}
+
+		// 試合結果画面の各マッチにある「スコア推移」ボタンから該当マッチの推移を開く
+		function openHistoryViewForRecord(rec) {
+			state.historyReturnTarget = 'results';
+			closeResultView();
+
+			renderHistoryTarget({
+				player0Name: rec.player0Name,
+				player1Name: rec.player1Name,
+				games0: rec.games0,
+				games1: rec.games1,
+				gamesList: Array.isArray(rec.gamesHistory) ? rec.gamesHistory : []
+			});
+			historyViewEl.classList.add('active');
+		}
+
+		function closeHistoryView() {
+			historyViewEl.classList.remove('active');
+		}
+
+		function renderHistoryTarget({ player0Name, player1Name, games0, games1, gamesList }) {
+			histName0El.textContent = player0Name;
+			histName1El.textContent = player1Name;
+
+			const g0Class = games0 > games1 ? 'lead' : '';
+			const g1Class = games1 > games0 ? 'lead' : '';
+			histGamesScoreEl.innerHTML = `<span class="${g0Class}">${games0}</span> - <span class="${g1Class}">${games1}</span>`;
+
+			historyContentEl.innerHTML = '';
+
+			if (!gamesList || gamesList.length === 0) {
+				const emptyDiv = document.createElement('div');
+				emptyDiv.className = 'empty-state-box';
+				emptyDiv.textContent = 'スコア推移データがありません。';
+				historyContentEl.appendChild(emptyDiv);
+				return;
+			}
+
+			gamesList.forEach(gameData => {
+				const card = document.createElement('div');
+				card.className = 'game-history-card';
+
+				const heading = document.createElement('div');
+				heading.className = 'game-history-heading';
+				heading.textContent = gameData.inProgress
+					? `Game ${gameData.gameNumber} (進行中)`
+					: `Game ${gameData.gameNumber}`;
+				card.appendChild(heading);
+
+				const swipeArea = document.createElement('div');
+				swipeArea.className = 'timeline-swipe-area';
+				swipeArea.appendChild(buildLargeGameTimelineSVG(gameData, player0Name, player1Name));
+				card.appendChild(swipeArea);
+
+				historyContentEl.appendChild(card);
+			});
+		}
+
+		function buildLargeGameTimelineSVG(gameData, name0, name1) {
+			const log = gameData.log || [];
+			const nameColWidth = 150;
+			const colStep = 62;
+			const finalColWidth = 78;
+			const rowHeight = 74;
+			const totalHeight = rowHeight * 2;
+			const totalWidth = nameColWidth + Math.max(log.length, 1) * colStep + finalColWidth;
+
+			const svgNS = 'http://www.w3.org/2000/svg';
+			const svg = document.createElementNS(svgNS, 'svg');
+			svg.setAttribute('width', String(totalWidth));
+			svg.setAttribute('height', String(totalHeight));
+			svg.setAttribute('viewBox', `0 0 ${totalWidth} ${totalHeight}`);
+			svg.style.display = 'block';
+			svg.style.minWidth = `${totalWidth}px`;
+
+			const yRow0 = rowHeight * 0.5;
+			const yRow1 = rowHeight * 1.5;
+
+			const addLine = (x1, y1, x2, y2, stroke, width = 1.5) => {
+				const line = document.createElementNS(svgNS, 'line');
+				line.setAttribute('x1', x1);
+				line.setAttribute('y1', y1);
+				line.setAttribute('x2', x2);
+				line.setAttribute('y2', y2);
+				line.setAttribute('stroke', stroke);
+				line.setAttribute('stroke-width', width);
+				svg.appendChild(line);
+			};
+
+			addLine(0, 1, totalWidth, 1, '#cbd5e1', 2);
+			addLine(0, rowHeight, totalWidth - finalColWidth, rowHeight, '#e2e8f0', 1.5);
+			addLine(0, totalHeight - 1, totalWidth, totalHeight - 1, '#cbd5e1', 2);
+
+			const finalX = totalWidth - finalColWidth;
+			const rect = document.createElementNS(svgNS, 'rect');
+			rect.setAttribute('x', finalX);
+			rect.setAttribute('y', 2);
+			rect.setAttribute('width', finalColWidth);
+			rect.setAttribute('height', totalHeight - 4);
+			rect.setAttribute('fill', '#f5b82e');
+			svg.appendChild(rect);
+
+			const addText = (txt, x, y, color, size, weight = '800', anchor = 'start') => {
+				const t = document.createElementNS(svgNS, 'text');
+				t.setAttribute('x', x);
+				t.setAttribute('y', y);
+				t.setAttribute('fill', color);
+				t.setAttribute('font-size', size);
+				t.setAttribute('font-weight', weight);
+				t.setAttribute('text-anchor', anchor);
+				t.setAttribute('dominant-baseline', 'central');
+				t.textContent = txt;
+				svg.appendChild(t);
+				return t;
+			};
+
+			// SVG内のプレイヤー名表示: 長い名前の場合は2行に折り返し、さらに列幅を超える場合は横幅に合わせて縮小
+			const addPlayerNameSVG = (rawName, x, centerY) => {
+				const str = String(rawName || '');
+				const maxColW = nameColWidth - x - 10; // 約128px
+				const lines = str.length > 8
+					? [str.slice(0, Math.ceil(str.length / 2)), str.slice(Math.ceil(str.length / 2))]
+					: [str];
+				const fontSizePx = lines.length > 1 ? 15 : 18;
+				const lineOffsets = lines.length > 1 ? [-10, 10] : [0];
+
+				lines.forEach((lineStr, idx) => {
+					const tEl = addText(lineStr, x, centerY + lineOffsets[idx], '#1e293b', `${fontSizePx}px`, '900', 'start');
+					const measuredW = measureTextWidthPx(lineStr, '900', fontSizePx, 'sans-serif');
+					if (measuredW > maxColW) {
+						tEl.setAttribute('textLength', String(maxColW));
+						tEl.setAttribute('lengthAdjust', 'spacingAndGlyphs');
+					}
+				});
+			};
+
+			addPlayerNameSVG(name0, 12, yRow0);
+			addPlayerNameSVG(name1, 12, yRow1);
+
+			addText(String(gameData.p0), finalX + finalColWidth / 2, yRow0, '#0f172a', '22px', '900', 'middle');
+			addText(String(gameData.p1), finalX + finalColWidth / 2, yRow1, '#0f172a', '22px', '900', 'middle');
+
+			if (log.length > 1) {
+				const polyPoints = log.map((entry, idx) => {
+					const cx = nameColWidth + idx * colStep + colStep / 2;
+					const cy = entry.scorer === 0 ? yRow0 : yRow1;
+					return `${cx},${cy}`;
+				}).join(' ');
+
+				const polyline = document.createElementNS(svgNS, 'polyline');
+				polyline.setAttribute('points', polyPoints);
+				polyline.setAttribute('fill', 'none');
+				polyline.setAttribute('stroke', '#2563eb');
+				polyline.setAttribute('stroke-width', '3.5');
+				svg.appendChild(polyline);
+			}
+
+			log.forEach((entry, idx) => {
+				const cx = nameColWidth + idx * colStep + colStep / 2;
+
+				[0, 1].forEach(teamId => {
+					const cy = teamId === 0 ? yRow0 : yRow1;
+					const isScorer = entry.scorer === teamId;
+					const ptsVal = teamId === 0 ? entry.p0 : entry.p1;
+
+					const circle = document.createElementNS(svgNS, 'circle');
+					circle.setAttribute('cx', cx);
+					circle.setAttribute('cy', cy);
+					circle.setAttribute('r', isScorer ? '18' : '15.5');
+					circle.setAttribute('fill', isScorer ? '#1d9bf0' : '#e2e8f0');
+					svg.appendChild(circle);
+
+					addText(
+						String(ptsVal),
+						cx,
+						cy,
+						isScorer ? '#ffffff' : '#64748b',
+						isScorer ? '16px' : '14.5px',
+						'900',
+						'middle'
+					);
+
+					if (entry.server === teamId) {
+						addLine(cx - 17, cy + 25, cx + 17, cy + 25, '#dc2626', 4);
+					}
+				});
+			});
+
+			return svg;
+		}
+
+		// ============================================================================
+		// 10. モーダルダイアログ (ゲーム数選択・リセット確認・結果クリア確認)
+		// ============================================================================
+		const modalBackdropEl = document.getElementById('modal-backdrop');
+		const modalTitleEl = document.getElementById('modal-title');
+		const modalDescEl = document.getElementById('modal-desc');
+		const modalActionsEl = document.getElementById('modal-actions');
+
+		function openModal({ title, desc, buttons, twoCols = false }) {
+			state.modalOpen = true;
+			modalTitleEl.textContent = title;
+			modalDescEl.textContent = desc;
+			modalActionsEl.innerHTML = '';
+			modalActionsEl.classList.toggle('two-cols-row', Boolean(twoCols));
+
+			buttons.forEach(btnDef => {
+				const btn = document.createElement('button');
+				btn.className = `modal-btn ${btnDef.variant || 'secondary'}`;
+				btn.textContent = btnDef.label;
+				if (btnDef.disabled) {
+					btn.disabled = true;
+				}
+				btn.addEventListener('click', () => {
+					if (btn.disabled) return;
+					closeModal();
+					if (btnDef.onClick) btnDef.onClick();
+				});
+				modalActionsEl.appendChild(btn);
+			});
+
+			modalBackdropEl.classList.add('active');
+		}
+
+		function closeModal() {
+			state.modalOpen = false;
+			modalBackdropEl.classList.remove('active');
+		}
+
+		modalBackdropEl.addEventListener('click', (e) => {
+			if (e.target === modalBackdropEl) {
+				closeModal();
+			}
+		});
+
+		function showResetConfirmModal() {
+			openModal({
+				title: 'リセットの確認',
+				desc: 'リセットする範囲を選択してください。',
+				buttons: [
+					{
+						label: '現在のゲームをリセット',
+						variant: 'primary',
+						onClick: () => {
+							const isFirstGame = state.completedGamesHistory.length === 0
+								&& state.teams[0].games === 0
+								&& state.teams[1].games === 0;
+							if (isFirstGame) {
+								resetEntireMatch();
+								return;
+							}
+							const wasAutoSwapPending = state.autoSwapPending;
+							cancelPendingAutoSwap();
+							hideInboardBar();
+							if (state.decidingSwapped && !wasAutoSwapPending) {
+								[state.leftTeamIdx, state.rightTeamIdx] = [state.rightTeamIdx, state.leftTeamIdx];
+							}
+							state.teams[0].points = 0;
+							state.teams[1].points = 0;
+							state.currentGameRallyLog = [];
+							state.actionUndoStack = [];
+							state.decidingSwapped = false;
+							syncUIAndBoard({ animate: true, direction: -1 });
+							showToast('現在のゲームをリセットしました');
+						}
+					},
+					{
+						label: 'マッチ全体をリセット',
+						variant: 'danger',
+						onClick: () => {
+							cancelPendingAutoSwap();
+							hideInboardBar();
+							resetEntireMatch();
+						}
+					},
+					{
+						label: 'キャンセル',
+						variant: 'cancel-full'
+					}
+				]
+			});
+		}
+
+		function showDeleteResultConfirmModal(targetMatchId = null) {
+			if (state.matchRecords.length === 0) return;
+			const isDeleteAll = targetMatchId === null;
+			openModal({
+				title: isDeleteAll ? '全ての試合結果を削除' : '試合結果の削除',
+				desc: isDeleteAll
+					? '保存されている全ての試合結果とスコア推移を削除しますか？\n（現在進行中のマッチは削除されません）'
+					: '選択した試合結果とスコア推移を削除しますか？',
+				twoCols: true,
+				buttons: [
+					{
+						label: '削除する',
+						variant: 'danger',
+						onClick: () => {
+							if (isDeleteAll) {
+								state.matchRecords = [];
+								state.currentSavedMatchId = null;
+								saveMatchRecordsToStorage();
+								saveActiveMatchToStorage();
+								renderResultView();
+								showToast('全ての試合結果を削除しました');
+							} else {
+								state.matchRecords = state.matchRecords.filter(r => r.id !== targetMatchId);
+								if (state.currentSavedMatchId === targetMatchId) {
+									state.currentSavedMatchId = null;
+								}
+								saveMatchRecordsToStorage();
+								saveActiveMatchToStorage();
+								renderResultView();
+								showToast('試合結果を削除しました');
+							}
+						}
+					},
+					{
+						label: 'キャンセル',
+						variant: 'secondary'
+					}
+				]
+			});
+		}
+
+		function isMatchInProgress() {
+			return (
+				state.matchStarted ||
+				state.teams[0].points > 0 ||
+				state.teams[1].points > 0 ||
+				state.teams[0].games > 0 ||
+				state.teams[1].games > 0 ||
+				state.completedGamesHistory.length > 0
+			);
+		}
+
+		function showMatchFormatModal() {
+			const inProgress = isMatchInProgress();
+			const completedGames = Math.max(
+				state.completedGamesHistory.length,
+				state.teams[0].games + state.teams[1].games
+			);
+			const maxTeamGames = Math.max(state.teams[0].games, state.teams[1].games);
+
+			const options = [1, 3, 5, 7].map(num => {
+				const neededGames = Math.ceil(num / 2);
+				// 進行中は、既に終了しているゲーム数以下、または既にどちらかが先取数に達している形式へは変更不可
+				const isDisabled = inProgress && (num <= completedGames || maxTeamGames >= neededGames);
+				return {
+					label: `${num}ゲームズ (${neededGames}G先取)` + (state.bestOf === num ? ' ✓' : ''),
+					variant: state.bestOf === num ? 'primary' : 'secondary',
+					disabled: isDisabled,
+					onClick: () => {
+						if (state.bestOf === num) return;
+						state.bestOf = num;
+						if (inProgress) {
+							// 進行中の形式変更: スコアや推移データを維持したまま形式のみ変更
+							// 変更によって現在のゲームが最終ゲームになり、かつ既に5点以上に達している場合は5点チェンジエンド済扱いにする
+							if (isDecidingGame() && (state.teams[0].points >= 5 || state.teams[1].points >= 5)) {
+								state.decidingSwapped = true;
+							}
+							syncUIAndBoard({ animate: false });
+							showToast(`${num}ゲームズマッチに変更しました`);
+						} else {
+							cancelPendingAutoSwap();
+							hideInboardBar();
+							resetEntireMatch();
+							showToast(`${num}ゲームズマッチに設定しました`);
+						}
+					}
+				};
+			});
+
+			options.push({
+				label: 'キャンセル',
+				variant: 'cancel-full'
+			});
+
+			openModal({
+				title: inProgress ? 'マッチ形式の変更' : 'マッチ形式の選択',
+				desc: inProgress
+					? '変更するゲーム数をタップして選択してください。'
+					: 'プレイするゲーム数をタップして選択してください。',
+				buttons: options
+			});
+		}
+
+		function resetEntireMatch() {
+			cancelPendingAutoSwap();
+			hideInboardBar();
+			state.teams[0].points = 0;
+			state.teams[0].games = 0;
+			state.teams[1].points = 0;
+			state.teams[1].games = 0;
+			state.leftTeamIdx = 0;
+			state.rightTeamIdx = 1;
+			state.initialServerTeamIdx = 0;
+			state.decidingSwapped = false;
+			state.matchStarted = false;
+			state.matchStartTime = null;
+			state.matchEndTime = null;
+			state.currentSavedMatchId = null;
+			state.currentGameRallyLog = [];
+			state.actionUndoStack = [];
+			state.completedGamesHistory = [];
+			syncUIAndBoard({ animate: true, direction: -1 });
+			showToast('新しいマッチの準備ができました');
+		}
+
+		// ============================================================================
+		// 11. 誤動作を防ぐ「タップ完了時（指を離した位置）」での即時カウントアップ
+		// ============================================================================
+		let activePointerId = null;
+		let pressedUnit = null;
+
+		function getHitUnitFromPoint(clientX, clientY) {
+			const elem = document.elementFromPoint(clientX, clientY);
+			if (!elem) return null;
+			const cardEl = elem.closest('.flip-card');
+			if (!cardEl) return null;
+			return allUnits.find(u => u.el === cardEl) || null;
+		}
+
+		function clearPressedUnitState() {
+			allUnits.forEach(u => u.setPressedHighlight(false));
+			pressedUnit = null;
+			activePointerId = null;
+		}
+
+		allUnits.forEach(unit => {
+			unit.el.addEventListener('pointerdown', (e) => {
+				if (isInteractionLocked()) return;
+				if (e.button === 2) return;
+
+				activePointerId = e.pointerId;
+				pressedUnit = unit;
+				unit.setPressedHighlight(true);
+			});
+
+			unit.el.addEventListener('contextmenu', (e) => {
+				e.preventDefault();
+			});
+		});
+
+		window.addEventListener('pointermove', (e) => {
+			if (e.pointerId !== activePointerId || !pressedUnit) return;
+			const currentHoverUnit = getHitUnitFromPoint(e.clientX, e.clientY);
+			pressedUnit.setPressedHighlight(currentHoverUnit === pressedUnit);
+		});
+
+		window.addEventListener('pointerup', (e) => {
+			if (e.pointerId !== activePointerId || !pressedUnit) return;
+
+			const targetUnit = pressedUnit;
+			const releasedUnit = getHitUnitFromPoint(e.clientX, e.clientY);
+			clearPressedUnitState();
+
+			if (isInteractionLocked()) return;
+
+			if (releasedUnit !== targetUnit) {
+				return;
+			}
+
+			incrementPanelValue(targetUnit);
+		});
+
+		window.addEventListener('pointercancel', () => {
+			clearPressedUnitState();
+		});
+
+		// ============================================================================
+		// 12. ボタン・UIイベントリスナー
+		// ============================================================================
+		// スコアボード中央下の「試合開始」ボタン
+		btnStartMatchEl.addEventListener('click', () => {
+			if (isInteractionLocked()) return;
+			startMatchNow(true);
+			showToast('試合を開始しました');
+		});
+
+		document.getElementById('btn-swap-top').addEventListener('click', () => {
+			if (isInteractionLocked()) return;
+			swapCourts('Change Ends');
+			syncUIAndBoard({ animate: true, direction: 1 });
+		});
+
+		document.getElementById('btn-undo').addEventListener('click', () => {
+			if (state.modalOpen || state.pendingPhase !== 'none') return;
+			undoLastAction();
+		});
+
+		document.getElementById('btn-match-format').addEventListener('click', () => {
+			if (isInteractionLocked()) return;
+			showMatchFormatModal();
+		});
+
+		document.getElementById('btn-reset').addEventListener('click', () => {
+			if (isInteractionLocked()) return;
+			showResetConfirmModal();
+		});
+
+		// 試合結果ビュー開閉 & 結果クリアボタン
+		document.getElementById('btn-result').addEventListener('click', () => {
+			if (isInteractionLocked()) return;
+			openResultView();
+		});
+		document.getElementById('btn-result-close').addEventListener('click', () => {
+			closeResultView();
+		});
+		btnClearResultsEl.addEventListener('click', () => {
+			showDeleteResultConfirmModal(null);
+		});
+
+		// スコアボード右下の「推移」ボタン -> 現在のマッチの推移へ
+		document.getElementById('btn-history').addEventListener('click', () => {
+			if (isInteractionLocked()) return;
+			openCurrentMatchHistoryView();
+		});
+
+		// スコア推移画面の「‹ 戻る」ボタン -> 遷移元（試合結果画面 または スコアボード）へ戻る
+		document.getElementById('btn-history-close').addEventListener('click', () => {
+			closeHistoryView();
+			if (state.historyReturnTarget === 'results') {
+				openResultView();
+			}
+		});
+
+		const btnVoiceEl = document.getElementById('btn-voice');
+		const voiceSvgOnEl = document.getElementById('voice-svg-on');
+		const voiceSvgOffEl = document.getElementById('voice-svg-off');
+		const voiceStateTextEl = document.getElementById('voice-state-text');
+
+		function syncVoiceBtnUI() {
+			btnVoiceEl.classList.toggle('off-state', !state.voiceEnabled);
+			voiceSvgOnEl.style.display = state.voiceEnabled ? 'block' : 'none';
+			voiceSvgOffEl.style.display = state.voiceEnabled ? 'none' : 'block';
+			voiceStateTextEl.textContent = state.voiceEnabled ? 'VOICE' : 'MUTE';
+		}
+
+		btnVoiceEl.addEventListener('click', () => {
+			if (isInteractionLocked()) return;
+			state.voiceEnabled = !state.voiceEnabled;
+			syncVoiceBtnUI();
+			saveActiveMatchToStorage();
+			if (state.voiceEnabled) {
+				sound.speakEnglishCall(buildEnglishScoreCall());
+			} else if ('speechSynthesis' in window) {
+				window.speechSynthesis.cancel();
+			}
+			showToast(`Voice Call: ${state.voiceEnabled ? 'ON' : 'OFF'}`);
+		});
+
+		leftServeBarEl.addEventListener('click', () => {
+			if (isInteractionLocked()) return;
+			if (getCurrentServerTeamIdx() !== state.leftTeamIdx) {
+				state.initialServerTeamIdx = 1 - state.initialServerTeamIdx;
+				syncUIAndBoard({ animate: false });
+				showToast(`Server: ${state.teams[state.leftTeamIdx].name}`);
+			}
+		});
+		rightServeBarEl.addEventListener('click', () => {
+			if (isInteractionLocked()) return;
+			if (getCurrentServerTeamIdx() !== state.rightTeamIdx) {
+				state.initialServerTeamIdx = 1 - state.initialServerTeamIdx;
+				syncUIAndBoard({ animate: false });
+				showToast(`Server: ${state.teams[state.rightTeamIdx].name}`);
+			}
+		});
+
+		function syncCurrentSavedRecordPlayerNames() {
+			if (!state.currentSavedMatchId) return;
+			const rec = state.matchRecords.find(r => r.id === state.currentSavedMatchId);
+			if (rec) {
+				rec.player0Name = state.teams[0].name;
+				rec.player1Name = state.teams[1].name;
+				saveMatchRecordsToStorage();
+			}
+		}
+
+		leftNameInputEl.addEventListener('input', () => {
+			const defaultName = state.leftTeamIdx === 0 ? 'Player1' : 'Player2';
+			state.teams[state.leftTeamIdx].name = leftNameInputEl.value.trim() || defaultName;
+			fitScoreboardNameInput(leftNameInputEl);
+			syncCurrentSavedRecordPlayerNames();
+			saveActiveMatchToStorage();
+		});
+		leftNameInputEl.addEventListener('blur', () => {
+			leftNameInputEl.value = state.teams[state.leftTeamIdx].name;
+			fitScoreboardNameInput(leftNameInputEl);
+		});
+		rightNameInputEl.addEventListener('input', () => {
+			const defaultName = state.rightTeamIdx === 0 ? 'Player1' : 'Player2';
+			state.teams[state.rightTeamIdx].name = rightNameInputEl.value.trim() || defaultName;
+			fitScoreboardNameInput(rightNameInputEl);
+			syncCurrentSavedRecordPlayerNames();
+			saveActiveMatchToStorage();
+		});
+		rightNameInputEl.addEventListener('blur', () => {
+			rightNameInputEl.value = state.teams[state.rightTeamIdx].name;
+			fitScoreboardNameInput(rightNameInputEl);
+		});
+
+		window.addEventListener('resize', () => {
+			fitScoreboardNameInput(leftNameInputEl);
+			fitScoreboardNameInput(rightNameInputEl);
+			resultsListContainerEl.querySelectorAll('.result-player-name-input').forEach(el => {
+				autoResizeResultNameTextarea(el);
+			});
+		});
+
+		// 初期描画実行 & リロード前の状態（ゲーム終了／マッチ終了バー含む）を復元
+		syncVoiceBtnUI();
+		syncUIAndBoard({ animate: false });
+		if ((state.pendingPhase === 'game_end' || state.pendingPhase === 'match_end') && state.pendingWinnerIdx !== -1) {
+			showInboardBar(state.pendingPhase, state.pendingWinnerIdx);
+		}
+	</script>
+</body>
+</html>
