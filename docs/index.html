@@ -6,312 +6,509 @@
 	<title>ttmiszk's Public Hub</title>
 
 	<style>
+		/* --- 基本設定 --- */
+		:root {
+			--bg-page: #f8fafc;
+			--bg-card: #ffffff;
+			--text-main: #0f172a;
+			--text-muted: #64748b;
+			--border-subtle: #e2e8f0;
+			--border-hover: #cbd5e1;
+
+			/* ボタン色 */
+			--btn-primary-bg: #0f172a;
+			--btn-primary-hover: #1e293b;
+			--btn-primary-text: #ffffff;
+			--btn-secondary-bg: #f8fafc;
+			--btn-secondary-hover: #f1f5f9;
+			--btn-secondary-border: #cbd5e1;
+			--btn-secondary-text: #334155;
+
+			/* バッジ色 */
+			--badge-win-bg: #e0f2fe;
+			--badge-win-border: #bae6fd;
+			--badge-win-text: #0284c7;
+			--badge-web-bg: #ecfdf5;
+			--badge-web-border: #a7f3d0;
+			--badge-web-text: #059669;
+
+			/* 注意書き */
+			--notice-bg: #ffffff;
+			--notice-border: #e2e8f0;
+			--notice-accent: #f59e0b;
+			--notice-text: #475569;
+		}
+
+		* {
+			box-sizing: border-box;
+		}
+
 		body {
-			font-family: sans-serif;
-			max-width: 1000px;
-			margin: 0 auto;
-			padding: 20px;
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+			background-color: var(--bg-page);
+			color: var(--text-main);
+			margin: 0;
+			padding: 40px 20px 80px 20px;
 			line-height: 1.6;
-			background-color: #f7f0dd;
+			-webkit-font-smoothing: antialiased;
 		}
 
-		h1 {
-			border-bottom: 2px solid #999;
-			padding-bottom: 10px;
+		.container {
+			max-width: 980px;
+			margin: 0 auto;
 		}
 
-		h2 {
-			border: 0px;
-			padding: 0;
-			margin: 24px 0 4px 0;
+		/* --- ヘッダー --- */
+		header {
+			margin-bottom: 32px;
+		}
+
+		.header-title-row {
+			display: flex;
+			align-items: baseline;
+			gap: 12px;
+			margin-bottom: 6px;
+		}
+
+		.site-title {
+			font-size: 1.75rem;
+			font-weight: 700;
+			letter-spacing: -0.03em;
+			margin: 0;
+			color: var(--text-main);
+		}
+
+		.author-tag {
+			font-size: 0.85rem;
+			font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+			color: var(--text-muted);
+			background-color: #f1f5f9;
+			padding: 2px 8px;
+			border-radius: 4px;
+		}
+
+		.site-desc {
+			margin: 0 0 16px 0;
+			color: var(--text-muted);
+			font-size: 0.95rem;
 		}
 
 		.notice {
-			padding: 12px;
-			border: 1px solid #f0c36d;
-			border-left: 6px solid #f0c36d;
-			background-color: #fff8e1;
-			border-radius: 0px;
-			margin-bottom: 24px;
-			font-size: 0.9em;
-		}
-
-		.resource {
-			border: 1px solid #ddd;
+			padding: 12px 16px;
+			background-color: var(--notice-bg);
+			border: 1px solid var(--notice-border);
+			border-left: 4px solid var(--notice-accent);
 			border-radius: 6px;
-			padding: 16px;
-			margin-bottom: 16px;
-			background-color: #fdf6e3;
+			font-size: 0.88rem;
+			color: var(--notice-text);
 		}
 
-		.resource-title {
-			margin: 0 0 8px 0;
-			font-size: 1.4em;
-			font-weight: bold;
+		.notice strong {
+			color: var(--text-main);
 		}
 
-		.resource p {
-			margin-top: 0;
-			margin-bottom: 12px;
-			font-size: 0.95em;
-		}
-
-		.resource-actions {
+		/* --- フィルターナビ --- */
+		.filter-nav {
 			display: flex;
-			flex-wrap: wrap;
-			gap: 8px;
-			margin-top: 12px;
+			gap: 6px;
+			margin-bottom: 24px;
+			border-bottom: 1px solid var(--border-subtle);
+			padding-bottom: 12px;
 		}
 
-		.action-button {
+		.filter-btn {
+			appearance: none;
+			border: 1px solid transparent;
+			background-color: transparent;
+			color: var(--text-muted);
+			padding: 6px 14px;
+			border-radius: 6px;
+			font-size: 0.88rem;
+			font-weight: 500;
+			cursor: pointer;
+			transition: all 0.15s ease;
+		}
+
+		.filter-btn:hover {
+			background-color: #f1f5f9;
+			color: var(--text-main);
+		}
+
+		.filter-btn.active {
+			background-color: #0f172a;
+			color: #ffffff;
+		}
+
+		/* --- グリッド --- */
+		.card-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+			gap: 16px;
+		}
+
+		.card {
+			background-color: var(--bg-card);
+			border: 1px solid var(--border-subtle);
+			border-radius: 8px;
+			padding: 20px;
+			display: flex;
+			flex-direction: column;
+			box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+			transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+		}
+
+		.card:hover {
+			transform: translateY(-2px);
+			border-color: var(--border-hover);
+			box-shadow: 0 6px 12px rgba(0, 0, 0, 0.06);
+		}
+
+		.card.hidden {
+			display: none;
+		}
+
+		.card-meta {
+			display: flex;
+			align-items: center;
+			margin-bottom: 10px;
+		}
+
+		.card-title {
+			font-size: 1.08rem;
+			font-weight: 600;
+			margin: 0 0 8px 0;
+			color: var(--text-main);
+			letter-spacing: -0.01em;
+			line-height: 1.35;
+		}
+
+		/* --- バッジ --- */
+		.badge {
 			display: inline-block;
-			min-width: 180px;
-			padding: 2px 16px;
-			text-align: center;
+			font-size: 0.72rem;
+			font-weight: 600;
+			padding: 2px 7px;
+			border-radius: 4px;
+			line-height: 1.3;
+			border: 1px solid transparent;
+		}
+
+		.badge-web {
+			background-color: var(--badge-web-bg);
+			border-color: var(--badge-web-border);
+			color: var(--badge-web-text);
+		}
+
+		.badge-win {
+			background-color: var(--badge-win-bg);
+			border-color: var(--badge-win-border);
+			color: var(--badge-win-text);
+		}
+
+		.card-desc {
+			font-size: 0.83rem;
+			color: var(--text-muted);
+			margin: 0 0 16px 0;
+			flex-grow: 1; /* ボタン位置を下部に統一 */
+			line-height: 1.5;
+		}
+
+		/* --- ボタン --- */
+		.card-actions {
+			display: flex;
+			gap: 8px;
+			margin-top: auto;
+		}
+
+		.btn {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			gap: 6px;
+			flex: 1;
+			padding: 6px 10px;
+			border-radius: 6px;
+			font-size: 0.78rem;
+			font-weight: 500;
 			text-decoration: none;
-			border: 1px solid #aca89a;
-			border-radius: 16px;
-			box-sizing: border-box;
-			color: #333;
-			font-size: 0.8em;
+			transition: all 0.15s ease;
+			white-space: nowrap;
 		}
 
-		.action-button:hover {
-			background-color: #ddb;
+		.btn svg {
+			width: 12px;
+			height: 12px;
+			stroke-width: 2;
 		}
 
+		.btn-primary {
+			background-color: var(--btn-primary-bg);
+			color: var(--btn-primary-text);
+			border: 1px solid var(--btn-primary-bg);
+		}
+
+		.btn-primary:hover {
+			background-color: var(--btn-primary-hover);
+			border-color: var(--btn-primary-hover);
+		}
+
+		.btn-secondary {
+			background-color: var(--btn-secondary-bg);
+			color: var(--btn-secondary-text);
+			border: 1px solid var(--btn-secondary-border);
+		}
+
+		.btn-secondary:hover {
+			background-color: var(--btn-secondary-hover);
+			color: var(--text-main);
+			border-color: #94a3b8;
+		}
+
+		/* --- フッター --- */
 		footer {
-			margin-top: 40px;
-			padding-top: 16px;
-			border-top: 1px solid #999;
+			margin-top: 60px;
+			padding-top: 24px;
+			border-top: 1px solid var(--border-subtle);
 			text-align: center;
-			font-size: 0.9em;
-			color: #666;
+			font-size: 0.85rem;
+			color: var(--text-muted);
+		}
+
+		footer a {
+			color: var(--text-main);
+			text-decoration: none;
+			font-weight: 500;
+		}
+
+		footer a:hover {
+			text-decoration: underline;
 		}
 	</style>
 </head>
 <body>
 
-	<h1>Public Hub <span style="font-size: 0.6em;">@ttmiszk</span></h1>
+	<div class="container">
+		<header>
+			<div class="header-title-row">
+				<h1 class="site-title">Public Hub</h1>
+				<span class="author-tag">@ttmiszk</span>
+			</div>
+			<p class="site-desc">公開中のツール・ゲーム・各種リソースを提供しています。</p>
 
-	<p>ここでは、公開中のツール・ゲーム・各種リソースを提供しています。</p>
+			<div class="notice">
+				<strong>利用上の注意：</strong> これらのリソースは完全個人利用を目的としています。すべて自己責任でご利用ください。
+			</div>
+		</header>
 
-	<div class="notice">
-		<strong>利用上の注意</strong><br>
-		これらのリソースは完全個人利用を目的としています。すべて自己責任でご利用ください。
+		<!-- カテゴリフィルター切り替えタブ -->
+		<nav class="filter-nav" aria-label="カテゴリー選択">
+			<button class="filter-btn active" data-filter="all">すべて</button>
+			<button class="filter-btn" data-filter="tool">ツール</button>
+			<button class="filter-btn" data-filter="game">ゲーム</button>
+			<button class="filter-btn" data-filter="other">その他</button>
+		</nav>
+
+		<!-- アプリカード一覧 -->
+		<main class="card-grid" id="cardGrid">
+
+			<!-- ========================================================
+			     ▼ ツール (data-category="tool")
+			     ======================================================== -->
+
+			<!-- カード: Ultima Note -->
+			<article class="card" data-category="tool">
+				<div class="card-meta">
+					<span class="badge badge-win">Win</span>
+				</div>
+				<h2 class="card-title">Ultima Note</h2>
+				<p class="card-desc">セキュアで高機能なデスクトップ向けアウトラインエディタです。</p>
+				<div class="card-actions">
+					<a class="btn btn-secondary" href="https://github.com/ttmiszk/public-hub/releases/download/release/UltimaNote-win32-x64.zip">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+						ダウンロード
+					</a>
+				</div>
+			</article>
+
+			<!-- カード: Ultima Media Downloader -->
+			<article class="card" data-category="tool">
+				<div class="card-meta">
+					<span class="badge badge-win">Win</span>
+				</div>
+				<h2 class="card-title">Ultima Media Downloader</h2>
+				<p class="card-desc">ストリーミングサイトの動画や音声のダウンロードに便利なデスクトップ向けアプリです。</p>
+				<div class="card-actions">
+					<a class="btn btn-secondary" href="https://github.com/ttmiszk/public-hub/releases/download/release/UltimaMediaDownloader-win32-x64.zip">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+						ダウンロード
+					</a>
+				</div>
+			</article>
+
+			<!-- カード: Ultima Log Viewer -->
+			<article class="card" data-category="tool">
+				<div class="card-meta">
+					<span class="badge badge-win">Win</span>
+				</div>
+				<h2 class="card-title">Ultima Log Viewer</h2>
+				<p class="card-desc">開発者やシステム管理者のためのデスクトップ向けログ閲覧アプリです。</p>
+				<div class="card-actions">
+					<a class="btn btn-secondary" href="https://github.com/ttmiszk/public-hub/releases/download/release/UltimaLogViewer-win32-x64.zip">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+						ダウンロード
+					</a>
+				</div>
+			</article>
+
+			<!-- カード: Ultima Calc -->
+			<article class="card" data-category="tool">
+				<div class="card-meta">
+					<span class="badge badge-web">Web</span>
+				</div>
+				<h2 class="card-title">Ultima Calc</h2>
+				<p class="card-desc">ブラウザで動作する高機能電卓アプリです。</p>
+				<div class="card-actions">
+					<a class="btn btn-primary" href="./ultima-calc/" target="_blank" rel="noopener noreferrer">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+						ブラウザで起動
+					</a>
+					<a class="btn btn-secondary" href="https://github.com/ttmiszk/public-hub/releases/download/release/ultima-calc.zip">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+						ダウンロード
+					</a>
+				</div>
+			</article>
+
+			<!-- ========================================================
+			     ▼ ゲーム (data-category="game")
+			     ======================================================== -->
+
+			<!-- カード: Ultima Shooter -->
+			<article class="card" data-category="game">
+				<div class="card-meta">
+					<span class="badge badge-web">Web</span>
+				</div>
+				<h2 class="card-title">Ultima Shooter</h2>
+				<p class="card-desc">ブラウザで動作する3D縦スクロールシューティングゲームです。</p>
+				<div class="card-actions">
+					<a class="btn btn-primary" href="./ultima-shooter/" target="_blank" rel="noopener noreferrer">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+						ブラウザで起動
+					</a>
+					<a class="btn btn-secondary" href="https://github.com/ttmiszk/public-hub/releases/download/release/ultima-shooter.zip">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+						ダウンロード
+					</a>
+				</div>
+			</article>
+
+			<!-- カード: Ultima Reversi -->
+			<article class="card" data-category="game">
+				<div class="card-meta">
+					<span class="badge badge-web">Web</span>
+				</div>
+				<h2 class="card-title">Ultima Reversi</h2>
+				<p class="card-desc">Android／UWP版「Ultima Reversi」を移植し、HTML/CSS/JSで再構築したブラウザゲームです。</p>
+				<div class="card-actions">
+					<a class="btn btn-primary" href="./ultima-reversi-js/" target="_blank" rel="noopener noreferrer">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+						ブラウザで起動
+					</a>
+					<a class="btn btn-secondary" href="https://github.com/ttmiszk/public-hub/releases/download/release/ultima-reversi-js.zip">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+						ダウンロード
+					</a>
+				</div>
+			</article>
+
+			<!-- カード: Ultima 4 in a Row -->
+			<article class="card" data-category="game">
+				<div class="card-meta">
+					<span class="badge badge-web">Web</span>
+				</div>
+				<h2 class="card-title">Ultima 4 in a Row</h2>
+				<p class="card-desc">重力付き四目並べ（4 in a Row）を移植し、HTML/CSS/JSで再構築したブラウザゲームです。</p>
+				<div class="card-actions">
+					<a class="btn btn-primary" href="./ultima-4inarow-js/" target="_blank" rel="noopener noreferrer">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+						ブラウザで起動
+					</a>
+					<a class="btn btn-secondary" href="https://github.com/ttmiszk/public-hub/releases/download/release/ultima-4inarow-js.zip">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+						ダウンロード
+					</a>
+				</div>
+			</article>
+
+			<!-- カード: Ultima Slide Puzzle -->
+			<article class="card" data-category="game">
+				<div class="card-meta">
+					<span class="badge badge-web">Web</span>
+				</div>
+				<h2 class="card-title">Ultima Slide Puzzle</h2>
+				<p class="card-desc">ブラウザで動作するサーバレスのスライドパズルゲームです。</p>
+				<div class="card-actions">
+					<a class="btn btn-primary" href="./ultima-slide-puzzle/" target="_blank" rel="noopener noreferrer">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+						ブラウザで起動
+					</a>
+					<a class="btn btn-secondary" href="https://github.com/ttmiszk/public-hub/releases/download/release/ultima-slide-puzzle.zip">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+						ダウンロード
+					</a>
+				</div>
+			</article>
+
+			<!-- ========================================================
+			     ▼ その他 (data-category="other")
+			     ======================================================== -->
+
+			<!-- カード: Ultima Solar System 3D -->
+			<article class="card" data-category="other">
+				<div class="card-meta">
+					<span class="badge badge-web">Web</span>
+				</div>
+				<h2 class="card-title">Ultima Solar System 3D</h2>
+				<p class="card-desc">ブラウザで動作する太陽系3Dシミュレーションです。</p>
+				<div class="card-actions">
+					<a class="btn btn-primary" href="./ultima-solar-system-3d/" target="_blank" rel="noopener noreferrer">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+						ブラウザで起動
+					</a>
+					<a class="btn btn-secondary" href="https://github.com/ttmiszk/public-hub/releases/download/release/ultima-solar-system-3d.zip">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+						ダウンロード
+					</a>
+				</div>
+			</article>
+
+			<!-- ▼ 新しいアプリを追加するときは、上記の article ブロックをコピー＆ペーストして内容を書き換えてください ▼ -->
+
+		</main>
+
+		<footer>
+			<p>© 2026 ttmiszk</p>
+			<p><a href="https://github.com/ttmiszk/public-hub" target="_blank" rel="noopener noreferrer">GitHub Repository</a></p>
+		</footer>
 	</div>
 
-	<h2>ツール</h2>
+	<!-- カテゴリ切り替え用シンプルスクリプト（外部依存なし） -->
+	<script>
+		document.querySelectorAll('.filter-btn').forEach(btn => {
+			btn.addEventListener('click', () => {
+				document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+				btn.classList.add('active');
 
-	<div class="resource">
-		<div class="resource-title">
-			Ultima Note
-		</div>
-
-		<p>
-			セキュアで高機能なデスクトップ向けアウトラインエディタです。
-		</p>
-
-		<div class="resource-actions">
-			<a class="action-button"
-				href="https://github.com/ttmiszk/public-hub/releases/download/release/UltimaNote-win32-x64.zip">
-				ダウンロード
-			</a>
-		</div>
-	</div>
-
-	<div class="resource">
-		<div class="resource-title">
-			Ultima Media Downloader
-		</div>
-
-		<p>
-			ストリーミングサイトの動画や音声のダウンロードに便利なデスクトップ向けアプリです。
-		</p>
-
-		<div class="resource-actions">
-			<a class="action-button"
-				href="https://github.com/ttmiszk/public-hub/releases/download/release/UltimaMediaDownloader-win32-x64.zip">
-				ダウンロード
-			</a>
-		</div>
-	</div>
-
-	<div class="resource">
-		<div class="resource-title">
-			Ultima Log Viewer
-		</div>
-
-		<p>
-			開発者やシステム管理者のためのデスクトップ向けログ閲覧アプリです。
-		</p>
-
-		<div class="resource-actions">
-			<a class="action-button"
-				href="https://github.com/ttmiszk/public-hub/releases/download/release/UltimaLogViewer-win32-x64.zip">
-				ダウンロード
-			</a>
-		</div>
-	</div>
-
-	<div class="resource">
-		<div class="resource-title">
-			Ultima Calc
-		</div>
-
-		<p>
-			ブラウザで動作する高機能電卓アプリです。
-		</p>
-
-		<div class="resource-actions">
-			<a class="action-button"
-				href="https://github.com/ttmiszk/public-hub/releases/download/release/ultima-calc.zip">
-				ダウンロード
-			</a>
-
-			<a class="action-button"
-				target="_blank"
-				rel="noopener noreferrer"
-				href="./ultima-calc/">
-				ブラウザで実行
-			</a>
-		</div>
-	</div>
-
-	<h2>ゲーム</h2>
-
-	<div class="resource">
-		<div class="resource-title">
-			Ultima Shooter
-		</div>
-
-		<p>
-			ブラウザで動作する3D縦スクロールシューティングゲームです。
-		</p>
-
-		<div class="resource-actions">
-			<a class="action-button"
-				href="https://github.com/ttmiszk/public-hub/releases/download/release/ultima-shooter.zip">
-				ダウンロード
-			</a>
-
-			<a class="action-button"
-				target="_blank"
-				rel="noopener noreferrer"
-				href="./ultima-shooter/">
-				ブラウザで実行
-			</a>
-		</div>
-	</div>
-
-	<div class="resource">
-		<div class="resource-title">
-			Ultima Reversi
-		</div>
-
-		<p>
-			Android／UWP版「Ultima Reversi」を移植し、HTML/CSS/JavaScriptのみで再構築したブラウザゲームです。
-		</p>
-
-		<div class="resource-actions">
-			<a class="action-button"
-				href="https://github.com/ttmiszk/public-hub/releases/download/release/ultima-reversi-js.zip">
-				ダウンロード
-			</a>
-
-			<a class="action-button"
-				target="_blank"
-				rel="noopener noreferrer"
-				href="./ultima-reversi-js/">
-				ブラウザで実行
-			</a>
-		</div>
-	</div>
-
-	<div class="resource">
-		<div class="resource-title">
-			Ultima 4 in a Row
-		</div>
-
-		<p>
-			Android／UWP版「重力付き四目並べ（4 in a Row）」を移植し、HTML/CSS/JavaScriptのみで再構築したブラウザゲームです。
-		</p>
-
-		<div class="resource-actions">
-			<a class="action-button"
-				href="https://github.com/ttmiszk/public-hub/releases/download/release/ultima-4inarow-js.zip">
-				ダウンロード
-			</a>
-
-			<a class="action-button"
-				target="_blank"
-				rel="noopener noreferrer"
-				href="./ultima-4inarow-js/">
-				ブラウザで実行
-			</a>
-		</div>
-	</div>
-
-	<div class="resource">
-		<div class="resource-title">
-			Ultima Slide Puzzle
-		</div>
-
-		<p>
-			ブラウザで動作するサーバレスのスライドパズルゲームです。
-		</p>
-
-		<div class="resource-actions">
-			<a class="action-button"
-				href="https://github.com/ttmiszk/public-hub/releases/download/release/ultima-slide-puzzle.zip">
-				ダウンロード
-			</a>
-
-			<a class="action-button"
-				target="_blank"
-				rel="noopener noreferrer"
-				href="./ultima-slide-puzzle/">
-				ブラウザで実行
-			</a>
-		</div>
-	</div>
-
-	<h2>その他</h2>
-
-	<div class="resource">
-		<div class="resource-title">
-			Ultima Solar System 3D
-		</div>
-
-		<p>
-			ブラウザで動作する太陽系3Dシミュレーションです。
-		</p>
-
-		<div class="resource-actions">
-			<a class="action-button"
-				href="https://github.com/ttmiszk/public-hub/releases/download/release/ultima-solar-system-3d.zip">
-				ダウンロード
-			</a>
-
-			<a class="action-button"
-				target="_blank"
-				rel="noopener noreferrer"
-				href="./ultima-solar-system-3d/">
-				ブラウザで実行
-			</a>
-		</div>
-	</div>
-
-	<footer>
-		<p>
-			© 2026 ttmiszk
-		</p>
-
-		<p>
-			<a href="https://github.com/ttmiszk/public-hub">
-				GitHub Repository
-			</a>
-		</p>
-	</footer>
+				const filter = btn.getAttribute('data-filter');
+				document.querySelectorAll('.card').forEach(card => {
+					if (filter === 'all' || card.getAttribute('data-category') === filter) {
+						card.classList.remove('hidden');
+					} else {
+						card.classList.add('hidden');
+					}
+				});
+			});
+		});
+	</script>
 </body>
 </html>
