@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#141724"/>
+      <stop offset="50%" stop-color="#0c0e15"/>
+      <stop offset="100%" stop-color="#050609"/>
+    </linearGradient>
+
+    <!-- Scoreboard Board Plate Gradient -->
+    <linearGradient id="board-plate" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#242838"/>
+      <stop offset="100%" stop-color="#141620"/>
+    </linearGradient>
+
+    <!-- Unified Dark Gray Card Gradient -->
+    <linearGradient id="card-gray-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#323746"/>
+      <stop offset="100%" stop-color="#1f222c"/>
+    </linearGradient>
+
+    <!-- Metallic Binder Ring Gradient -->
+    <linearGradient id="ring-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#94a3b8"/>
+      <stop offset="35%" stop-color="#f8fafc"/>
+      <stop offset="70%" stop-color="#cbd5e1"/>
+      <stop offset="100%" stop-color="#64748b"/>
+    </linearGradient>
+
+    <!-- Drop Shadows -->
+    <filter id="board-shadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000000" flood-opacity="0.75"/>
+    </filter>
+    <filter id="card-shadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+    <filter id="text-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <!-- App Rounded Base Frame (Outer border removed for clean OS rendering) -->
+  <rect width="512" height="512" rx="112" fill="url(#bg-grad)"/>
+
+  <!-- =========================================================
+       Center Hero: Unified Dark Scoreboard (Score: 11 - 9)
+  ========================================================= -->
+  <g filter="url(#board-shadow)">
+    <!-- Scoreboard Base Backplate -->
+    <rect x="36" y="96" width="440" height="320" rx="32" fill="url(#board-plate)" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+
+    <!-- Left Score Card (Dark Gray Panel with Yellow "11") -->
+    <g filter="url(#card-shadow)">
+      <rect x="62" y="133" width="182" height="256" rx="22" fill="url(#card-gray-grad)" stroke="rgba(255,255,255,0.18)" stroke-width="1.5"/>
+      <!-- Yellow "11" (Centered, horizontally scaled so margins match 1-digit "9") -->
+      <g transform="translate(153, 264) scale(0.60, 1)">
+        <text x="0" y="0" font-family="Arial, 'Helvetica Neue', Helvetica, sans-serif" font-size="154" font-weight="900" fill="#facc15" text-anchor="middle" dominant-baseline="central" filter="url(#text-glow)">11</text>
+      </g>
+      <!-- Binder Ring Holes -->
+      <circle cx="108" cy="160" r="10" fill="#0e1018"/>
+      <circle cx="198" cy="160" r="10" fill="#0e1018"/>
+    </g>
+
+    <!-- Right Score Card (Dark Gray Panel with White "9") -->
+    <g filter="url(#card-shadow)">
+      <rect x="269" y="133" width="182" height="256" rx="22" fill="url(#card-gray-grad)" stroke="rgba(255,255,255,0.18)" stroke-width="1.5"/>
+      <!-- White "9" -->
+      <text x="360" y="264" font-family="Arial, 'Helvetica Neue', Helvetica, sans-serif" font-size="154" font-weight="700" fill="#ffffff" text-anchor="middle" dominant-baseline="central" filter="url(#text-glow)">9</text>
+      <!-- Binder Ring Holes -->
+      <circle cx="315" cy="160" r="10" fill="#0e1018"/>
+      <circle cx="405" cy="160" r="10" fill="#0e1018"/>
+    </g>
+
+    <!-- Metallic Binder Rings (Spanning board plate and score cards) -->
+    <!-- Left Card Rings -->
+    <rect x="100" y="82" width="16" height="72" rx="8" fill="url(#ring-grad)" stroke="#475569" stroke-width="1.5"/>
+    <rect x="190" y="82" width="16" height="72" rx="8" fill="url(#ring-grad)" stroke="#475569" stroke-width="1.5"/>
+    <!-- Right Card Rings -->
+    <rect x="307" y="82" width="16" height="72" rx="8" fill="url(#ring-grad)" stroke="#475569" stroke-width="1.5"/>
+    <rect x="397" y="82" width="16" height="72" rx="8" fill="url(#ring-grad)" stroke="#475569" stroke-width="1.5"/>
+  </g>
+</svg>

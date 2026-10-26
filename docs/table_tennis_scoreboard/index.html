@@ -4,6 +4,18 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 	<title>卓球スコアボード - Table Tennis Scoreboard</title>
+
+	<!-- PWA & Mobile Web App Meta Tags -->
+	<link rel="manifest" href="manifest.json">
+	<meta name="theme-color" content="#050507">
+	<meta name="mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+	<meta name="apple-mobile-web-app-title" content="卓球スコア">
+	<link rel="icon" type="image/svg+xml" href="icon.svg">
+	<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+	<link rel="apple-touch-icon" href="icon-192.png">
+
 	<style>
 		:root {
 			--bg-black: #050507;
@@ -15,6 +27,36 @@
 			--serve-red: #dc2626;
 			--accent-blue: #2563eb;
 			--accent-gold: #facc15;
+
+			/* Safe Area CSS Variables (Dynamic for portrait-rotation) */
+			--safe-top: env(safe-area-inset-top, 0px);
+			--safe-bottom: env(safe-area-inset-bottom, 0px);
+			--safe-left: env(safe-area-inset-left, 0px);
+			--safe-right: env(safe-area-inset-right, 0px);
+
+			/* Logical Viewport dimensions */
+			--vw: 1vw;
+			--vh: 1vh;
+		}
+
+		/* 縦持ち時: 90° 時計回り回転（ノッチが左側、ホームバーが右側に移動） */
+		body.is-portrait-locked-90 {
+			--safe-top: env(safe-area-inset-right, 0px);
+			--safe-bottom: env(safe-area-inset-left, 0px);
+			--safe-left: env(safe-area-inset-top, 0px);
+			--safe-right: env(safe-area-inset-bottom, 0px);
+			--vw: 1vh;
+			--vh: 1vw;
+		}
+
+		/* 縦持ち時: 270° (-90°) 反時計回り回転（ノッチが右側、ホームバーが左側に移動） */
+		body.is-portrait-locked-270 {
+			--safe-top: env(safe-area-inset-left, 0px);
+			--safe-bottom: env(safe-area-inset-right, 0px);
+			--safe-left: env(safe-area-inset-bottom, 0px);
+			--safe-right: env(safe-area-inset-top, 0px);
+			--vw: 1vh;
+			--vh: 1vw;
 		}
 
 		* {
@@ -38,18 +80,48 @@
 			touch-action: none;
 		}
 
-		#app {
+		/* ルートビューポートコンテナ: 縦画面時は90度/270度自動回転してフルスクリーン横画面化 */
+		#app-viewport-root {
 			position: relative;
 			width: 100%;
 			height: 100%;
 			height: 100dvh;
+			overflow: hidden;
+			container-type: size;
+			container-name: viewport;
+			transform-origin: center center;
+			transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+		}
+
+		body.is-portrait-locked-90 #app-viewport-root {
+			position: fixed;
+			top: 50%;
+			left: 50%;
+			width: 100dvh;
+			height: 100dvw;
+			transform: translate(-50%, -50%) rotate(90deg);
+		}
+
+		body.is-portrait-locked-270 #app-viewport-root {
+			position: fixed;
+			top: 50%;
+			left: 50%;
+			width: 100dvh;
+			height: 100dvw;
+			transform: translate(-50%, -50%) rotate(-90deg);
+		}
+
+		#app {
+			position: relative;
+			width: 100%;
+			height: 100%;
 			display: flex;
 			flex-direction: column;
 			justify-content: space-between;
-			padding-top: max(clamp(12px, 2.2vh, 24px), calc(env(safe-area-inset-top, 0px) + 12px));
-			padding-bottom: max(clamp(14px, 2.6vh, 28px), calc(env(safe-area-inset-bottom, 0px) + 14px));
-			padding-left: max(clamp(10px, 2.5vw, 28px), calc(env(safe-area-inset-left, 0px) + 10px));
-			padding-right: max(clamp(10px, 2.5vw, 28px), calc(env(safe-area-inset-right, 0px) + 10px));
+			padding-top: max(clamp(12px, calc(2.2 * var(--vh)), 24px), calc(var(--safe-top) + 12px));
+			padding-bottom: max(clamp(14px, calc(2.6 * var(--vh)), 28px), calc(var(--safe-bottom) + 14px));
+			padding-left: max(clamp(10px, calc(2.5 * var(--vw)), 28px), calc(var(--safe-left) + 10px));
+			padding-right: max(clamp(10px, calc(2.5 * var(--vw)), 28px), calc(var(--safe-right) + 10px));
 		}
 
 		/* =========================================================
@@ -157,7 +229,7 @@
 			width: 100%;
 			max-width: 1400px;
 			flex: 0 1 auto;
-			height: min(calc(100% - clamp(44px, 7vh, 64px)), 56vw);
+			height: min(calc(100% - clamp(44px, calc(7 * var(--vh)), 64px)), calc(56 * var(--vw)));
 			max-height: 760px;
 			min-height: 0;
 			display: grid;
@@ -180,7 +252,7 @@
 			min-width: 0;
 			display: flex;
 			flex-direction: column;
-			gap: clamp(6px, 1.2vh, 12px);
+			gap: clamp(18px, 3vh, 32px);
 		}
 
 		.point-col.left { grid-column: 1; }
@@ -218,7 +290,7 @@
 			display: flex;
 			flex-direction: column;
 			justify-content: flex-start;
-			padding-top: calc(clamp(12px, 1.8vh, 18px) + clamp(6px, 1.2vh, 12px));
+			padding-top: calc(clamp(12px, 1.8vh, 18px) + clamp(18px, 3vh, 32px));
 		}
 
 		.game-panels-pair {
@@ -286,48 +358,112 @@
 			display: none;
 		}
 
-		/* --- 3D Split-Flap Card Unit --- */
+		/* --- Clean Seamless Scoreboard Card Unit --- */
 		.flip-card {
 			position: relative;
 			width: 100%;
 			min-width: 0;
 			container-type: size;
-			border-radius: clamp(12px, 2vw, 26px);
-			background: #141519;
+			border-radius: clamp(12px, 2vw, 24px);
+			background: linear-gradient(180deg, #20232c 0%, #15171d 100%);
+			border: 1.5px solid rgba(255, 255, 255, 0.12);
 			box-shadow:
 				0 14px 34px rgba(0, 0, 0, 0.8),
-				inset 0 1px 0 rgba(255, 255, 255, 0.12);
+				inset 0 1px 0 rgba(255, 255, 255, 0.14);
 			cursor: pointer;
-			transform-style: preserve-3d;
-			perspective: 1100px;
-			transition: box-shadow 0.15s, transform 0.1s;
+			overflow: visible;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			transition: box-shadow 0.15s, transform 0.1s, border-color 0.2s;
 			--digit-size: clamp(5rem, min(28vw, 54vh), 26rem);
-			--digit-scale-y: 1.14;
+			--digit-scale-y: 1.08;
 			--digit-color: #ffffff;
+		}
+
+		/* スコアカード上部のバインダー金具リング＆穴（実機スコアボードモチーフ） */
+		.card-rings {
+			--ring-hole-top: clamp(8px, 5.5cqh, 24px);
+			--ring-hole-size: clamp(8px, 3.4cqw, 17px);
+			--ring-metal-top: clamp(-8px, -2.2cqh, -4px);
+			--ring-metal-width: clamp(5px, 2.2cqw, 12px);
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			height: 0;
+			pointer-events: none;
+			z-index: 10;
+		}
+
+		.ring-unit {
+			position: absolute;
+			top: 0;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			transform: translateX(-50%);
+		}
+
+		.ring-unit.left {
+			left: 25%;
+		}
+
+		.ring-unit.right {
+			left: 75%;
+		}
+
+		/* カード上の黒いパンチ穴（奥側） */
+		.ring-hole {
+			position: absolute;
+			top: var(--ring-hole-top);
+			width: var(--ring-hole-size);
+			height: var(--ring-hole-size);
+			border-radius: 50%;
+			background: #07090e;
+			box-shadow: 
+				inset 0 2px 4px rgba(0, 0, 0, 0.95),
+				0 1px 0 rgba(255, 255, 255, 0.15);
+			z-index: 1;
+		}
+
+		/* シルバーメタリックの縦長リング（手前側・穴の中に差し込まれる高さ） */
+		.ring-metal {
+			position: absolute;
+			top: var(--ring-metal-top);
+			width: var(--ring-metal-width);
+			height: calc(var(--ring-hole-top) + (var(--ring-hole-size) * 0.65) - var(--ring-metal-top));
+			border-radius: 999px;
+			background: linear-gradient(90deg, #94a3b8 0%, #ffffff 38%, #cbd5e1 75%, #64748b 100%);
+			box-shadow: 
+				0 3px 6px rgba(0, 0, 0, 0.65),
+				inset 0 1px 0 rgba(255, 255, 255, 0.95);
+			border: 1px solid rgba(71, 85, 105, 0.55);
+			z-index: 2;
 		}
 
 		.flip-card.point-card {
 			flex: 1;
 			min-height: 0;
 			--digit-size: clamp(5rem, min(28vw, 54vh), 26rem);
-			--digit-scale-y: 1.15;
+			--digit-scale-y: 1.08;
 		}
 
 		.flip-card.game-card {
 			flex: 1;
 			min-height: 0;
-			border-radius: clamp(10px, 1.5vw, 20px);
+			border-radius: clamp(10px, 1.5vw, 18px);
 			--digit-size: clamp(2.8rem, min(12.5vw, 30vh), 14rem);
-			--digit-scale-y: 1.14;
+			--digit-scale-y: 1.08;
 		}
 
-		/* Use container query units when supported so digits fill ~82% of card height with minimal top/bottom margin */
+		/* Container query units */
 		@supports (font-size: 1cqh) {
 			.flip-card.point-card {
-				--digit-size: min(82cqh, 88cqw);
+				--digit-size: min(84cqh, 88cqw);
 			}
 			.flip-card.game-card {
-				--digit-size: min(82cqh, 88cqw);
+				--digit-size: min(84cqh, 88cqw);
 			}
 		}
 
@@ -341,49 +477,17 @@
 			box-shadow:
 				0 0 0 4px rgba(59, 130, 246, 0.85),
 				0 14px 34px rgba(0, 0, 0, 0.85);
+			border-color: rgba(96, 165, 250, 0.6);
 		}
 
-		/* Static & Animated Half-Leaves (Split at the exact horizontal center crease) */
-		.half-leaf {
-			position: absolute;
-			left: 0;
-			right: 0;
-			height: 50%;
-			overflow: hidden;
-			background: var(--card-bg-top);
-			border-left: 1.5px solid var(--card-border);
-			border-right: 1.5px solid var(--card-border);
-			backface-visibility: hidden;
-			-webkit-backface-visibility: hidden;
-			pointer-events: none;
-		}
-
-		.half-leaf.top {
-			top: 0;
-			border-radius: inherit;
-			border-bottom-left-radius: 0;
-			border-bottom-right-radius: 0;
-			border-top: 1.5px solid var(--card-border);
-			background: linear-gradient(180deg, #23252c 0%, #1c1e24 100%);
-		}
-
-		.half-leaf.bottom {
-			bottom: 0;
-			border-radius: inherit;
-			border-top-left-radius: 0;
-			border-top-right-radius: 0;
-			border-bottom: 1.5px solid var(--card-border);
-			background: linear-gradient(180deg, #181a20 0%, #13151a 100%);
-		}
-
-		.leaf-inner {
-			position: absolute;
-			left: 0;
+		/* 一体型カードの数字要素 */
+		.card-digit {
 			width: 100%;
-			height: 200%;
+			height: 100%;
 			display: flex;
 			align-items: center;
 			justify-content: center;
+			padding-bottom: 0.09em; /* 光学的な上下余白均等化（フォントベースライン補正） */
 			font-size: var(--digit-size);
 			font-weight: 800;
 			line-height: 1;
@@ -392,86 +496,64 @@
 			letter-spacing: -0.04em;
 			--digit-scale-x: 1;
 			transform: scale(var(--digit-scale-x), var(--digit-scale-y));
-			text-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+			text-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+			will-change: transform, opacity;
+			pointer-events: none;
 		}
 
-		/* 10以上の2桁表示時は縦幅(font-size・scaleY)を0〜9と完全に同一に保ったまま、横幅のみ収まるよう圧縮 */
-		.leaf-inner.two-digits-text {
+		/* 10以上の2桁表示時は縦幅を保持したまま横幅のみ圧縮 */
+		.card-digit.two-digits-text {
 			--digit-scale-x: 0.75;
 			letter-spacing: -0.06em;
 		}
 
-		.half-leaf.top .leaf-inner {
-			top: 0;
+		/* 高速・高視認性 スライド＆スナップ トランジション */
+		@keyframes scoreSlideDownIn {
+			0% {
+				transform: translateY(-28%) scale(var(--digit-scale-x), var(--digit-scale-y));
+				opacity: 0.15;
+			}
+			70% {
+				transform: translateY(3%) scale(var(--digit-scale-x), var(--digit-scale-y));
+				opacity: 1;
+			}
+			100% {
+				transform: translateY(0%) scale(var(--digit-scale-x), var(--digit-scale-y));
+				opacity: 1;
+			}
 		}
 
-		.half-leaf.bottom .leaf-inner {
-			top: -100%;
+		@keyframes scoreSlideUpIn {
+			0% {
+				transform: translateY(28%) scale(var(--digit-scale-x), var(--digit-scale-y));
+				opacity: 0.15;
+			}
+			70% {
+				transform: translateY(-3%) scale(var(--digit-scale-x), var(--digit-scale-y));
+				opacity: 1;
+			}
+			100% {
+				transform: translateY(0%) scale(var(--digit-scale-x), var(--digit-scale-y));
+				opacity: 1;
+			}
 		}
 
-		/* Center Horizontal Hinge Slit Line */
-		.center-crease {
-			position: absolute;
-			left: 0;
-			right: 0;
-			top: calc(50% - 2px);
-			height: 4px;
-			background: rgba(0, 0, 0, 0.85);
-			box-shadow: 0 1px 0 rgba(255, 255, 255, 0.07);
-			z-index: 10;
-			pointer-events: none;
+		@keyframes scoreCardPulse {
+			0% { transform: scale(0.965); }
+			60% { transform: scale(1.012); }
+			100% { transform: scale(1); }
 		}
 
-		/* 3D Rotating Flap Leaves (Pivot strictly on the center crease!) */
-		.flap-front,
-		.flap-back {
-			z-index: 6;
-			will-change: transform, filter;
+		.flip-card.anim-slide-down .card-digit {
+			animation: scoreSlideDownIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 		}
 
-		.half-leaf.top.flap-front,
-		.half-leaf.top.flap-back {
-			transform-origin: 50% 100%;
+		.flip-card.anim-slide-up .card-digit {
+			animation: scoreSlideUpIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 		}
 
-		.half-leaf.bottom.flap-front,
-		.half-leaf.bottom.flap-back {
-			transform-origin: 50% 0%;
-		}
-
-		@keyframes flipDownFront {
-			0% { transform: rotateX(0deg); filter: brightness(1.05); }
-			50% { filter: brightness(0.75); }
-			100% { transform: rotateX(-180deg); filter: brightness(0.45); }
-		}
-		@keyframes flipDownBack {
-			0% { transform: rotateX(180deg); filter: brightness(0.45); }
-			50% { filter: brightness(1.15); }
-			100% { transform: rotateX(0deg); filter: brightness(1); }
-		}
-
-		@keyframes flipUpFront {
-			0% { transform: rotateX(0deg); filter: brightness(1.05); }
-			50% { filter: brightness(0.75); }
-			100% { transform: rotateX(180deg); filter: brightness(0.45); }
-		}
-		@keyframes flipUpBack {
-			0% { transform: rotateX(-180deg); filter: brightness(0.45); }
-			50% { filter: brightness(1.15); }
-			100% { transform: rotateX(0deg); filter: brightness(1); }
-		}
-
-		.anim-down-front {
-			animation: flipDownFront 0.44s cubic-bezier(0.32, 0.08, 0.24, 1) forwards;
-		}
-		.anim-down-back {
-			animation: flipDownBack 0.44s cubic-bezier(0.32, 0.08, 0.24, 1) forwards;
-		}
-		.anim-up-front {
-			animation: flipUpFront 0.44s cubic-bezier(0.32, 0.08, 0.24, 1) forwards;
-		}
-		.anim-up-back {
-			animation: flipUpBack 0.44s cubic-bezier(0.32, 0.08, 0.24, 1) forwards;
+		.flip-card.pulse-anim {
+			animation: scoreCardPulse 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
 		}
 
 		/* --- Won-Game Circles ("〇〇〇") matched to the Game Card's width --- */
@@ -643,7 +725,7 @@
 		.right-controls {
 			display: flex;
 			align-items: center;
-			gap: clamp(6px, 1.6vw, 14px);
+			gap: clamp(4px, calc(1.3 * var(--vw)), 12px);
 			pointer-events: auto;
 		}
 
@@ -652,8 +734,8 @@
 		.right-controls { justify-self: end; }
 
 		.circle-btn {
-			width: clamp(42px, 6.6vw, 62px);
-			height: clamp(42px, 6.6vw, 62px);
+			width: clamp(38px, calc(5.6 * var(--vw)), 60px);
+			height: clamp(38px, calc(5.6 * var(--vw)), 60px);
 			border-radius: 50%;
 			background: rgba(26, 28, 35, 0.95);
 			border: 2px solid rgba(255, 255, 255, 0.24);
@@ -701,7 +783,7 @@
 		========================================================= */
 		.toast-banner {
 			position: fixed;
-			top: max(16px, calc(env(safe-area-inset-top, 0px) + 14px));
+			top: max(16px, calc(var(--safe-top) + 14px));
 			left: 50%;
 			transform: translateX(-50%) translateY(-25px);
 			z-index: 95;
@@ -725,7 +807,7 @@
 		}
 
 		/* =========================================================
-		   6. Full-Screen Views: 1) 試合結果一覧 & 2) スコア推移
+		   6. Full-Screen Views: 1) 試合結果一覧 & 2) スコア推移 (シックなダークテーマ)
 		========================================================= */
 		.overlay-screen {
 			position: fixed;
@@ -733,8 +815,8 @@
 			height: 100%;
 			height: 100dvh;
 			z-index: 75;
-			background: #f1f5f9;
-			color: #0f172a;
+			background: #090a0f;
+			color: #f8fafc;
 			display: flex;
 			flex-direction: column;
 			opacity: 0;
@@ -751,23 +833,24 @@
 		}
 
 		.screen-topbar {
-			background: #061224;
+			background: #10131c;
 			color: #ffffff;
 			display: grid;
 			grid-template-columns: auto 1fr auto;
 			align-items: center;
-			padding-top: max(12px, calc(env(safe-area-inset-top, 0px) + 12px));
+			padding-top: max(12px, calc(var(--safe-top) + 12px));
 			padding-bottom: 12px;
-			padding-left: max(18px, calc(env(safe-area-inset-left, 0px) + 18px));
-			padding-right: max(18px, calc(env(safe-area-inset-right, 0px) + 18px));
+			padding-left: max(18px, calc(var(--safe-left) + 18px));
+			padding-right: max(18px, calc(var(--safe-right) + 18px));
 			min-height: 60px;
-			box-shadow: 0 3px 12px rgba(0, 0, 0, 0.25);
+			border-bottom: 1.5px solid rgba(255, 255, 255, 0.1);
+			box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
 			flex-shrink: 0;
 		}
 
 		.screen-close-btn {
-			background: rgba(255, 255, 255, 0.14);
-			border: 2px solid rgba(255, 255, 255, 0.28);
+			background: rgba(255, 255, 255, 0.08);
+			border: 1.5px solid rgba(255, 255, 255, 0.2);
 			color: #ffffff;
 			border-radius: 12px;
 			min-width: 52px;
@@ -780,30 +863,35 @@
 			align-items: center;
 			justify-content: center;
 			gap: 6px;
+			transition: background 0.15s, transform 0.1s;
 		}
 
 		.screen-close-btn:active {
 			transform: scale(0.95);
+			background: rgba(255, 255, 255, 0.16);
 		}
 
 		.screen-danger-btn {
-			background: #dc2626;
-			border: 2px solid #fca5a5;
-			color: #ffffff;
+			background: rgba(220, 38, 38, 0.22);
+			border: 1.5px solid #ef4444;
+			color: #fca5a5;
 			border-radius: 12px;
 			min-height: 44px;
 			padding: 6px 16px;
 			font-size: 1rem;
 			font-weight: 800;
 			cursor: pointer;
+			transition: background 0.15s, transform 0.1s;
 		}
 
 		.screen-danger-btn:active {
 			transform: scale(0.95);
+			background: rgba(220, 38, 38, 0.4);
+			color: #ffffff;
 		}
 
 		.screen-danger-btn:disabled {
-			opacity: 0.4;
+			opacity: 0.3;
 			pointer-events: none;
 		}
 
@@ -812,6 +900,7 @@
 			font-size: clamp(1.2rem, 3vw, 1.6rem);
 			font-weight: 900;
 			letter-spacing: 0.04em;
+			color: #ffffff;
 		}
 
 		.screen-body {
@@ -840,11 +929,11 @@
 
 		.result-table-card {
 			width: 100%;
-			background: #ffffff;
-			border: 2px solid #cbd5e1;
-			border-radius: 14px;
+			background: #131620;
+			border: 1.5px solid rgba(255, 255, 255, 0.14);
+			border-radius: 16px;
 			overflow: hidden;
-			box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+			box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
 		}
 
 		/* Match Metadata Bar (Start/End Datetime, Duration, and Score Progression Button) */
@@ -855,8 +944,8 @@
 			justify-content: space-between;
 			gap: 10px;
 			padding: 12px 16px;
-			background: #f8fafc;
-			border-bottom: 2px solid #cbd5e1;
+			background: #191c28;
+			border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 		}
 
 		.result-meta-info {
@@ -866,12 +955,13 @@
 			gap: 8px 16px;
 			font-size: clamp(0.92rem, 2vw, 1.08rem);
 			font-weight: 800;
-			color: #334155;
+			color: #cbd5e1;
 		}
 
 		.meta-duration-badge {
-			background: #e2e8f0;
-			color: #0f172a;
+			background: #232838;
+			color: #f1f5f9;
+			border: 1px solid rgba(255, 255, 255, 0.12);
 			padding: 3px 10px;
 			border-radius: 999px;
 			font-weight: 900;
@@ -885,7 +975,7 @@
 
 		.result-to-progression-btn {
 			background: #2563eb;
-			border: 2px solid #60a5fa;
+			border: 1.5px solid #60a5fa;
 			color: #ffffff;
 			border-radius: 10px;
 			padding: 8px 16px;
@@ -902,9 +992,9 @@
 		}
 
 		.result-delete-one-btn {
-			background: #fee2e2;
-			border: 2px solid #f87171;
-			color: #b91c1c;
+			background: rgba(239, 68, 68, 0.16);
+			border: 1.5px solid rgba(239, 68, 68, 0.6);
+			color: #fca5a5;
 			border-radius: 10px;
 			padding: 8px 14px;
 			font-size: clamp(0.95rem, 2vw, 1.1rem);
@@ -916,23 +1006,24 @@
 
 		.result-delete-one-btn:active {
 			transform: scale(0.96);
-			background: #fecaca;
+			background: rgba(239, 68, 68, 0.3);
+			color: #ffffff;
 		}
 
 		.result-header-grid {
 			display: grid;
 			grid-template-columns: 32% 36% 32%;
-			background: #2b6cb0;
+			background: #1e3a8a;
 			color: #ffffff;
 			font-size: clamp(1rem, 2.3vw, 1.3rem);
 			font-weight: 800;
 			text-align: center;
-			border-bottom: 2px solid #cbd5e1;
+			border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 		}
 
 		.result-header-cell {
 			padding: 10px 8px;
-			border-right: 1px solid rgba(255, 255, 255, 0.28);
+			border-right: 1px solid rgba(255, 255, 255, 0.14);
 		}
 
 		.result-header-cell:last-child {
@@ -944,7 +1035,7 @@
 			grid-template-columns: 32% 10% 16% 10% 32%;
 			align-items: stretch;
 			min-height: clamp(150px, 34vh, 240px);
-			background: #ffffff;
+			background: #131620;
 		}
 
 		.result-cell {
@@ -953,7 +1044,7 @@
 			align-items: center;
 			justify-content: center;
 			padding: 14px 8px;
-			border-right: 1.5px solid #e2e8f0;
+			border-right: 1px solid rgba(255, 255, 255, 0.08);
 			text-align: center;
 		}
 
@@ -964,7 +1055,7 @@
 		.result-player-name {
 			font-size: clamp(1.2rem, 3vw, 1.75rem);
 			font-weight: 900;
-			color: #1e293b;
+			color: #ffffff;
 			word-break: break-word;
 		}
 
@@ -975,7 +1066,7 @@
 			font-size: clamp(1.1rem, 2.8vw, 1.65rem);
 			font-weight: 900;
 			line-height: 1.28;
-			color: #1e293b;
+			color: #ffffff;
 			text-align: center;
 			background: transparent;
 			border: 2px solid transparent;
@@ -994,7 +1085,7 @@
 		}
 
 		.result-player-name-input:focus {
-			background: #f8fafc;
+			background: #1c2130;
 			border-color: var(--accent-blue);
 		}
 
@@ -1005,7 +1096,8 @@
 		}
 
 		.result-games-num.winner {
-			color: #e11d48;
+			color: #f43f5e;
+			text-shadow: 0 0 16px rgba(244, 63, 94, 0.4);
 		}
 
 		.result-set-list {
@@ -1022,7 +1114,7 @@
 			gap: 8px;
 			font-size: clamp(1.1rem, 2.6vw, 1.45rem);
 			font-weight: 800;
-			color: #64748b;
+			color: #94a3b8;
 		}
 
 		.result-set-row .pt-left {
@@ -1038,7 +1130,7 @@
 			font-weight: 900;
 		}
 
-		/* --- Score History View --- */
+		/* --- Score History View (Dark Theme) --- */
 		.history-header-summary {
 			display: grid;
 			grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
@@ -1050,6 +1142,7 @@
 			width: 100%;
 			min-width: 0;
 			padding: 0 6px;
+			color: #ffffff;
 		}
 
 		.history-header-name {
@@ -1065,10 +1158,14 @@
 			letter-spacing: 0.05em;
 			white-space: nowrap;
 			flex-shrink: 0;
+			background: rgba(255, 255, 255, 0.1);
+			border: 1px solid rgba(255, 255, 255, 0.18);
+			padding: 4px 14px;
+			border-radius: 999px;
 		}
 
 		.history-header-summary .lead {
-			color: #ef4444;
+			color: #f43f5e;
 		}
 
 		.history-list-container {
@@ -1080,11 +1177,11 @@
 		}
 
 		.game-history-card {
-			background: #ffffff;
+			background: #131620;
 			border-radius: 16px;
-			border: 2px solid #cbd5e1;
-			box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-			padding: 12px 14px 16px;
+			border: 1.5px solid rgba(255, 255, 255, 0.14);
+			box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
+			padding: 14px 16px 18px;
 			width: 100%;
 		}
 
@@ -1092,8 +1189,8 @@
 			text-align: center;
 			font-size: clamp(1.25rem, 3vw, 1.55rem);
 			font-weight: 900;
-			color: #0f172a;
-			margin-bottom: 10px;
+			color: #f8fafc;
+			margin-bottom: 12px;
 		}
 
 		.timeline-swipe-area {
@@ -1104,14 +1201,14 @@
 		}
 
 		.empty-state-box {
-			background: #ffffff;
-			border: 2px dashed #cbd5e1;
+			background: #131620;
+			border: 2px dashed rgba(255, 255, 255, 0.18);
 			border-radius: 16px;
 			padding: 40px 24px;
 			text-align: center;
 			font-size: clamp(1.15rem, 2.8vw, 1.4rem);
 			font-weight: 800;
-			color: #475569;
+			color: #94a3b8;
 			margin: auto;
 			max-width: 600px;
 		}
@@ -1234,6 +1331,7 @@
 	</style>
 </head>
 <body>
+	<div id="app-viewport-root">
 	<div id="app">
 		<!-- Pure CSS 3D Split-Flap Scoreboard Stage (Always Landscape-Proportioned!)
 		     Top Header Area (Player Names + Subtle Change-Court Button) sits directly above the Score Panels -->
@@ -1257,9 +1355,11 @@
 				<div class="point-col left">
 					<div id="left-serve-bar" class="serve-panel-bar active" title="タップしてサーブ権を切り替え"></div>
 					<div id="card-left-point" class="flip-card point-card" data-role="point" data-side="left">
-						<div class="half-leaf top"><div class="leaf-inner">0</div></div>
-						<div class="half-leaf bottom"><div class="leaf-inner">0</div></div>
-						<div class="center-crease"></div>
+						<div class="card-rings" aria-hidden="true">
+							<div class="ring-unit left"><span class="ring-metal"></span><span class="ring-hole"></span></div>
+							<div class="ring-unit right"><span class="ring-metal"></span><span class="ring-hole"></span></div>
+						</div>
+						<div class="card-digit">0</div>
 					</div>
 				</div>
 
@@ -1268,18 +1368,22 @@
 					<div class="game-panels-pair">
 						<div class="game-subcol">
 							<div id="card-left-game" class="flip-card game-card" data-role="game" data-side="left">
-								<div class="half-leaf top"><div class="leaf-inner">0</div></div>
-								<div class="half-leaf bottom"><div class="leaf-inner">0</div></div>
-								<div class="center-crease"></div>
+								<div class="card-rings" aria-hidden="true">
+									<div class="ring-unit left"><span class="ring-metal"></span><span class="ring-hole"></span></div>
+									<div class="ring-unit right"><span class="ring-metal"></span><span class="ring-hole"></span></div>
+								</div>
+								<div class="card-digit">0</div>
 							</div>
 							<div id="left-dots-bar" class="game-dots-bar"></div>
 						</div>
 
 						<div class="game-subcol">
 							<div id="card-right-game" class="flip-card game-card" data-role="game" data-side="right">
-								<div class="half-leaf top"><div class="leaf-inner">0</div></div>
-								<div class="half-leaf bottom"><div class="leaf-inner">0</div></div>
-								<div class="center-crease"></div>
+								<div class="card-rings" aria-hidden="true">
+									<div class="ring-unit left"><span class="ring-metal"></span><span class="ring-hole"></span></div>
+									<div class="ring-unit right"><span class="ring-metal"></span><span class="ring-hole"></span></div>
+								</div>
+								<div class="card-digit">0</div>
 							</div>
 							<div id="right-dots-bar" class="game-dots-bar"></div>
 						</div>
@@ -1300,9 +1404,11 @@
 				<div class="point-col right">
 					<div id="right-serve-bar" class="serve-panel-bar" title="タップしてサーブ権を切り替え"></div>
 					<div id="card-right-point" class="flip-card point-card" data-role="point" data-side="right">
-						<div class="half-leaf top"><div class="leaf-inner">0</div></div>
-						<div class="half-leaf bottom"><div class="leaf-inner">0</div></div>
-						<div class="center-crease"></div>
+						<div class="card-rings" aria-hidden="true">
+							<div class="ring-unit left"><span class="ring-metal"></span><span class="ring-hole"></span></div>
+							<div class="ring-unit right"><span class="ring-metal"></span><span class="ring-hole"></span></div>
+						</div>
+						<div class="card-digit">0</div>
 					</div>
 				</div>
 			</main>
@@ -1377,6 +1483,15 @@
 					</svg>
 					<span class="btn-subtext" id="voice-state-text">VOICE</span>
 				</button>
+
+				<button id="btn-rotate" class="circle-btn" title="画面向き切り替え (横画面固定 90° / 270° / 通常)">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+						<path d="M3 3v5h5"/>
+						<rect x="7" y="11" width="10" height="7" rx="1.5"/>
+					</svg>
+					<span class="btn-subtext" id="rotate-state-text">ROTATE</span>
+				</button>
 			</div>
 		</footer>
 	</div>
@@ -1426,6 +1541,7 @@
 			<div id="modal-actions" class="modal-actions"></div>
 		</div>
 	</div>
+	</div><!-- /#app-viewport-root -->
 
 	<script>
 		// ============================================================================
@@ -1930,56 +2046,35 @@
 		}
 
 		// ============================================================================
-		// 5. CSS 3D スプリットフラップ・パネルクラス
+		// 5. 高速・高視認性 スコアカード・パネルクラス (シームレス一体型スライド)
 		// ============================================================================
 		class CSSSplitFlapCard {
 			constructor(el) {
 				this.el = el;
 				this.role = el.dataset.role; // 'point' | 'game'
 				this.side = el.dataset.side; // 'left' | 'right'
-				this.staticTopInner = el.querySelector('.half-leaf.top .leaf-inner');
-				this.staticBottomInner = el.querySelector('.half-leaf.bottom .leaf-inner');
+				this.digitEl = el.querySelector('.card-digit');
 				this.currentVal = null;
-				this.activeFlapEls = [];
-				this.cleanupTimer = null;
+				this.animTimer = null;
 			}
 
 			setPressedHighlight(isPressed) {
 				this.el.classList.toggle('pressing', isPressed);
 			}
 
-			createFlapLeaf(halfType, extraClass, val, isYellow) {
-				const leaf = document.createElement('div');
-				leaf.className = `half-leaf ${halfType} ${extraClass}`;
-				const inner = document.createElement('div');
-				const isTwoDigits = String(val).length >= 2;
-				inner.className = 'leaf-inner' + (isTwoDigits ? ' two-digits-text' : '');
-				inner.textContent = String(val);
-				inner.style.color = isYellow ? 'var(--text-yellow)' : '#ffffff';
-				leaf.appendChild(inner);
-				return leaf;
-			}
-
 			clearActiveFlaps() {
-				if (this.cleanupTimer) {
-					clearTimeout(this.cleanupTimer);
-					this.cleanupTimer = null;
+				if (this.animTimer) {
+					clearTimeout(this.animTimer);
+					this.animTimer = null;
 				}
-				while (this.activeFlapEls.length > 0) {
-					const node = this.activeFlapEls.pop();
-					node.remove();
-				}
-				if (this.currentVal !== null) {
+				this.el.classList.remove('anim-slide-down', 'anim-slide-up', 'pulse-anim');
+				if (this.currentVal !== null && this.digitEl) {
 					const isYellow = this.role === 'point' && this.currentVal >= 10;
 					const isTwoDigits = String(this.currentVal).length >= 2;
 					this.el.classList.toggle('yellow-digits', isYellow);
 					this.el.classList.toggle('two-digits', isTwoDigits);
-					this.staticTopInner.textContent = String(this.currentVal);
-					this.staticBottomInner.textContent = String(this.currentVal);
-					this.staticTopInner.classList.toggle('two-digits-text', isTwoDigits);
-					this.staticBottomInner.classList.toggle('two-digits-text', isTwoDigits);
-					this.staticTopInner.style.color = '';
-					this.staticBottomInner.style.color = '';
+					this.digitEl.textContent = String(this.currentVal);
+					this.digitEl.classList.toggle('two-digits-text', isTwoDigits);
 				}
 			}
 
@@ -1987,63 +2082,38 @@
 				const isFirstInit = this.currentVal === null;
 				if (this.currentVal === newVal) return;
 
-				const oldVal = this.currentVal;
 				this.currentVal = newVal;
 
-				const newIsYellow = this.role === 'point' && newVal >= 10;
-				const oldIsYellow = this.role === 'point' && oldVal >= 10;
-				const newIsTwoDigits = String(newVal).length >= 2;
-				const oldIsTwoDigits = String(oldVal).length >= 2;
-				this.el.classList.toggle('two-digits', newIsTwoDigits);
+				const isYellow = this.role === 'point' && newVal >= 10;
+				const isTwoDigits = String(newVal).length >= 2;
+				this.el.classList.toggle('yellow-digits', isYellow);
+				this.el.classList.toggle('two-digits', isTwoDigits);
 
-				if (isFirstInit || !animateFlip || oldVal === null) {
-					this.clearActiveFlaps();
+				if (this.digitEl) {
+					this.digitEl.textContent = String(newVal);
+					this.digitEl.classList.toggle('two-digits-text', isTwoDigits);
+				}
+
+				if (isFirstInit || !animateFlip) {
+					this.el.classList.remove('anim-slide-down', 'anim-slide-up', 'pulse-anim');
 					return;
 				}
 
-				if (this.cleanupTimer) {
-					clearTimeout(this.cleanupTimer);
-					this.cleanupTimer = null;
+				// アニメーションの再トリガー（クラスの再適用で連続タップ時も確実に滑らかに追従）
+				if (this.animTimer) {
+					clearTimeout(this.animTimer);
+					this.animTimer = null;
 				}
-				while (this.activeFlapEls.length > 0) {
-					this.activeFlapEls.pop().remove();
-				}
+				this.el.classList.remove('anim-slide-down', 'anim-slide-up', 'pulse-anim');
+				void this.el.offsetWidth; // Reflow to restart CSS animation
 
-				if (direction >= 0) {
-					this.staticTopInner.textContent = String(newVal);
-					this.staticTopInner.classList.toggle('two-digits-text', newIsTwoDigits);
-					this.staticTopInner.style.color = newIsYellow ? 'var(--text-yellow)' : '#ffffff';
+				const animClass = direction >= 0 ? 'anim-slide-down' : 'anim-slide-up';
+				this.el.classList.add(animClass, 'pulse-anim');
 
-					this.staticBottomInner.textContent = String(oldVal);
-					this.staticBottomInner.classList.toggle('two-digits-text', oldIsTwoDigits);
-					this.staticBottomInner.style.color = oldIsYellow ? 'var(--text-yellow)' : '#ffffff';
-
-					const flapFront = this.createFlapLeaf('top', 'flap-front anim-down-front', oldVal, oldIsYellow);
-					const flapBack = this.createFlapLeaf('bottom', 'flap-back anim-down-back', newVal, newIsYellow);
-
-					this.el.appendChild(flapFront);
-					this.el.appendChild(flapBack);
-					this.activeFlapEls.push(flapFront, flapBack);
-				} else {
-					this.staticTopInner.textContent = String(oldVal);
-					this.staticTopInner.classList.toggle('two-digits-text', oldIsTwoDigits);
-					this.staticTopInner.style.color = oldIsYellow ? 'var(--text-yellow)' : '#ffffff';
-
-					this.staticBottomInner.textContent = String(newVal);
-					this.staticBottomInner.classList.toggle('two-digits-text', newIsTwoDigits);
-					this.staticBottomInner.style.color = newIsYellow ? 'var(--text-yellow)' : '#ffffff';
-
-					const flapFront = this.createFlapLeaf('bottom', 'flap-front anim-up-front', oldVal, oldIsYellow);
-					const flapBack = this.createFlapLeaf('top', 'flap-back anim-up-back', newVal, newIsYellow);
-
-					this.el.appendChild(flapFront);
-					this.el.appendChild(flapBack);
-					this.activeFlapEls.push(flapFront, flapBack);
-				}
-
-				this.cleanupTimer = setTimeout(() => {
-					this.clearActiveFlaps();
-				}, 450);
+				this.animTimer = setTimeout(() => {
+					this.el.classList.remove('anim-slide-down', 'anim-slide-up', 'pulse-anim');
+					this.animTimer = null;
+				}, 240);
 			}
 		}
 
@@ -2796,9 +2866,9 @@
 				svg.appendChild(line);
 			};
 
-			addLine(0, 1, totalWidth, 1, '#cbd5e1', 2);
-			addLine(0, rowHeight, totalWidth - finalColWidth, rowHeight, '#e2e8f0', 1.5);
-			addLine(0, totalHeight - 1, totalWidth, totalHeight - 1, '#cbd5e1', 2);
+			addLine(0, 1, totalWidth, 1, 'rgba(255, 255, 255, 0.16)', 2);
+			addLine(0, rowHeight, totalWidth - finalColWidth, rowHeight, 'rgba(255, 255, 255, 0.08)', 1.5);
+			addLine(0, totalHeight - 1, totalWidth, totalHeight - 1, 'rgba(255, 255, 255, 0.16)', 2);
 
 			const finalX = totalWidth - finalColWidth;
 			const rect = document.createElementNS(svgNS, 'rect');
@@ -2806,7 +2876,8 @@
 			rect.setAttribute('y', 2);
 			rect.setAttribute('width', finalColWidth);
 			rect.setAttribute('height', totalHeight - 4);
-			rect.setAttribute('fill', '#f5b82e');
+			rect.setAttribute('fill', '#d97706');
+			rect.setAttribute('rx', '8');
 			svg.appendChild(rect);
 
 			const addText = (txt, x, y, color, size, weight = '800', anchor = 'start') => {
@@ -2834,7 +2905,7 @@
 				const lineOffsets = lines.length > 1 ? [-10, 10] : [0];
 
 				lines.forEach((lineStr, idx) => {
-					const tEl = addText(lineStr, x, centerY + lineOffsets[idx], '#1e293b', `${fontSizePx}px`, '900', 'start');
+					const tEl = addText(lineStr, x, centerY + lineOffsets[idx], '#ffffff', `${fontSizePx}px`, '900', 'start');
 					const measuredW = measureTextWidthPx(lineStr, '900', fontSizePx, 'sans-serif');
 					if (measuredW > maxColW) {
 						tEl.setAttribute('textLength', String(maxColW));
@@ -2846,8 +2917,8 @@
 			addPlayerNameSVG(name0, 12, yRow0);
 			addPlayerNameSVG(name1, 12, yRow1);
 
-			addText(String(gameData.p0), finalX + finalColWidth / 2, yRow0, '#0f172a', '22px', '900', 'middle');
-			addText(String(gameData.p1), finalX + finalColWidth / 2, yRow1, '#0f172a', '22px', '900', 'middle');
+			addText(String(gameData.p0), finalX + finalColWidth / 2, yRow0, '#ffffff', '22px', '900', 'middle');
+			addText(String(gameData.p1), finalX + finalColWidth / 2, yRow1, '#ffffff', '22px', '900', 'middle');
 
 			if (log.length > 1) {
 				const polyPoints = log.map((entry, idx) => {
@@ -2859,7 +2930,7 @@
 				const polyline = document.createElementNS(svgNS, 'polyline');
 				polyline.setAttribute('points', polyPoints);
 				polyline.setAttribute('fill', 'none');
-				polyline.setAttribute('stroke', '#2563eb');
+				polyline.setAttribute('stroke', '#38bdf8');
 				polyline.setAttribute('stroke-width', '3.5');
 				svg.appendChild(polyline);
 			}
@@ -2876,21 +2947,21 @@
 					circle.setAttribute('cx', cx);
 					circle.setAttribute('cy', cy);
 					circle.setAttribute('r', isScorer ? '18' : '15.5');
-					circle.setAttribute('fill', isScorer ? '#1d9bf0' : '#e2e8f0');
+					circle.setAttribute('fill', isScorer ? '#0ea5e9' : 'rgba(255, 255, 255, 0.08)');
 					svg.appendChild(circle);
 
 					addText(
 						String(ptsVal),
 						cx,
 						cy,
-						isScorer ? '#ffffff' : '#64748b',
+						isScorer ? '#ffffff' : '#94a3b8',
 						isScorer ? '16px' : '14.5px',
 						'900',
 						'middle'
 					);
 
 					if (entry.server === teamId) {
-						addLine(cx - 17, cy + 25, cx + 17, cy + 25, '#dc2626', 4);
+						addLine(cx - 17, cy + 25, cx + 17, cy + 25, '#ef4444', 4);
 					}
 				});
 			});
@@ -3316,7 +3387,107 @@
 			});
 		});
 
+		// ============================================================================
+		// 13. PWA (Service Worker) 登録 & ランドスケープ（横画面）固定制御
+		// ============================================================================
+		// PWA Service Worker 登録
+		if ('serviceWorker' in navigator) {
+			window.addEventListener('load', () => {
+				navigator.serviceWorker.register('./sw.js').then((reg) => {
+					console.log('TT-Scoreboard PWA ServiceWorker active:', reg.scope);
+				}).catch((err) => {
+					console.warn('TT-Scoreboard PWA ServiceWorker registration failed:', err);
+				});
+			});
+		}
+
+		// 画面向き設定: 'landscape_90' (縦持ち時 90° 時計回り) | 'landscape_270' (縦持ち時 270° 反時計回り) | 'free' (端末連動)
+		const ORIENTATION_STORAGE_KEY = 'tt_scoreboard_orientation_mode_v1';
+		let orientationMode = localStorage.getItem(ORIENTATION_STORAGE_KEY) || 'landscape_90';
+
+		const btnRotateEl = document.getElementById('btn-rotate');
+		const rotateStateTextEl = document.getElementById('rotate-state-text');
+
+		function applyOrientationMode() {
+			const isPortrait = window.matchMedia('(orientation: portrait)').matches || (window.innerHeight > window.innerWidth);
+			document.body.classList.remove('is-portrait-locked-90', 'is-portrait-locked-270');
+
+			if (isPortrait) {
+				if (orientationMode === 'landscape_90') {
+					document.body.classList.add('is-portrait-locked-90');
+				} else if (orientationMode === 'landscape_270') {
+					document.body.classList.add('is-portrait-locked-270');
+				}
+			}
+
+			if (rotateStateTextEl) {
+				if (orientationMode === 'landscape_90') {
+					rotateStateTextEl.textContent = '90°';
+					btnRotateEl.title = '横画面固定中 (90° 時計回り)。タップで向き反転または解除';
+				} else if (orientationMode === 'landscape_270') {
+					rotateStateTextEl.textContent = '270°';
+					btnRotateEl.title = '横画面固定中 (270° 反時計回り)。タップで向き反転または解除';
+				} else {
+					rotateStateTextEl.textContent = 'FREE';
+					btnRotateEl.title = '端末連動中 (回転なし)。タップで常に横画面モードを有効化';
+				}
+			}
+
+			// 回転後の寸法に合わせてテキストやパネルの自動フィットを再計算
+			setTimeout(() => {
+				fitScoreboardNameInput(leftNameInputEl);
+				fitScoreboardNameInput(rightNameInputEl);
+				resultsListContainerEl.querySelectorAll('.result-player-name-input').forEach(el => {
+					autoResizeResultNameTextarea(el);
+				});
+			}, 80);
+		}
+
+		function cycleOrientationMode() {
+			if (orientationMode === 'landscape_90') {
+				orientationMode = 'landscape_270';
+				showToast('横画面固定: 270° (反時計回り)');
+			} else if (orientationMode === 'landscape_270') {
+				orientationMode = 'free';
+				showToast('端末連動モード (画面回転解除)');
+			} else {
+				orientationMode = 'landscape_90';
+				showToast('横画面固定: 90° (時計回り)');
+			}
+			localStorage.setItem(ORIENTATION_STORAGE_KEY, orientationMode);
+			applyOrientationMode();
+			tryLockScreenOrientation();
+		}
+
+		if (btnRotateEl) {
+			btnRotateEl.addEventListener('click', () => {
+				if (isInteractionLocked()) return;
+				cycleOrientationMode();
+			});
+		}
+
+		// Screen Orientation API による横画面ロック試行（Android PWA / フルスクリーン対応ブラウザ向け）
+		function tryLockScreenOrientation() {
+			if (orientationMode !== 'free' && window.screen && window.screen.orientation && typeof window.screen.orientation.lock === 'function') {
+				window.screen.orientation.lock('landscape').catch(() => {
+					// サポート外や未許可ブラウザでは静かにスルー (CSS回転が確実に動作)
+				});
+			}
+		}
+
+		['touchstart', 'click'].forEach(evtType => {
+			document.addEventListener(evtType, tryLockScreenOrientation, { once: true, passive: true });
+		});
+
+		window.addEventListener('resize', applyOrientationMode);
+		window.addEventListener('orientationchange', applyOrientationMode);
+		if (window.screen && window.screen.orientation) {
+			window.screen.orientation.addEventListener('change', applyOrientationMode);
+		}
+
 		// 初期描画実行 & リロード前の状態（ゲーム終了／マッチ終了バー含む）を復元
+		applyOrientationMode();
+		tryLockScreenOrientation();
 		syncVoiceBtnUI();
 		syncUIAndBoard({ animate: false });
 		if ((state.pendingPhase === 'game_end' || state.pendingPhase === 'match_end') && state.pendingWinnerIdx !== -1) {
