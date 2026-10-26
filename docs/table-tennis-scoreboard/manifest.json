@@ -1,6 +1,6 @@
 {
   "name": "卓球スコアボード - Table Tennis Scoreboard",
-  "short_name": "卓球スコア",
+  "short_name": "卓球スコアボード",
   "description": "外部依存なし・完全オフラインで動作する高機能卓球スコアボード",
   "start_url": "./index.html",
   "scope": "./",
