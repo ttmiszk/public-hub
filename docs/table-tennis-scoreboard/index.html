@@ -135,10 +135,9 @@
 			display: grid;
 			grid-template-columns: 34fr 14fr 14fr 34fr;
 			align-items: center;
-			gap: clamp(5px, 1.8vw, 24px);
+			gap: clamp(4px, 1.5vw, 20px);
 			flex-shrink: 0;
 			width: 100%;
-			max-width: 1400px;
 			margin: 0 auto;
 		}
 
@@ -157,13 +156,14 @@
 			background: transparent;
 			border: 2px solid transparent;
 			color: #ffffff;
-			font-size: clamp(1.3rem, 3.8vw, 2.3rem);
+			font-size: clamp(0.95rem, 2.3vw, 1.35rem);
 			font-weight: 900;
 			text-align: center;
 			width: 100%;
 			max-width: 100%;
-			padding: 2px 4px;
-			border-radius: 10px;
+			height: clamp(26px, 4.8vh, 34px);
+			padding: 1px 3px;
+			border-radius: 8px;
 			outline: none;
 			transition: border-color 0.2s, background-color 0.2s;
 			user-select: text;
@@ -180,14 +180,14 @@
 		.swap-top-btn {
 			grid-column: 2 / 4;
 			justify-self: center;
-			min-width: 42px;
-			height: 36px;
-			padding: 0 10px;
+			min-width: 36px;
+			height: clamp(24px, 4.2vh, 30px);
+			padding: 0 8px;
 			background: transparent;
 			border: none;
 			border-radius: 8px;
 			color: rgba(255, 255, 255, 0.35);
-			font-size: clamp(1.1rem, 2.2vw, 1.45rem);
+			font-size: clamp(0.9rem, 1.8vw, 1.2rem);
 			font-weight: 600;
 			display: flex;
 			align-items: center;
@@ -209,8 +209,8 @@
 
 		/* =========================================================
 		   2. Pure CSS Scoreboard Stage
-		      - Always fills full horizontal width
-		      - Height never exceeds a landscape ratio (even in portrait mode)
+		      - Always fills full horizontal width up to portrait-ratio constraint
+		      - Height fills available viewport while maintaining vertical panel ratio (>= 4:3)
 		      - Player Names + Change-Court Button sit immediately above Score Panels
 		========================================================= */
 		.scoreboard-wrapper {
@@ -221,16 +221,27 @@
 			flex-direction: column;
 			align-items: center;
 			justify-content: center;
-			gap: clamp(6px, 1.2vh, 12px);
 			padding: clamp(4px, 1vh, 10px) 0;
+		}
+
+		/* スコアボード全体（ヘッダー＋ステージ）を包むプロポーション制御コンテナ */
+		.scoreboard-content-box {
+			width: 100%;
+			max-width: 1400px;
+			height: 100%;
+			max-height: 780px;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			gap: clamp(6px, 1.2vh, 12px);
+			margin: 0 auto;
+			transition: max-width 0.15s ease-out;
 		}
 
 		.scoreboard-stage {
 			width: 100%;
-			max-width: 1400px;
-			flex: 0 1 auto;
-			height: min(calc(100% - clamp(44px, calc(7 * var(--vh)), 64px)), calc(56 * var(--vw)));
-			max-height: 760px;
+			flex: 1;
 			min-height: 0;
 			display: grid;
 			grid-template-columns: 34fr 14fr 14fr 34fr;
@@ -252,7 +263,7 @@
 			min-width: 0;
 			display: flex;
 			flex-direction: column;
-			gap: clamp(18px, 3vh, 32px);
+			gap: clamp(10px, 1.8vh, 18px);
 		}
 
 		.point-col.left { grid-column: 1; }
@@ -290,7 +301,7 @@
 			display: flex;
 			flex-direction: column;
 			justify-content: flex-start;
-			padding-top: calc(clamp(12px, 1.8vh, 18px) + clamp(18px, 3vh, 32px));
+			padding-top: calc(clamp(12px, 1.8vh, 18px) + clamp(10px, 1.8vh, 18px));
 		}
 
 		.game-panels-pair {
@@ -371,82 +382,21 @@
 				0 14px 34px rgba(0, 0, 0, 0.8),
 				inset 0 1px 0 rgba(255, 255, 255, 0.14);
 			cursor: pointer;
-			overflow: visible;
+			overflow: hidden;
 			display: flex;
 			align-items: center;
 			justify-content: center;
 			transition: box-shadow 0.15s, transform 0.1s, border-color 0.2s;
 			--digit-size: clamp(5rem, min(28vw, 54vh), 26rem);
-			--digit-scale-y: 1.08;
+			--digit-scale-y: 1;
 			--digit-color: #ffffff;
-		}
-
-		/* スコアカード上部のバインダー金具リング＆穴（実機スコアボードモチーフ） */
-		.card-rings {
-			--ring-hole-top: clamp(8px, 5.5cqh, 24px);
-			--ring-hole-size: clamp(8px, 3.4cqw, 17px);
-			--ring-metal-top: clamp(-8px, -2.2cqh, -4px);
-			--ring-metal-width: clamp(5px, 2.2cqw, 12px);
-			position: absolute;
-			top: 0;
-			left: 0;
-			right: 0;
-			height: 0;
-			pointer-events: none;
-			z-index: 10;
-		}
-
-		.ring-unit {
-			position: absolute;
-			top: 0;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			transform: translateX(-50%);
-		}
-
-		.ring-unit.left {
-			left: 25%;
-		}
-
-		.ring-unit.right {
-			left: 75%;
-		}
-
-		/* カード上の黒いパンチ穴（奥側） */
-		.ring-hole {
-			position: absolute;
-			top: var(--ring-hole-top);
-			width: var(--ring-hole-size);
-			height: var(--ring-hole-size);
-			border-radius: 50%;
-			background: #07090e;
-			box-shadow: 
-				inset 0 2px 4px rgba(0, 0, 0, 0.95),
-				0 1px 0 rgba(255, 255, 255, 0.15);
-			z-index: 1;
-		}
-
-		/* シルバーメタリックの縦長リング（手前側・穴の中に差し込まれる高さ） */
-		.ring-metal {
-			position: absolute;
-			top: var(--ring-metal-top);
-			width: var(--ring-metal-width);
-			height: calc(var(--ring-hole-top) + (var(--ring-hole-size) * 0.65) - var(--ring-metal-top));
-			border-radius: 999px;
-			background: linear-gradient(90deg, #94a3b8 0%, #ffffff 38%, #cbd5e1 75%, #64748b 100%);
-			box-shadow: 
-				0 3px 6px rgba(0, 0, 0, 0.65),
-				inset 0 1px 0 rgba(255, 255, 255, 0.95);
-			border: 1px solid rgba(71, 85, 105, 0.55);
-			z-index: 2;
 		}
 
 		.flip-card.point-card {
 			flex: 1;
 			min-height: 0;
 			--digit-size: clamp(5rem, min(28vw, 54vh), 26rem);
-			--digit-scale-y: 1.08;
+			--digit-scale-y: 1;
 		}
 
 		.flip-card.game-card {
@@ -454,7 +404,7 @@
 			min-height: 0;
 			border-radius: clamp(10px, 1.5vw, 18px);
 			--digit-size: clamp(2.8rem, min(12.5vw, 30vh), 14rem);
-			--digit-scale-y: 1.08;
+			--digit-scale-y: 1;
 		}
 
 		/* Container query units */
@@ -480,14 +430,15 @@
 			border-color: rgba(96, 165, 250, 0.6);
 		}
 
-		/* 一体型カードの数字要素 */
+		/* 一体型カードの数字要素（常に垂直・水平の完全中央配置） */
 		.card-digit {
 			width: 100%;
 			height: 100%;
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			padding-bottom: 0.09em; /* 光学的な上下余白均等化（フォントベースライン補正） */
+			padding: 0;
+			margin: 0;
 			font-size: var(--digit-size);
 			font-weight: 800;
 			line-height: 1;
@@ -495,6 +446,7 @@
 			font-variant-numeric: tabular-nums;
 			letter-spacing: -0.04em;
 			--digit-scale-x: 1;
+			transform-origin: center center;
 			transform: scale(var(--digit-scale-x), var(--digit-scale-y));
 			text-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
 			will-change: transform, opacity;
@@ -574,8 +526,8 @@
 			width: clamp(7px, 2.6vw, 28px);
 			aspect-ratio: 1 / 1;
 			border-radius: 50%;
-			background: rgba(255, 255, 255, 0.14);
-			border: clamp(1.5px, 0.35vw, 3.5px) solid rgba(255, 255, 255, 0.55);
+			background: rgba(255, 255, 255, 0.12);
+			border: clamp(1px, 0.18vw, 1.8px) solid rgba(255, 255, 255, 0.5);
 			transition: background 0.22s, transform 0.22s, box-shadow 0.22s, border-color 0.22s;
 		}
 
@@ -586,7 +538,7 @@
 		@supports (width: 1cqw) {
 			.game-dot {
 				width: min(26cqw, 28px);
-				border-width: clamp(1.5px, 3cqw, 3.5px);
+				border-width: clamp(1px, 1.5cqw, 1.8px);
 			}
 			.game-dots-bar[data-count="4"] .game-dot {
 				width: min(20cqw, 23px);
@@ -835,53 +787,106 @@
 		.screen-topbar {
 			background: #10131c;
 			color: #ffffff;
-			display: grid;
-			grid-template-columns: auto 1fr auto;
+			position: relative;
+			display: flex;
 			align-items: center;
-			padding-top: max(12px, calc(var(--safe-top) + 12px));
-			padding-bottom: 12px;
-			padding-left: max(18px, calc(var(--safe-left) + 18px));
-			padding-right: max(18px, calc(var(--safe-right) + 18px));
-			min-height: 60px;
+			justify-content: space-between;
+			padding-top: max(10px, calc(var(--safe-top) + 10px));
+			padding-bottom: 10px;
+			padding-left: max(12px, calc(var(--safe-left) + 12px));
+			padding-right: max(14px, calc(var(--safe-right) + 14px));
+			min-height: 56px;
 			border-bottom: 1.5px solid rgba(255, 255, 255, 0.1);
 			box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
 			flex-shrink: 0;
+			z-index: 10;
 		}
 
-		.screen-close-btn {
-			background: rgba(255, 255, 255, 0.08);
-			border: 1.5px solid rgba(255, 255, 255, 0.2);
-			color: #ffffff;
-			border-radius: 12px;
-			min-width: 52px;
+		.screen-back-btn {
+			background: transparent;
+			border: none;
+			color: #f1f5f9;
+			padding: 6px 10px;
+			min-width: 44px;
 			min-height: 44px;
-			padding: 6px 16px;
-			font-size: 1.1rem;
-			font-weight: 900;
 			cursor: pointer;
-			display: flex;
+			display: inline-flex;
 			align-items: center;
 			justify-content: center;
-			gap: 6px;
-			transition: background 0.15s, transform 0.1s;
+			transition: opacity 0.15s, transform 0.1s;
+			border-radius: 999px;
+			-webkit-tap-highlight-color: transparent;
+			flex-shrink: 0;
+			z-index: 2;
 		}
 
-		.screen-close-btn:active {
+		.screen-back-btn:hover {
+			opacity: 0.8;
+			background: rgba(255, 255, 255, 0.06);
+		}
+
+		.screen-back-btn:active {
+			transform: scale(0.9);
+			background: rgba(255, 255, 255, 0.12);
+		}
+
+		.screen-back-btn svg {
+			width: 28px;
+			height: 28px;
+			stroke: currentColor;
+			stroke-width: 2.6;
+			stroke-linecap: round;
+			stroke-linejoin: round;
+			fill: none;
+			display: block;
+		}
+
+		.screen-topbar-actions {
+			display: flex;
+			align-items: center;
+			justify-content: flex-end;
+			gap: 8px;
+			margin-left: auto;
+			z-index: 2;
+		}
+
+		.screen-action-btn {
+			background: rgba(59, 130, 246, 0.18);
+			border: 1.5px solid rgba(96, 165, 250, 0.55);
+			color: #bfdbfe;
+			border-radius: 10px;
+			min-height: 38px;
+			padding: 5px 12px;
+			font-size: clamp(0.82rem, 1.7vw, 0.95rem);
+			font-weight: 800;
+			cursor: pointer;
+			transition: background 0.15s, transform 0.1s, color 0.15s;
+			white-space: nowrap;
+		}
+
+		.screen-action-btn:active {
 			transform: scale(0.95);
-			background: rgba(255, 255, 255, 0.16);
+			background: rgba(59, 130, 246, 0.35);
+			color: #ffffff;
+		}
+
+		.screen-action-btn:disabled {
+			opacity: 0.3;
+			pointer-events: none;
 		}
 
 		.screen-danger-btn {
 			background: rgba(220, 38, 38, 0.22);
 			border: 1.5px solid #ef4444;
 			color: #fca5a5;
-			border-radius: 12px;
-			min-height: 44px;
-			padding: 6px 16px;
-			font-size: 1rem;
+			border-radius: 10px;
+			min-height: 38px;
+			padding: 5px 12px;
+			font-size: clamp(0.82rem, 1.7vw, 0.95rem);
 			font-weight: 800;
 			cursor: pointer;
 			transition: background 0.15s, transform 0.1s;
+			white-space: nowrap;
 		}
 
 		.screen-danger-btn:active {
@@ -896,44 +901,135 @@
 		}
 
 		.screen-title-center {
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			transform: translate(-50%, -50%);
 			text-align: center;
-			font-size: clamp(1.2rem, 3vw, 1.6rem);
+			font-size: clamp(1.05rem, 2.4vw, 1.35rem);
 			font-weight: 900;
 			letter-spacing: 0.04em;
 			color: #ffffff;
+			white-space: nowrap;
+			pointer-events: none;
+			z-index: 1;
 		}
 
 		.screen-body {
 			flex: 1;
 			overflow-y: auto;
 			-webkit-overflow-scrolling: touch;
-			padding-top: 20px;
-			padding-bottom: max(40px, calc(env(safe-area-inset-bottom, 0px) + 32px));
-			padding-left: max(16px, calc(env(safe-area-inset-left, 0px) + 16px));
-			padding-right: max(16px, calc(env(safe-area-inset-right, 0px) + 16px));
+			padding-top: 14px;
+			padding-bottom: max(32px, calc(env(safe-area-inset-bottom, 0px) + 24px));
+			padding-left: max(14px, calc(env(safe-area-inset-left, 0px) + 14px));
+			padding-right: max(14px, calc(env(safe-area-inset-right, 0px) + 14px));
 			display: flex;
 			flex-direction: column;
 			align-items: center;
 			justify-content: flex-start;
-			gap: 24px;
+			gap: 16px;
 		}
 
-		/* --- Match Result History Cards List --- */
+		/* --- Match Result History Cards List & Date Grouping --- */
 		.results-list-container {
 			width: 100%;
 			max-width: 880px;
 			display: flex;
 			flex-direction: column;
-			gap: 24px;
+			gap: 14px;
+		}
+
+		.result-date-group {
+			width: 100%;
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+		}
+
+		.result-date-header {
+			width: 100%;
+			background: #161b28;
+			border: 1.5px solid rgba(255, 255, 255, 0.14);
+			border-radius: 12px;
+			padding: 10px 14px;
+			color: #f8fafc;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			cursor: pointer;
+			transition: background 0.15s, border-color 0.15s;
+			text-align: left;
+		}
+
+		.result-date-header:hover {
+			background: #1c2233;
+			border-color: rgba(255, 255, 255, 0.24);
+		}
+
+		.result-date-header:active {
+			background: #22293d;
+		}
+
+		.result-date-header-left {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			font-size: clamp(0.92rem, 2vw, 1.1rem);
+			font-weight: 900;
+			color: #f1f5f9;
+		}
+
+		.result-date-chevron {
+			display: inline-block;
+			font-size: 0.85em;
+			color: #94a3b8;
+			transition: transform 0.2s ease;
+			transform: rotate(0deg);
+		}
+
+		.result-date-group.collapsed .result-date-chevron {
+			transform: rotate(-90deg);
+		}
+
+		.date-today-badge {
+			background: rgba(59, 130, 246, 0.24);
+			border: 1px solid rgba(96, 165, 250, 0.55);
+			color: #93c5fd;
+			font-size: clamp(0.72rem, 1.5vw, 0.82rem);
+			font-weight: 900;
+			padding: 1px 8px;
+			border-radius: 999px;
+		}
+
+		.date-count-badge {
+			background: rgba(255, 255, 255, 0.08);
+			border: 1px solid rgba(255, 255, 255, 0.14);
+			color: #cbd5e1;
+			font-size: clamp(0.76rem, 1.6vw, 0.88rem);
+			font-weight: 800;
+			padding: 2px 10px;
+			border-radius: 999px;
+		}
+
+		.result-date-body {
+			display: flex;
+			flex-direction: column;
+			gap: 14px;
+			padding-left: 2px;
+			padding-right: 2px;
+		}
+
+		.result-date-group.collapsed .result-date-body {
+			display: none;
 		}
 
 		.result-table-card {
 			width: 100%;
 			background: #131620;
 			border: 1.5px solid rgba(255, 255, 255, 0.14);
-			border-radius: 16px;
+			border-radius: 14px;
 			overflow: hidden;
-			box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
+			box-shadow: 0 10px 28px rgba(0, 0, 0, 0.6);
 		}
 
 		/* Match Metadata Bar (Start/End Datetime, Duration, and Score Progression Button) */
@@ -942,8 +1038,8 @@
 			flex-wrap: wrap;
 			align-items: center;
 			justify-content: space-between;
-			gap: 10px;
-			padding: 12px 16px;
+			gap: 8px;
+			padding: 8px 12px;
 			background: #191c28;
 			border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 		}
@@ -952,8 +1048,8 @@
 			display: flex;
 			flex-wrap: wrap;
 			align-items: center;
-			gap: 8px 16px;
-			font-size: clamp(0.92rem, 2vw, 1.08rem);
+			gap: 6px 12px;
+			font-size: clamp(0.78rem, 1.6vw, 0.92rem);
 			font-weight: 800;
 			color: #cbd5e1;
 		}
@@ -962,28 +1058,41 @@
 			background: #232838;
 			color: #f1f5f9;
 			border: 1px solid rgba(255, 255, 255, 0.12);
-			padding: 3px 10px;
+			padding: 2px 8px;
 			border-radius: 999px;
 			font-weight: 900;
 		}
 
 		.result-meta-actions {
+			margin-left: auto;
 			display: flex;
 			align-items: center;
-			gap: 8px;
+			justify-content: flex-end;
+			gap: 6px;
+		}
+
+		.result-to-progression-btn,
+		.result-delete-one-btn {
+			width: 68px;
+			min-height: 32px;
+			padding: 4px 0;
+			border-radius: 8px;
+			font-size: clamp(0.8rem, 1.7vw, 0.92rem);
+			font-weight: 900;
+			cursor: pointer;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			text-align: center;
+			transition: transform 0.1s, background 0.15s;
+			white-space: nowrap;
+			box-sizing: border-box;
 		}
 
 		.result-to-progression-btn {
 			background: #2563eb;
 			border: 1.5px solid #60a5fa;
 			color: #ffffff;
-			border-radius: 10px;
-			padding: 8px 16px;
-			font-size: clamp(0.95rem, 2vw, 1.1rem);
-			font-weight: 900;
-			cursor: pointer;
-			transition: transform 0.1s, background 0.15s;
-			white-space: nowrap;
 		}
 
 		.result-to-progression-btn:active {
@@ -995,13 +1104,6 @@
 			background: rgba(239, 68, 68, 0.16);
 			border: 1.5px solid rgba(239, 68, 68, 0.6);
 			color: #fca5a5;
-			border-radius: 10px;
-			padding: 8px 14px;
-			font-size: clamp(0.95rem, 2vw, 1.1rem);
-			font-weight: 900;
-			cursor: pointer;
-			transition: transform 0.1s, background 0.15s;
-			white-space: nowrap;
 		}
 
 		.result-delete-one-btn:active {
@@ -1010,31 +1112,11 @@
 			color: #ffffff;
 		}
 
-		.result-header-grid {
-			display: grid;
-			grid-template-columns: 32% 36% 32%;
-			background: #1e3a8a;
-			color: #ffffff;
-			font-size: clamp(1rem, 2.3vw, 1.3rem);
-			font-weight: 800;
-			text-align: center;
-			border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-		}
-
-		.result-header-cell {
-			padding: 10px 8px;
-			border-right: 1px solid rgba(255, 255, 255, 0.14);
-		}
-
-		.result-header-cell:last-child {
-			border-right: none;
-		}
-
 		.result-body-grid {
 			display: grid;
-			grid-template-columns: 32% 10% 16% 10% 32%;
+			grid-template-columns: 29% 10% 22% 10% 29%;
 			align-items: stretch;
-			min-height: clamp(150px, 34vh, 240px);
+			min-height: clamp(86px, 19vh, 140px);
 			background: #131620;
 		}
 
@@ -1043,7 +1125,7 @@
 			flex-direction: column;
 			align-items: center;
 			justify-content: center;
-			padding: 14px 8px;
+			padding: 8px 6px;
 			border-right: 1px solid rgba(255, 255, 255, 0.08);
 			text-align: center;
 		}
@@ -1053,7 +1135,7 @@
 		}
 
 		.result-player-name {
-			font-size: clamp(1.2rem, 3vw, 1.75rem);
+			font-size: clamp(0.95rem, 2.2vw, 1.35rem);
 			font-weight: 900;
 			color: #ffffff;
 			word-break: break-word;
@@ -1063,15 +1145,15 @@
 			width: 96%;
 			max-width: 240px;
 			font-family: inherit;
-			font-size: clamp(1.1rem, 2.8vw, 1.65rem);
+			font-size: clamp(0.92rem, 2.2vw, 1.3rem);
 			font-weight: 900;
-			line-height: 1.28;
+			line-height: 1.25;
 			color: #ffffff;
 			text-align: center;
 			background: transparent;
 			border: 2px solid transparent;
-			border-radius: 8px;
-			padding: 4px 6px;
+			border-radius: 6px;
+			padding: 2px 4px;
 			outline: none;
 			resize: none;
 			overflow: hidden;
@@ -1090,7 +1172,7 @@
 		}
 
 		.result-games-num {
-			font-size: clamp(2.2rem, 5.5vw, 3.5rem);
+			font-size: clamp(1.75rem, 4.2vw, 2.6rem);
 			font-weight: 900;
 			color: #64748b;
 		}
@@ -1103,7 +1185,7 @@
 		.result-set-list {
 			display: flex;
 			flex-direction: column;
-			gap: 5px;
+			gap: 3px;
 			width: 100%;
 		}
 
@@ -1111,10 +1193,13 @@
 			display: grid;
 			grid-template-columns: 1fr auto 1fr;
 			align-items: center;
-			gap: 8px;
-			font-size: clamp(1.1rem, 2.6vw, 1.45rem);
+			gap: clamp(4px, 1vw, 8px);
+			font-size: clamp(1.02rem, 2.25vw, 1.32rem);
+			line-height: 1.25;
 			font-weight: 800;
 			color: #94a3b8;
+			white-space: nowrap;
+			font-variant-numeric: tabular-nums;
 		}
 
 		.result-set-row .pt-left {
@@ -1130,14 +1215,62 @@
 			font-weight: 900;
 		}
 
+		/* Match Memo Input Section */
+		.result-memo-bar {
+			border-top: 1px solid rgba(255, 255, 255, 0.08);
+			background: #10131c;
+			padding: 6px 12px;
+		}
+
+		.result-memo-input {
+			width: 100%;
+			display: block;
+			font-family: inherit;
+			font-size: clamp(0.82rem, 1.7vw, 0.95rem);
+			font-weight: 600;
+			line-height: 1.45;
+			color: #e2e8f0;
+			background: rgba(255, 255, 255, 0.03);
+			border: 1.5px solid rgba(255, 255, 255, 0.1);
+			border-radius: 8px;
+			padding: 6px 10px;
+			outline: none;
+			resize: none;
+			overflow: hidden;
+			white-space: pre-wrap;
+			overflow-wrap: anywhere;
+			word-break: break-word;
+			transition: border-color 0.2s, background-color 0.2s;
+			user-select: text;
+			-webkit-user-select: text;
+			touch-action: manipulation;
+		}
+
+		.result-memo-input::placeholder {
+			color: #64748b;
+			font-weight: 500;
+		}
+
+		.result-memo-input:focus {
+			background: #171c2b;
+			border-color: var(--accent-blue);
+		}
+
 		/* --- Score History View (Dark Theme) --- */
+		.history-topbar {
+			display: grid;
+			grid-template-columns: 44px 1fr 44px;
+			align-items: center;
+			justify-content: stretch;
+		}
+
 		.history-header-summary {
 			display: grid;
 			grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
 			align-items: center;
 			justify-items: center;
-			gap: clamp(8px, 2vw, 20px);
-			font-size: clamp(1rem, 2.5vw, 1.45rem);
+			gap: clamp(6px, 1.8vw, 16px);
+			font-size: clamp(0.85rem, 2vw, 1.15rem);
 			font-weight: 900;
 			width: 100%;
 			min-width: 0;
@@ -1154,13 +1287,13 @@
 		}
 
 		.history-header-summary .score-pill {
-			font-size: clamp(1.3rem, 3.2vw, 1.85rem);
+			font-size: clamp(1.05rem, 2.4vw, 1.4rem);
 			letter-spacing: 0.05em;
 			white-space: nowrap;
 			flex-shrink: 0;
 			background: rgba(255, 255, 255, 0.1);
 			border: 1px solid rgba(255, 255, 255, 0.18);
-			padding: 4px 14px;
+			padding: 2px 10px;
 			border-radius: 999px;
 		}
 
@@ -1173,59 +1306,59 @@
 			max-width: 1100px;
 			display: flex;
 			flex-direction: column;
-			gap: 20px;
+			gap: 14px;
 		}
 
 		.game-history-card {
 			background: #131620;
-			border-radius: 16px;
+			border-radius: 12px;
 			border: 1.5px solid rgba(255, 255, 255, 0.14);
-			box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
-			padding: 14px 16px 18px;
+			box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+			padding: 10px 14px 12px;
 			width: 100%;
 		}
 
 		.game-history-heading {
 			text-align: center;
-			font-size: clamp(1.25rem, 3vw, 1.55rem);
+			font-size: clamp(0.98rem, 2.2vw, 1.25rem);
 			font-weight: 900;
 			color: #f8fafc;
-			margin-bottom: 12px;
+			margin-bottom: 8px;
 		}
 
 		.timeline-swipe-area {
 			width: 100%;
 			overflow-x: auto;
 			-webkit-overflow-scrolling: touch;
-			padding-bottom: 6px;
+			padding-bottom: 4px;
 		}
 
 		.empty-state-box {
 			background: #131620;
 			border: 2px dashed rgba(255, 255, 255, 0.18);
-			border-radius: 16px;
-			padding: 40px 24px;
+			border-radius: 14px;
+			padding: 30px 20px;
 			text-align: center;
-			font-size: clamp(1.15rem, 2.8vw, 1.4rem);
+			font-size: clamp(0.95rem, 2.2vw, 1.2rem);
 			font-weight: 800;
 			color: #94a3b8;
 			margin: auto;
-			max-width: 600px;
+			max-width: 500px;
 		}
 
 		/* =========================================================
-		   7. Large Touch-Friendly Modal Dialog
+		   7. Large Touch-Friendly Modal Dialog (Zero Vertical Scrollbar)
 		========================================================= */
 		.modal-backdrop {
 			position: fixed;
 			inset: 0;
 			z-index: 90;
-			background: rgba(0, 0, 0, 0.8);
+			background: rgba(0, 0, 0, 0.82);
 			backdrop-filter: blur(6px);
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			padding: 14px;
+			padding: 8px;
 			opacity: 0;
 			pointer-events: none;
 			transition: opacity 0.2s ease;
@@ -1238,42 +1371,53 @@
 
 		.modal-card {
 			background: #181b23;
-			border: 2.5px solid rgba(255, 255, 255, 0.25);
-			border-radius: 22px;
-			max-width: 640px;
-			width: 96vw;
-			max-height: 92vh;
-			overflow-y: auto;
-			padding: clamp(18px, 4vh, 28px) clamp(16px, 4vw, 28px);
-			box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9);
+			border: 2px solid rgba(255, 255, 255, 0.25);
+			border-radius: 18px;
+			max-width: 660px;
+			width: min(94vw, 660px);
+			max-height: 94dvh;
+			overflow-y: hidden; /* 縦スクロールバーを完全に抑制 */
+			padding: clamp(10px, 2.5vh, 20px) clamp(14px, 3.5vw, 24px);
+			box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
 			text-align: center;
 			transform: scale(0.95);
+			transform-origin: center center;
 			transition: transform 0.2s ease;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
 		}
 
 		.modal-backdrop.active .modal-card {
-			transform: scale(1);
+			transform: scale(var(--modal-scale, 1));
 		}
 
 		.modal-title {
-			font-size: clamp(1.35rem, 3.5vw, 1.8rem);
+			font-size: clamp(1.15rem, 2.8vw, 1.45rem);
 			font-weight: 900;
-			margin-bottom: 8px;
+			margin-bottom: 4px;
 			color: #ffffff;
+			line-height: 1.2;
 		}
 
 		.modal-desc {
-			font-size: clamp(1.05rem, 2.5vw, 1.25rem);
+			font-size: clamp(0.85rem, 2vw, 1.02rem);
 			color: #cbd5e1;
-			line-height: 1.5;
-			margin-bottom: 18px;
+			line-height: 1.35;
+			margin-bottom: 12px;
 			white-space: pre-line;
 		}
 
 		.modal-actions {
+			width: 100%;
 			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-			gap: 12px;
+			grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+			gap: 8px;
+		}
+
+		.modal-actions.format-grid {
+			grid-template-columns: repeat(4, 1fr);
 		}
 
 		.modal-actions.two-cols-row {
@@ -1282,17 +1426,18 @@
 
 		.modal-btn {
 			width: 100%;
-			min-height: 58px;
-			padding: 14px 18px;
-			border-radius: 16px;
+			min-height: clamp(38px, 7vh, 48px);
+			padding: 8px 12px;
+			border-radius: 12px;
 			border: 2px solid rgba(255, 255, 255, 0.2);
-			font-size: clamp(1.08rem, 2.6vw, 1.3rem);
+			font-size: clamp(0.9rem, 2vw, 1.1rem);
 			font-weight: 900;
 			cursor: pointer;
 			transition: transform 0.1s;
 			display: flex;
 			align-items: center;
 			justify-content: center;
+			white-space: nowrap;
 		}
 
 		.modal-btn:active {
@@ -1336,82 +1481,68 @@
 		<!-- Pure CSS 3D Split-Flap Scoreboard Stage (Always Landscape-Proportioned!)
 		     Top Header Area (Player Names + Subtle Change-Court Button) sits directly above the Score Panels -->
 		<div class="scoreboard-wrapper">
-			<header class="top-header-bar">
-				<div class="player-header-col left">
-					<input id="left-name-input" class="player-name-input" type="text" value="Player1" maxlength="16" aria-label="Left Player Name">
-				</div>
-
-				<button id="btn-swap-top" class="swap-top-btn" title="チェンジコート (左右入れ替え)">
-					⇄
-				</button>
-
-				<div class="player-header-col right">
-					<input id="right-name-input" class="player-name-input" type="text" value="Player2" maxlength="16" aria-label="Right Player Name">
-				</div>
-			</header>
-
-			<main id="scoreboard-stage" class="scoreboard-stage">
-				<!-- Left Point Column: Serve Bar (100% matched to Point Panel width) + Point Panel -->
-				<div class="point-col left">
-					<div id="left-serve-bar" class="serve-panel-bar active" title="タップしてサーブ権を切り替え"></div>
-					<div id="card-left-point" class="flip-card point-card" data-role="point" data-side="left">
-						<div class="card-rings" aria-hidden="true">
-							<div class="ring-unit left"><span class="ring-metal"></span><span class="ring-hole"></span></div>
-							<div class="ring-unit right"><span class="ring-metal"></span><span class="ring-hole"></span></div>
-						</div>
-						<div class="card-digit">0</div>
+			<div id="scoreboard-content-box" class="scoreboard-content-box">
+				<header class="top-header-bar">
+					<div class="player-header-col left">
+						<input id="left-name-input" class="player-name-input" type="text" value="Player1" maxlength="16" aria-label="Left Player Name">
 					</div>
-				</div>
 
-				<!-- Center Columns (Spans cols 2 & 3): Left/Right Game Panels + Won-Game Dots + Lower Slot (Start Match Button / Elapsed Time) -->
-				<div class="center-cols-area">
-					<div class="game-panels-pair">
-						<div class="game-subcol">
-							<div id="card-left-game" class="flip-card game-card" data-role="game" data-side="left">
-								<div class="card-rings" aria-hidden="true">
-									<div class="ring-unit left"><span class="ring-metal"></span><span class="ring-hole"></span></div>
-									<div class="ring-unit right"><span class="ring-metal"></span><span class="ring-hole"></span></div>
+					<button id="btn-swap-top" class="swap-top-btn" title="チェンジコート (左右入れ替え)">
+						⇄
+					</button>
+
+					<div class="player-header-col right">
+						<input id="right-name-input" class="player-name-input" type="text" value="Player2" maxlength="16" aria-label="Right Player Name">
+					</div>
+				</header>
+
+				<main id="scoreboard-stage" class="scoreboard-stage">
+					<!-- Left Point Column: Serve Bar (100% matched to Point Panel width) + Point Panel -->
+					<div class="point-col left">
+						<div id="left-serve-bar" class="serve-panel-bar active" title="タップしてサーブ権を切り替え"></div>
+						<div id="card-left-point" class="flip-card point-card" data-role="point" data-side="left">
+							<div class="card-digit">0</div>
+						</div>
+					</div>
+
+					<!-- Center Columns (Spans cols 2 & 3): Left/Right Game Panels + Won-Game Dots + Lower Slot (Start Match Button / Elapsed Time) -->
+					<div class="center-cols-area">
+						<div class="game-panels-pair">
+							<div class="game-subcol">
+								<div id="card-left-game" class="flip-card game-card" data-role="game" data-side="left">
+									<div class="card-digit">0</div>
 								</div>
-								<div class="card-digit">0</div>
+								<div id="left-dots-bar" class="game-dots-bar"></div>
 							</div>
-							<div id="left-dots-bar" class="game-dots-bar"></div>
-						</div>
 
-						<div class="game-subcol">
-							<div id="card-right-game" class="flip-card game-card" data-role="game" data-side="right">
-								<div class="card-rings" aria-hidden="true">
-									<div class="ring-unit left"><span class="ring-metal"></span><span class="ring-hole"></span></div>
-									<div class="ring-unit right"><span class="ring-metal"></span><span class="ring-hole"></span></div>
+							<div class="game-subcol">
+								<div id="card-right-game" class="flip-card game-card" data-role="game" data-side="right">
+									<div class="card-digit">0</div>
 								</div>
-								<div class="card-digit">0</div>
+								<div id="right-dots-bar" class="game-dots-bar"></div>
 							</div>
-							<div id="right-dots-bar" class="game-dots-bar"></div>
+						</div>
+
+						<!-- Lower empty area under Game Panels: Displays "START" button before match starts, and elapsed "mm:ss" timer once started -->
+						<div class="center-lower-slot">
+							<button id="btn-start-match" class="start-match-btn" title="試合を開始してタイマーをスタート">
+								START
+							</button>
+							<div id="match-elapsed-timer" class="match-elapsed-timer" aria-label="経過時間">
+								00:00
+							</div>
 						</div>
 					</div>
 
-					<!-- Lower empty area under Game Panels: Displays "START" button before match starts, and elapsed "mm:ss" timer once started -->
-					<div class="center-lower-slot">
-						<button id="btn-start-match" class="start-match-btn" title="試合を開始してタイマーをスタート">
-							START
-						</button>
-						<div id="match-elapsed-timer" class="match-elapsed-timer" aria-label="経過時間">
-							00:00
+					<!-- Right Point Column: Serve Bar (100% matched to Point Panel width) + Point Panel -->
+					<div class="point-col right">
+						<div id="right-serve-bar" class="serve-panel-bar" title="タップしてサーブ権を切り替え"></div>
+						<div id="card-right-point" class="flip-card point-card" data-role="point" data-side="right">
+							<div class="card-digit">0</div>
 						</div>
 					</div>
-				</div>
-
-				<!-- Right Point Column: Serve Bar (100% matched to Point Panel width) + Point Panel -->
-				<div class="point-col right">
-					<div id="right-serve-bar" class="serve-panel-bar" title="タップしてサーブ権を切り替え"></div>
-					<div id="card-right-point" class="flip-card point-card" data-role="point" data-side="right">
-						<div class="card-rings" aria-hidden="true">
-							<div class="ring-unit left"><span class="ring-metal"></span><span class="ring-hole"></span></div>
-							<div class="ring-unit right"><span class="ring-metal"></span><span class="ring-hole"></span></div>
-						</div>
-						<div class="card-digit">0</div>
-					</div>
-				</div>
-			</main>
+				</main>
+			</div>
 		</div>
 
 		<!-- Game/Match Finished Overlay (Blocks background buttons while keeping Scoreboard 100% visible!) -->
@@ -1483,15 +1614,6 @@
 					</svg>
 					<span class="btn-subtext" id="voice-state-text">VOICE</span>
 				</button>
-
-				<button id="btn-rotate" class="circle-btn" title="画面向き切り替え (横画面固定 90° / 270° / 通常)">
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-						<path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-						<path d="M3 3v5h5"/>
-						<rect x="7" y="11" width="10" height="7" rx="1.5"/>
-					</svg>
-					<span class="btn-subtext" id="rotate-state-text">ROTATE</span>
-				</button>
 			</div>
 		</footer>
 	</div>
@@ -1500,13 +1622,22 @@
 	<div id="toast-banner" class="toast-banner">Change Ends</div>
 
 	<!-- =========================================================
-	     1) 試合結果ビュー (Multiple Completed Matches History + Clear Results Button)
+	     1) 試合結果ビュー (Multiple Completed Matches History + Export/Import + Clear Results Button)
 	========================================================= -->
 	<section id="result-view" class="overlay-screen" aria-label="試合結果">
 		<header class="screen-topbar">
-			<button id="btn-result-close" class="screen-close-btn">✕ 閉じる</button>
+			<button id="btn-result-close" class="screen-back-btn" title="スコアボードに戻る" aria-label="戻る">
+				<svg viewBox="0 0 24 24">
+					<polyline points="15 18 9 12 15 6" />
+				</svg>
+			</button>
 			<div class="screen-title-center">試合結果</div>
-			<button id="btn-clear-results" class="screen-danger-btn">全て削除</button>
+			<div class="screen-topbar-actions">
+				<button id="btn-export-results" class="screen-action-btn" title="全試合結果をJSON形式でダウンロード">エクスポート</button>
+				<button id="btn-import-results" class="screen-action-btn" title="JSONファイルから試合結果を追加登録">インポート</button>
+				<button id="btn-clear-results" class="screen-danger-btn">全て削除</button>
+				<input type="file" id="input-import-results" accept=".json,application/json,text/plain" style="display:none;" />
+			</div>
 		</header>
 		<div class="screen-body">
 			<div id="results-list-container" class="results-list-container"></div>
@@ -1517,14 +1648,18 @@
 	     2) スコア推移グラフビュー (Displays Current Match or Selected Past Match)
 	========================================================= -->
 	<section id="history-view" class="overlay-screen" aria-label="スコア推移グラフ">
-		<header class="screen-topbar">
-			<button id="btn-history-close" class="screen-close-btn">‹ 戻る</button>
+		<header class="screen-topbar history-topbar">
+			<button id="btn-history-close" class="screen-back-btn" title="戻る" aria-label="戻る">
+				<svg viewBox="0 0 24 24">
+					<polyline points="15 18 9 12 15 6" />
+				</svg>
+			</button>
 			<div class="history-header-summary">
 				<span id="hist-name-0" class="history-header-name">Player1</span>
 				<span id="hist-games-score" class="score-pill">0 - 0</span>
 				<span id="hist-name-1" class="history-header-name">Player2</span>
 			</div>
-			<div style="width:78px;"></div>
+			<div style="width:44px;"></div>
 		</header>
 		<div class="screen-body">
 			<div id="history-content" class="history-list-container"></div>
@@ -1576,6 +1711,8 @@
 			completedGamesHistory: [],
 			// 過去の全マッチ結果リスト (新しい順)
 			matchRecords: [],
+			// 試合結果画面の日付グループ開閉状態マップ ({ 'YYYY/MM/DD': boolean })
+			resultDateOpenMap: {},
 			// スコア推移画面の遷移元 ('scoreboard' | 'results')
 			historyReturnTarget: 'scoreboard'
 		};
@@ -1729,9 +1866,20 @@
 			return `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
 		}
 
+		function formatDateOnlyJP(ts) {
+			if (!ts) return '日付不明';
+			const d = new Date(ts);
+			if (isNaN(d.getTime())) return '日付不明';
+			const yyyy = d.getFullYear();
+			const mo = String(d.getMonth() + 1).padStart(2, '0');
+			const da = String(d.getDate()).padStart(2, '0');
+			return `${yyyy}/${mo}/${da}`;
+		}
+
 		function formatDateTimeJP(ts) {
 			if (!ts) return '-';
 			const d = new Date(ts);
+			if (isNaN(d.getTime())) return '-';
 			const yyyy = d.getFullYear();
 			const mo = String(d.getMonth() + 1).padStart(2, '0');
 			const da = String(d.getDate()).padStart(2, '0');
@@ -1744,6 +1892,7 @@
 		function formatTimeOnlyJP(ts) {
 			if (!ts) return '-';
 			const d = new Date(ts);
+			if (isNaN(d.getTime())) return '-';
 			const hh = String(d.getHours()).padStart(2, '0');
 			const mi = String(d.getMinutes()).padStart(2, '0');
 			const ss = String(d.getSeconds()).padStart(2, '0');
@@ -1803,13 +1952,26 @@
 			return String(n);
 		}
 
+		const isIOS = (
+			/iPad|iPhone|iPod/.test(navigator.userAgent) ||
+			(navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+		);
+
 		class SoundSystem {
 			constructor() {
 				this.ctx = null;
 				this.voices = [];
+				this.unlocked = false;
+				this.activeUtterances = new Set();
+
 				if ('speechSynthesis' in window) {
 					const loadVoices = () => {
-						this.voices = window.speechSynthesis.getVoices();
+						try {
+							const list = window.speechSynthesis.getVoices();
+							if (list && list.length > 0) {
+								this.voices = list;
+							}
+						} catch (e) {}
 					};
 					loadVoices();
 					window.speechSynthesis.onvoiceschanged = loadVoices;
@@ -1822,8 +1984,33 @@
 					if (AudioCtx) this.ctx = new AudioCtx();
 				}
 				if (this.ctx && this.ctx.state === 'suspended') {
-					this.ctx.resume();
+					this.ctx.resume().catch(() => {});
 				}
+			}
+
+			// iOS/Safari 向け: ユーザー操作（タップ）時にオーディオと合成音声を確実にアンロック
+			unlock() {
+				this.initContext();
+				if (!('speechSynthesis' in window)) return;
+
+				try {
+					if (window.speechSynthesis.paused) {
+						window.speechSynthesis.resume();
+					}
+					if (!this.unlocked) {
+						// iOS Safari ではユーザー操作コンテキスト内で一度空の発話を走らせておくことで
+						// その後の発話がOSのセキュリティ制限でブロックされるのを防ぐ
+						const dummyUtter = new SpeechSynthesisUtterance(' ');
+						dummyUtter.volume = 0.01;
+						dummyUtter.rate = 10;
+						this.activeUtterances.add(dummyUtter);
+						dummyUtter.onend = dummyUtter.onerror = () => {
+							this.activeUtterances.delete(dummyUtter);
+						};
+						window.speechSynthesis.speak(dummyUtter);
+						this.unlocked = true;
+					}
+				} catch (e) {}
 			}
 
 			playFlipSound(isUp = true) {
@@ -1869,6 +2056,18 @@
 				} catch (e) {}
 			}
 
+			getAvailableVoices() {
+				if (!this.voices || this.voices.length === 0) {
+					if ('speechSynthesis' in window) {
+						try {
+							const list = window.speechSynthesis.getVoices();
+							if (list && list.length > 0) this.voices = list;
+						} catch (e) {}
+					}
+				}
+				return this.voices || [];
+			}
+
 			speakEnglishCall(enText, onComplete = null) {
 				if (!state.voiceEnabled || !('speechSynthesis' in window)) {
 					if (onComplete) {
@@ -1889,10 +2088,18 @@
 				};
 
 				try {
-					window.speechSynthesis.cancel();
+					// iOS WebKit では cancel() の直後に speak() を呼ぶと音声合成デーモンがハングする長年のバグがあるため
+					// iOS の場合は cancel() ではなく paused からの resume() を行い、自然にキューで再生する
+					if (!isIOS) {
+						window.speechSynthesis.cancel();
+					} else if (window.speechSynthesis.paused) {
+						window.speechSynthesis.resume();
+					}
+
 					const utter = new SpeechSynthesisUtterance(enText);
-					const enVoice = this.voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en-us'))
-						|| this.voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en'));
+					const voices = this.getAvailableVoices();
+					const enVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en-us'))
+						|| voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en'));
 					if (enVoice) {
 						utter.voice = enVoice;
 						utter.lang = enVoice.lang;
@@ -1902,13 +2109,23 @@
 					utter.rate = 1.0;
 					utter.pitch = 1.0;
 
+					// ガベージコレクションによる発話中断を防止するため参照を保持
+					this.activeUtterances.add(utter);
+
+					utter.onend = () => {
+						this.activeUtterances.delete(utter);
+						if (onComplete) {
+							autoSwapTimerId = setTimeout(done, 180);
+						}
+					};
+					utter.onerror = () => {
+						this.activeUtterances.delete(utter);
+						if (onComplete) {
+							autoSwapTimerId = setTimeout(done, 180);
+						}
+					};
+
 					if (onComplete) {
-						utter.onend = () => {
-							autoSwapTimerId = setTimeout(done, 180);
-						};
-						utter.onerror = () => {
-							autoSwapTimerId = setTimeout(done, 180);
-						};
 						autoSwapTimerId = setTimeout(done, 2100);
 					}
 
@@ -1922,18 +2139,24 @@
 
 			/**
 			 * ゲーム終了・マッチ終了時コール:
-			 * プレイヤー名に日本語等の非ASCII文字が含まれている場合でも、
-			 * 「Game」「Game and Match」が日本語アクセント（カタカナ発音）にならないよう、
-			 * 英語フレーズとプレイヤー名を2つのSpeechSynthesisUtteranceに分割して連続再生する。
+			 * 英語フレーズとプレイヤー名を分割して連続キューイング。
+			 * onend の非同期コールバックではなく同期的に speak() をキューへ積むことで
+			 * iOS Safari の User Gesture 制限による2声目の無音化を防止。
 			 */
 			speakWinnerCall(prefixEnText, playerName) {
 				if (!state.voiceEnabled || !('speechSynthesis' in window)) {
 					return;
 				}
 				try {
-					window.speechSynthesis.cancel();
-					const enVoice = this.voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en-us'))
-						|| this.voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en'));
+					if (!isIOS) {
+						window.speechSynthesis.cancel();
+					} else if (window.speechSynthesis.paused) {
+						window.speechSynthesis.resume();
+					}
+
+					const voices = this.getAvailableVoices();
+					const enVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en-us'))
+						|| voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en'));
 
 					const prefixUtter = new SpeechSynthesisUtterance(prefixEnText);
 					if (enVoice) {
@@ -1945,12 +2168,18 @@
 					prefixUtter.rate = 1.0;
 					prefixUtter.pitch = 1.0;
 
+					this.activeUtterances.add(prefixUtter);
+					prefixUtter.onend = prefixUtter.onerror = () => {
+						this.activeUtterances.delete(prefixUtter);
+					};
+
 					const cleanName = String(playerName || '').trim();
+					let nameUtter = null;
 					if (cleanName) {
 						const hasNonAscii = /[^\x00-\x7F]/.test(cleanName);
-						const nameUtter = new SpeechSynthesisUtterance(cleanName);
+						nameUtter = new SpeechSynthesisUtterance(cleanName);
 						if (hasNonAscii) {
-							const jaVoice = this.voices.find(v => v.lang && v.lang.toLowerCase().startsWith('ja'));
+							const jaVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('ja'));
 							if (jaVoice) {
 								nameUtter.voice = jaVoice;
 								nameUtter.lang = jaVoice.lang;
@@ -1966,21 +2195,17 @@
 						nameUtter.rate = 1.0;
 						nameUtter.pitch = 1.0;
 
-						let nameSpoken = false;
-						const speakNameNext = () => {
-							if (nameSpoken) return;
-							nameSpoken = true;
-							try {
-								window.speechSynthesis.speak(nameUtter);
-							} catch (e) {}
-						};
-
-						prefixUtter.onend = () => {
-							setTimeout(speakNameNext, 80);
+						this.activeUtterances.add(nameUtter);
+						nameUtter.onend = nameUtter.onerror = () => {
+							this.activeUtterances.delete(nameUtter);
 						};
 					}
 
+					// 同期的にキューに積むことでiOS Safariでも確実に順番再生される
 					window.speechSynthesis.speak(prefixUtter);
+					if (nameUtter) {
+						window.speechSynthesis.speak(nameUtter);
+					}
 				} catch (e) {}
 			}
 		}
@@ -2184,11 +2409,13 @@
 			}
 		}
 
-		// 試合結果画面のプレイヤー名欄(textarea): 文字数・折り返し行数に応じて高さを自動調整
+		// 試合結果画面のプレイヤー名欄・メモ欄(textarea): 文字数・折り返し行数に応じて高さを自動調整
 		function autoResizeResultNameTextarea(el) {
 			if (!el) return;
 			el.style.height = 'auto';
-			el.style.height = `${el.scrollHeight}px`;
+			if (el.scrollHeight > 0) {
+				el.style.height = `${el.scrollHeight}px`;
+			}
 		}
 
 		function renderGameDots(containerEl, gamesWon, neededGames) {
@@ -2250,7 +2477,8 @@
 				player1Name: state.teams[1].name,
 				games0: state.teams[0].games,
 				games1: state.teams[1].games,
-				gamesHistory: JSON.parse(JSON.stringify(state.completedGamesHistory))
+				gamesHistory: JSON.parse(JSON.stringify(state.completedGamesHistory)),
+				memo: ''
 			};
 
 			// 最新の試合が先頭に来るように unshift で追加
@@ -2274,11 +2502,27 @@
 			saveActiveMatchToStorage();
 		}
 
+		let inboardShowTime = 0;
 		function showInboardBar(phase, winnerTeamIdx) {
 			state.pendingPhase = phase;
 			state.pendingWinnerIdx = winnerTeamIdx;
+			inboardShowTime = Date.now();
 			const winner = state.teams[winnerTeamIdx];
 			inboardBtnRowEl.innerHTML = '';
+
+			// タッチイベントのすり抜け・誤タップを完全防止する安全ガード（表示直後450ms以内のクリックを無効化）
+			const safeClick = (callback) => {
+				return (e) => {
+					if (Date.now() - inboardShowTime < 450) {
+						if (e) {
+							e.preventDefault();
+							e.stopPropagation();
+						}
+						return;
+					}
+					callback(e);
+				};
+			};
 
 			if (phase === 'game_end') {
 				inboardTitleEl.textContent = `${winner.name} がこのゲームを獲得！`;
@@ -2286,17 +2530,17 @@
 				const nextBtn = document.createElement('button');
 				nextBtn.className = 'inboard-btn primary';
 				nextBtn.textContent = '次のゲームへ';
-				nextBtn.addEventListener('click', () => {
+				nextBtn.addEventListener('click', safeClick(() => {
 					hideInboardBar();
 					proceedToNextGame();
-				});
+				}));
 
 				const undoBtn = document.createElement('button');
 				undoBtn.className = 'inboard-btn secondary';
 				undoBtn.textContent = '1つ戻す';
-				undoBtn.addEventListener('click', () => {
+				undoBtn.addEventListener('click', safeClick(() => {
 					undoCompletedGamePoint();
-				});
+				}));
 
 				inboardBtnRowEl.appendChild(nextBtn);
 				inboardBtnRowEl.appendChild(undoBtn);
@@ -2306,24 +2550,24 @@
 				const resultBtn = document.createElement('button');
 				resultBtn.className = 'inboard-btn primary';
 				resultBtn.textContent = '試合結果を見る';
-				resultBtn.addEventListener('click', () => {
+				resultBtn.addEventListener('click', safeClick(() => {
 					openResultView();
-				});
+				}));
 
 				const newMatchBtn = document.createElement('button');
 				newMatchBtn.className = 'inboard-btn gold';
 				newMatchBtn.textContent = '新しい試合を開始';
-				newMatchBtn.addEventListener('click', () => {
+				newMatchBtn.addEventListener('click', safeClick(() => {
 					hideInboardBar();
 					resetEntireMatch();
-				});
+				}));
 
 				const undoBtn = document.createElement('button');
 				undoBtn.className = 'inboard-btn secondary';
 				undoBtn.textContent = '1つ戻す';
-				undoBtn.addEventListener('click', () => {
+				undoBtn.addEventListener('click', safeClick(() => {
 					undoCompletedGamePoint();
-				});
+				}));
 
 				inboardBtnRowEl.appendChild(resultBtn);
 				inboardBtnRowEl.appendChild(newMatchBtn);
@@ -2516,23 +2760,35 @@
 				sound.playChime('match');
 				sound.speakWinnerCall('Game and Match', winner.name);
 				recordCompletedMatch();
-				showInboardBar('match_end', matchWinnerIdx);
+				// アニメーション完了を待ち、タップの誤爆を防ぐため 400ms のディレイを設ける
+				setTimeout(() => {
+					showInboardBar('match_end', matchWinnerIdx);
+				}, 400);
 			} else {
 				sound.playChime('change');
 				sound.speakWinnerCall('Game', winner.name);
-				showInboardBar('game_end', winnerTeamIdx);
+				// アニメーション完了を待ち、タップの誤爆を防ぐため 400ms のディレイを設ける
+				setTimeout(() => {
+					showInboardBar('game_end', winnerTeamIdx);
+				}, 400);
 			}
 		}
 
 		// ============================================================================
-		// 8. 試合結果画面 (過去マッチの履歴一覧・開始/終了日時・試合時間・各マッチのスコア推移遷移・結果クリア)
+		// 8. 試合結果画面 (日付別グループ開閉・メモ編集・エクスポート/インポート・推移遷移・結果削除)
 		// ============================================================================
 		const resultViewEl = document.getElementById('result-view');
 		const resultsListContainerEl = document.getElementById('results-list-container');
+		const btnExportResultsEl = document.getElementById('btn-export-results');
+		const btnImportResultsEl = document.getElementById('btn-import-results');
+		const inputImportResultsEl = document.getElementById('input-import-results');
 		const btnClearResultsEl = document.getElementById('btn-clear-results');
 
-		function openResultView() {
+		function openResultView(preserveGroupState = false) {
 			closeHistoryView();
+			if (!preserveGroupState) {
+				state.resultDateOpenMap = {};
+			}
 			renderResultView();
 			resultViewEl.classList.add('active');
 		}
@@ -2541,11 +2797,211 @@
 			resultViewEl.classList.remove('active');
 		}
 
+		function buildResultMatchCard(rec) {
+			const card = document.createElement('div');
+			card.className = 'result-table-card';
+
+			// 上部メタ情報バー (開始〜終了日時、試合時間、推移・削除ボタン)
+			const metaBar = document.createElement('div');
+			metaBar.className = 'result-meta-bar';
+
+			const metaInfo = document.createElement('div');
+			metaInfo.className = 'result-meta-info';
+
+			const startStr = formatDateTimeJP(rec.startTime);
+			const endStr = formatTimeOnlyJP(rec.endTime);
+			const durStr = formatElapsedMMSS(rec.durationMs || 0);
+
+			const dateSpan = document.createElement('span');
+			dateSpan.textContent = `${startStr} 〜 ${endStr}`;
+			const durBadge = document.createElement('span');
+			durBadge.className = 'meta-duration-badge';
+			durBadge.textContent = `試合時間 ${durStr}`;
+
+			metaInfo.appendChild(dateSpan);
+			metaInfo.appendChild(durBadge);
+
+			const actionsWrap = document.createElement('div');
+			actionsWrap.className = 'result-meta-actions';
+
+			const progBtn = document.createElement('button');
+			progBtn.type = 'button';
+			progBtn.className = 'result-to-progression-btn';
+			progBtn.textContent = '推移';
+			progBtn.addEventListener('click', () => {
+				openHistoryViewForRecord(rec);
+			});
+
+			const delBtn = document.createElement('button');
+			delBtn.type = 'button';
+			delBtn.className = 'result-delete-one-btn';
+			delBtn.textContent = '削除';
+			delBtn.addEventListener('click', () => {
+				showDeleteResultConfirmModal(rec.id);
+			});
+
+			actionsWrap.appendChild(progBtn);
+			actionsWrap.appendChild(delBtn);
+
+			metaBar.appendChild(metaInfo);
+			metaBar.appendChild(actionsWrap);
+			card.appendChild(metaBar);
+
+			// 本体グリッド（ヘッダ欄「対戦相手」「結果」は不要のため省略）
+			const bodyGrid = document.createElement('div');
+			bodyGrid.className = 'result-body-grid';
+
+			const cellName0 = document.createElement('div');
+			cellName0.className = 'result-cell';
+			const name0Input = document.createElement('textarea');
+			name0Input.rows = 1;
+			name0Input.maxLength = 16;
+			name0Input.className = 'result-player-name-input';
+			name0Input.value = rec.player0Name;
+			name0Input.title = 'タップしてプレイヤー名を変更';
+			name0Input.setAttribute('aria-label', '左プレイヤー名');
+			name0Input.addEventListener('keydown', (e) => {
+				if (e.key === 'Enter') {
+					e.preventDefault();
+					name0Input.blur();
+				}
+			});
+			name0Input.addEventListener('input', () => {
+				const cleanVal = name0Input.value.replace(/[\r\n]+/g, '');
+				if (name0Input.value !== cleanVal) {
+					name0Input.value = cleanVal;
+				}
+				autoResizeResultNameTextarea(name0Input);
+				const newName = cleanVal.trim() || 'Player1';
+				rec.player0Name = newName;
+				saveMatchRecordsToStorage();
+				if (state.currentSavedMatchId === rec.id) {
+					state.teams[0].name = newName;
+					if (state.pendingPhase === 'match_end' && state.pendingWinnerIdx === 0) {
+						inboardTitleEl.textContent = `試合終了！ 勝者: ${newName}`;
+					}
+					syncUIAndBoard({ animate: false });
+				}
+			});
+			name0Input.addEventListener('blur', () => {
+				name0Input.value = rec.player0Name;
+				autoResizeResultNameTextarea(name0Input);
+			});
+			cellName0.appendChild(name0Input);
+
+			const cellGames0 = document.createElement('div');
+			cellGames0.className = 'result-cell';
+			const games0Div = document.createElement('div');
+			games0Div.className = 'result-games-num' + (rec.games0 > rec.games1 ? ' winner' : '');
+			games0Div.textContent = String(rec.games0);
+			cellGames0.appendChild(games0Div);
+
+			const cellSets = document.createElement('div');
+			cellSets.className = 'result-cell';
+			const setListDiv = document.createElement('div');
+			setListDiv.className = 'result-set-list';
+
+			if (Array.isArray(rec.gamesHistory) && rec.gamesHistory.length > 0) {
+				rec.gamesHistory.forEach(g => {
+					const row = document.createElement('div');
+					row.className = 'result-set-row';
+					const c0 = g.p0 > g.p1 ? 'pt-left pt-win' : 'pt-left';
+					const c1 = g.p1 > g.p0 ? 'pt-right pt-win' : 'pt-right';
+					row.innerHTML = `<span class="${c0}">${g.p0}</span><span>-</span><span class="${c1}">${g.p1}</span>`;
+					setListDiv.appendChild(row);
+				});
+			} else {
+				const row = document.createElement('div');
+				row.className = 'result-set-row';
+				row.innerHTML = `<span class="pt-left">-</span><span>-</span><span class="pt-right">-</span>`;
+				setListDiv.appendChild(row);
+			}
+			cellSets.appendChild(setListDiv);
+
+			const cellGames1 = document.createElement('div');
+			cellGames1.className = 'result-cell';
+			const games1Div = document.createElement('div');
+			games1Div.className = 'result-games-num' + (rec.games1 > rec.games0 ? ' winner' : '');
+			games1Div.textContent = String(rec.games1);
+			cellGames1.appendChild(games1Div);
+
+			const cellName1 = document.createElement('div');
+			cellName1.className = 'result-cell';
+			const name1Input = document.createElement('textarea');
+			name1Input.rows = 1;
+			name1Input.maxLength = 16;
+			name1Input.className = 'result-player-name-input';
+			name1Input.value = rec.player1Name;
+			name1Input.title = 'タップしてプレイヤー名を変更';
+			name1Input.setAttribute('aria-label', '右プレイヤー名');
+			name1Input.addEventListener('keydown', (e) => {
+				if (e.key === 'Enter') {
+					e.preventDefault();
+					name1Input.blur();
+				}
+			});
+			name1Input.addEventListener('input', () => {
+				const cleanVal = name1Input.value.replace(/[\r\n]+/g, '');
+				if (name1Input.value !== cleanVal) {
+					name1Input.value = cleanVal;
+				}
+				autoResizeResultNameTextarea(name1Input);
+				const newName = cleanVal.trim() || 'Player2';
+				rec.player1Name = newName;
+				saveMatchRecordsToStorage();
+				if (state.currentSavedMatchId === rec.id) {
+					state.teams[1].name = newName;
+					if (state.pendingPhase === 'match_end' && state.pendingWinnerIdx === 1) {
+						inboardTitleEl.textContent = `試合終了！ 勝者: ${newName}`;
+					}
+					syncUIAndBoard({ animate: false });
+				}
+			});
+			name1Input.addEventListener('blur', () => {
+				name1Input.value = rec.player1Name;
+				autoResizeResultNameTextarea(name1Input);
+			});
+			cellName1.appendChild(name1Input);
+
+			bodyGrid.appendChild(cellName0);
+			bodyGrid.appendChild(cellGames0);
+			bodyGrid.appendChild(cellSets);
+			bodyGrid.appendChild(cellGames1);
+			bodyGrid.appendChild(cellName1);
+			card.appendChild(bodyGrid);
+
+			// 下部フリー入力メモ欄（複数行入力可能・試合結果画面からのみ登録/編集可能）
+			const memoBar = document.createElement('div');
+			memoBar.className = 'result-memo-bar';
+			const memoInput = document.createElement('textarea');
+			memoInput.rows = 1;
+			memoInput.className = 'result-memo-input';
+			memoInput.placeholder = 'メモを入力（複数行可）...';
+			memoInput.value = typeof rec.memo === 'string' ? rec.memo : '';
+			memoInput.setAttribute('aria-label', '試合メモ');
+			memoInput.addEventListener('input', () => {
+				autoResizeResultNameTextarea(memoInput);
+				rec.memo = memoInput.value;
+				saveMatchRecordsToStorage();
+			});
+			memoInput.addEventListener('blur', () => {
+				rec.memo = memoInput.value;
+				saveMatchRecordsToStorage();
+				autoResizeResultNameTextarea(memoInput);
+			});
+			memoBar.appendChild(memoInput);
+			card.appendChild(memoBar);
+
+			return { card, name0Input, name1Input, memoInput };
+		}
+
 		function renderResultView() {
 			resultsListContainerEl.innerHTML = '';
-			btnClearResultsEl.disabled = state.matchRecords.length === 0;
+			const hasRecords = state.matchRecords.length > 0;
+			btnClearResultsEl.disabled = !hasRecords;
+			btnExportResultsEl.disabled = !hasRecords;
 
-			if (state.matchRecords.length === 0) {
+			if (!hasRecords) {
 				const emptyDiv = document.createElement('div');
 				emptyDiv.className = 'empty-state-box';
 				emptyDiv.textContent = 'まだ完了した試合結果がありません。試合が終了するとここに履歴が保存されます。';
@@ -2553,191 +3009,271 @@
 				return;
 			}
 
-			state.matchRecords.forEach((rec) => {
-				const card = document.createElement('div');
-				card.className = 'result-table-card';
+			// 開始日付（YYYY/MM/DD）ごとにグループ化（日付降順・試合開始時刻降順）
+			const todayDateKey = formatDateOnlyJP(Date.now());
+			const sortedRecords = [...state.matchRecords].sort(
+				(a, b) => (b.startTime || b.endTime || 0) - (a.startTime || a.endTime || 0)
+			);
 
-				// 上部メタ情報バー (開始〜終了日時、試合時間、スコア推移ボタン)
-				const metaBar = document.createElement('div');
-				metaBar.className = 'result-meta-bar';
-
-				const metaInfo = document.createElement('div');
-				metaInfo.className = 'result-meta-info';
-
-				const startStr = formatDateTimeJP(rec.startTime);
-				const endStr = formatTimeOnlyJP(rec.endTime);
-				const durStr = formatElapsedMMSS(rec.durationMs || 0);
-
-				const dateSpan = document.createElement('span');
-				dateSpan.textContent = `${startStr} 〜 ${endStr}`;
-				const durBadge = document.createElement('span');
-				durBadge.className = 'meta-duration-badge';
-				durBadge.textContent = `試合時間 ${durStr}`;
-
-				metaInfo.appendChild(dateSpan);
-				metaInfo.appendChild(durBadge);
-
-				const actionsWrap = document.createElement('div');
-				actionsWrap.className = 'result-meta-actions';
-
-				const progBtn = document.createElement('button');
-				progBtn.className = 'result-to-progression-btn';
-				progBtn.textContent = 'スコア推移';
-				progBtn.addEventListener('click', () => {
-					openHistoryViewForRecord(rec);
-				});
-
-				const delBtn = document.createElement('button');
-				delBtn.className = 'result-delete-one-btn';
-				delBtn.textContent = '削除';
-				delBtn.addEventListener('click', () => {
-					showDeleteResultConfirmModal(rec.id);
-				});
-
-				actionsWrap.appendChild(progBtn);
-				actionsWrap.appendChild(delBtn);
-
-				metaBar.appendChild(metaInfo);
-				metaBar.appendChild(actionsWrap);
-				card.appendChild(metaBar);
-
-				// 青ヘッダー行
-				const headerGrid = document.createElement('div');
-				headerGrid.className = 'result-header-grid';
-				headerGrid.innerHTML = `
-					<div class="result-header-cell">対戦相手</div>
-					<div class="result-header-cell">結果</div>
-					<div class="result-header-cell">対戦相手</div>
-				`;
-				card.appendChild(headerGrid);
-
-				// 本体グリッド
-				const bodyGrid = document.createElement('div');
-				bodyGrid.className = 'result-body-grid';
-
-				const cellName0 = document.createElement('div');
-				cellName0.className = 'result-cell';
-				const name0Input = document.createElement('textarea');
-				name0Input.rows = 1;
-				name0Input.maxLength = 16;
-				name0Input.className = 'result-player-name-input';
-				name0Input.value = rec.player0Name;
-				name0Input.title = 'タップしてプレイヤー名を変更';
-				name0Input.setAttribute('aria-label', '左プレイヤー名');
-				name0Input.addEventListener('keydown', (e) => {
-					if (e.key === 'Enter') {
-						e.preventDefault();
-						name0Input.blur();
-					}
-				});
-				name0Input.addEventListener('input', () => {
-					const cleanVal = name0Input.value.replace(/[\r\n]+/g, '');
-					if (name0Input.value !== cleanVal) {
-						name0Input.value = cleanVal;
-					}
-					autoResizeResultNameTextarea(name0Input);
-					const newName = cleanVal.trim() || 'Player1';
-					rec.player0Name = newName;
-					saveMatchRecordsToStorage();
-					if (state.currentSavedMatchId === rec.id) {
-						state.teams[0].name = newName;
-						if (state.pendingPhase === 'match_end' && state.pendingWinnerIdx === 0) {
-							inboardTitleEl.textContent = `試合終了！ 勝者: ${newName}`;
-						}
-						syncUIAndBoard({ animate: false });
-					}
-				});
-				name0Input.addEventListener('blur', () => {
-					name0Input.value = rec.player0Name;
-					autoResizeResultNameTextarea(name0Input);
-				});
-				cellName0.appendChild(name0Input);
-
-				const cellGames0 = document.createElement('div');
-				cellGames0.className = 'result-cell';
-				const games0Div = document.createElement('div');
-				games0Div.className = 'result-games-num' + (rec.games0 > rec.games1 ? ' winner' : '');
-				games0Div.textContent = String(rec.games0);
-				cellGames0.appendChild(games0Div);
-
-				const cellSets = document.createElement('div');
-				cellSets.className = 'result-cell';
-				const setListDiv = document.createElement('div');
-				setListDiv.className = 'result-set-list';
-
-				if (Array.isArray(rec.gamesHistory) && rec.gamesHistory.length > 0) {
-					rec.gamesHistory.forEach(g => {
-						const row = document.createElement('div');
-						row.className = 'result-set-row';
-						const c0 = g.p0 > g.p1 ? 'pt-left pt-win' : 'pt-left';
-						const c1 = g.p1 > g.p0 ? 'pt-right pt-win' : 'pt-right';
-						row.innerHTML = `<span class="${c0}">${g.p0}</span><span>-</span><span class="${c1}">${g.p1}</span>`;
-						setListDiv.appendChild(row);
-					});
-				} else {
-					const row = document.createElement('div');
-					row.className = 'result-set-row';
-					row.innerHTML = `<span class="pt-left">-</span><span>-</span><span class="pt-right">-</span>`;
-					setListDiv.appendChild(row);
+			const dateGroupsMap = new Map();
+			sortedRecords.forEach(rec => {
+				const dateKey = formatDateOnlyJP(rec.startTime || rec.endTime);
+				if (!dateGroupsMap.has(dateKey)) {
+					dateGroupsMap.set(dateKey, []);
 				}
-				cellSets.appendChild(setListDiv);
-
-				const cellGames1 = document.createElement('div');
-				cellGames1.className = 'result-cell';
-				const games1Div = document.createElement('div');
-				games1Div.className = 'result-games-num' + (rec.games1 > rec.games0 ? ' winner' : '');
-				games1Div.textContent = String(rec.games1);
-				cellGames1.appendChild(games1Div);
-
-				const cellName1 = document.createElement('div');
-				cellName1.className = 'result-cell';
-				const name1Input = document.createElement('textarea');
-				name1Input.rows = 1;
-				name1Input.maxLength = 16;
-				name1Input.className = 'result-player-name-input';
-				name1Input.value = rec.player1Name;
-				name1Input.title = 'タップしてプレイヤー名を変更';
-				name1Input.setAttribute('aria-label', '右プレイヤー名');
-				name1Input.addEventListener('keydown', (e) => {
-					if (e.key === 'Enter') {
-						e.preventDefault();
-						name1Input.blur();
-					}
-				});
-				name1Input.addEventListener('input', () => {
-					const cleanVal = name1Input.value.replace(/[\r\n]+/g, '');
-					if (name1Input.value !== cleanVal) {
-						name1Input.value = cleanVal;
-					}
-					autoResizeResultNameTextarea(name1Input);
-					const newName = cleanVal.trim() || 'Player2';
-					rec.player1Name = newName;
-					saveMatchRecordsToStorage();
-					if (state.currentSavedMatchId === rec.id) {
-						state.teams[1].name = newName;
-						if (state.pendingPhase === 'match_end' && state.pendingWinnerIdx === 1) {
-							inboardTitleEl.textContent = `試合終了！ 勝者: ${newName}`;
-						}
-						syncUIAndBoard({ animate: false });
-					}
-				});
-				name1Input.addEventListener('blur', () => {
-					name1Input.value = rec.player1Name;
-					autoResizeResultNameTextarea(name1Input);
-				});
-				cellName1.appendChild(name1Input);
-
-				bodyGrid.appendChild(cellName0);
-				bodyGrid.appendChild(cellGames0);
-				bodyGrid.appendChild(cellSets);
-				bodyGrid.appendChild(cellGames1);
-				bodyGrid.appendChild(cellName1);
-
-				card.appendChild(bodyGrid);
-				resultsListContainerEl.appendChild(card);
-				autoResizeResultNameTextarea(name0Input);
-				autoResizeResultNameTextarea(name1Input);
+				dateGroupsMap.get(dateKey).push(rec);
 			});
+
+			dateGroupsMap.forEach((groupRecords, dateKey) => {
+				const isToday = (dateKey === todayDateKey);
+				// デフォルトで当日の結果は開いた状態、過去日の履歴は閉じた状態にする
+				const isOpen = (dateKey in state.resultDateOpenMap)
+					? state.resultDateOpenMap[dateKey]
+					: isToday;
+				state.resultDateOpenMap[dateKey] = isOpen;
+
+				const groupEl = document.createElement('div');
+				groupEl.className = 'result-date-group' + (isOpen ? '' : ' collapsed');
+
+				const headerBtn = document.createElement('button');
+				headerBtn.type = 'button';
+				headerBtn.className = 'result-date-header';
+				headerBtn.setAttribute('aria-expanded', String(isOpen));
+
+				const headerLeft = document.createElement('div');
+				headerLeft.className = 'result-date-header-left';
+
+				const chevron = document.createElement('span');
+				chevron.className = 'result-date-chevron';
+				chevron.textContent = '▼';
+				headerLeft.appendChild(chevron);
+
+				const dateLabel = document.createElement('span');
+				dateLabel.textContent = dateKey;
+				headerLeft.appendChild(dateLabel);
+
+				if (isToday) {
+					const todayBadge = document.createElement('span');
+					todayBadge.className = 'date-today-badge';
+					todayBadge.textContent = '本日';
+					headerLeft.appendChild(todayBadge);
+				}
+
+				const countBadge = document.createElement('span');
+				countBadge.className = 'date-count-badge';
+				countBadge.textContent = `${groupRecords.length}試合`;
+
+				headerBtn.appendChild(headerLeft);
+				headerBtn.appendChild(countBadge);
+
+				const groupBody = document.createElement('div');
+				groupBody.className = 'result-date-body';
+
+				const textareasToResize = [];
+				groupRecords.forEach(rec => {
+					const { card, name0Input, name1Input, memoInput } = buildResultMatchCard(rec);
+					groupBody.appendChild(card);
+					textareasToResize.push(name0Input, name1Input, memoInput);
+				});
+
+				headerBtn.addEventListener('click', () => {
+					const nextOpen = groupEl.classList.contains('collapsed');
+					state.resultDateOpenMap[dateKey] = nextOpen;
+					groupEl.classList.toggle('collapsed', !nextOpen);
+					headerBtn.setAttribute('aria-expanded', String(nextOpen));
+					if (nextOpen) {
+						textareasToResize.forEach(el => autoResizeResultNameTextarea(el));
+					}
+				});
+
+				groupEl.appendChild(headerBtn);
+				groupEl.appendChild(groupBody);
+				resultsListContainerEl.appendChild(groupEl);
+
+				if (isOpen) {
+					textareasToResize.forEach(el => autoResizeResultNameTextarea(el));
+				}
+			});
+		}
+
+		// 全試合結果（推移データ・メモ含む）をJSON形式でエクスポート（ダウンロード）
+		function exportMatchRecordsToJson() {
+			if (state.matchRecords.length === 0) {
+				showToast('エクスポートする試合結果がありません');
+				return;
+			}
+			try {
+				const jsonText = JSON.stringify(state.matchRecords, null, 2);
+				const blob = new Blob([jsonText], { type: 'application/json;charset=utf-8' });
+				const url = URL.createObjectURL(blob);
+				const d = new Date();
+				const yyyy = d.getFullYear();
+				const mo = String(d.getMonth() + 1).padStart(2, '0');
+				const da = String(d.getDate()).padStart(2, '0');
+				const hh = String(d.getHours()).padStart(2, '0');
+				const mi = String(d.getMinutes()).padStart(2, '0');
+				const ss = String(d.getSeconds()).padStart(2, '0');
+				const fileName = `tt_match_results_${yyyy}${mo}${da}_${hh}${mi}${ss}.json`;
+
+				const a = document.createElement('a');
+				a.href = url;
+				a.download = fileName;
+				document.body.appendChild(a);
+				a.click();
+				document.body.removeChild(a);
+				setTimeout(() => URL.revokeObjectURL(url), 1000);
+				showToast(`${state.matchRecords.length}件の試合結果をエクスポートしました`);
+			} catch (e) {
+				showToast('エクスポートに失敗しました');
+			}
+		}
+
+		// インポートされた各試合レコードの検証＆正規化
+		function normalizeImportedMatchRecord(item) {
+			if (!item || typeof item !== 'object') return null;
+			const hasCore = (
+				typeof item.player0Name === 'string' ||
+				typeof item.player1Name === 'string' ||
+				typeof item.games0 === 'number' ||
+				typeof item.games1 === 'number' ||
+				Array.isArray(item.gamesHistory)
+			);
+			if (!hasCore) return null;
+
+			const now = Date.now();
+			const startTime = (typeof item.startTime === 'number' && Number.isFinite(item.startTime))
+				? item.startTime
+				: ((typeof item.endTime === 'number' && Number.isFinite(item.endTime)) ? item.endTime : now);
+			const endTime = (typeof item.endTime === 'number' && Number.isFinite(item.endTime))
+				? item.endTime
+				: startTime;
+			const durationMs = (typeof item.durationMs === 'number' && Number.isFinite(item.durationMs) && item.durationMs >= 0)
+				? item.durationMs
+				: Math.max(0, endTime - startTime);
+			const id = (typeof item.id === 'string' && item.id.trim())
+				? item.id.trim()
+				: `match_${endTime}_${Math.random().toString(36).slice(2, 7)}`;
+			const bestOf = [1, 3, 5, 7].includes(Number(item.bestOf)) ? Number(item.bestOf) : 5;
+			const player0Name = (typeof item.player0Name === 'string' && item.player0Name.trim()) ? item.player0Name.trim() : 'Player1';
+			const player1Name = (typeof item.player1Name === 'string' && item.player1Name.trim()) ? item.player1Name.trim() : 'Player2';
+			const games0 = Math.max(0, Number(item.games0) || 0);
+			const games1 = Math.max(0, Number(item.games1) || 0);
+
+			const gamesHistory = Array.isArray(item.gamesHistory)
+				? item.gamesHistory.map((g, idx) => {
+					const p0 = Math.max(0, Number(g && g.p0) || 0);
+					const p1 = Math.max(0, Number(g && g.p1) || 0);
+					const winner = (g && (g.winner === 0 || g.winner === 1))
+						? g.winner
+						: (p0 >= p1 ? 0 : 1);
+					const log = Array.isArray(g && g.log)
+						? g.log
+							.filter(entry => entry && typeof entry === 'object')
+							.map(entry => ({
+								scorer: entry.scorer === 1 ? 1 : 0,
+								p0: Math.max(0, Number(entry.p0) || 0),
+								p1: Math.max(0, Number(entry.p1) || 0),
+								server: entry.server === 1 ? 1 : 0
+							}))
+						: [];
+					return {
+						gameNumber: Number(g && g.gameNumber) || (idx + 1),
+						winner,
+						p0,
+						p1,
+						log
+					};
+				})
+				: [];
+
+			const memo = typeof item.memo === 'string' ? item.memo : '';
+
+			return {
+				id,
+				bestOf,
+				startTime,
+				endTime,
+				durationMs,
+				player0Name,
+				player1Name,
+				games0,
+				games1,
+				gamesHistory,
+				memo
+			};
+		}
+
+		// JSONファイルから試合結果を読み込み、localStorageに追加登録
+		function importMatchRecordsFromJsonFile(file) {
+			if (!file) return;
+			const reader = new FileReader();
+			reader.onload = () => {
+				try {
+					const text = String(reader.result || '').trim();
+					if (!text) {
+						showToast('ファイルが空です');
+						return;
+					}
+					const parsed = JSON.parse(text);
+					let rawList = null;
+					if (Array.isArray(parsed)) {
+						rawList = parsed;
+					} else if (parsed && typeof parsed === 'object') {
+						if (Array.isArray(parsed.matchRecords)) {
+							rawList = parsed.matchRecords;
+						} else {
+							rawList = [parsed];
+						}
+					}
+					if (!rawList || rawList.length === 0) {
+						showToast('インポートできる試合結果が見つかりません');
+						return;
+					}
+
+					const validRecords = rawList.map(normalizeImportedMatchRecord).filter(Boolean);
+					if (validRecords.length === 0) {
+						showToast('有効な試合結果データが含まれていません');
+						return;
+					}
+
+					const existingIds = new Set(state.matchRecords.map(r => r && r.id).filter(Boolean));
+					let addedCount = 0;
+					let updatedCount = 0;
+
+					validRecords.forEach(rec => {
+						if (existingIds.has(rec.id)) {
+							const idx = state.matchRecords.findIndex(r => r && r.id === rec.id);
+							if (idx !== -1) {
+								state.matchRecords[idx] = rec;
+								updatedCount++;
+							}
+						} else {
+							state.matchRecords.push(rec);
+							existingIds.add(rec.id);
+							addedCount++;
+						}
+					});
+
+					// 開始日時の新しい順に整列して保存
+					state.matchRecords.sort((a, b) => (b.startTime || b.endTime || 0) - (a.startTime || a.endTime || 0));
+					saveMatchRecordsToStorage();
+					renderResultView();
+
+					if (addedCount > 0 && updatedCount > 0) {
+						showToast(`${addedCount}件を追加、${updatedCount}件を更新しました`);
+					} else if (addedCount > 0) {
+						showToast(`${addedCount}件の試合結果を追加登録しました`);
+					} else {
+						showToast(`${updatedCount}件の試合結果を更新しました`);
+					}
+				} catch (e) {
+					showToast('JSONファイルの解析に失敗しました');
+				}
+			};
+			reader.onerror = () => {
+				showToast('ファイルの読み込みに失敗しました');
+			};
+			reader.readAsText(file, 'utf-8');
 		}
 
 		// ============================================================================
@@ -2977,16 +3513,21 @@
 		const modalDescEl = document.getElementById('modal-desc');
 		const modalActionsEl = document.getElementById('modal-actions');
 
-		function openModal({ title, desc, buttons, twoCols = false }) {
+		function openModal({ title, desc, buttons, twoCols = false, gridMode = 'default' }) {
 			state.modalOpen = true;
 			modalTitleEl.textContent = title;
 			modalDescEl.textContent = desc;
 			modalActionsEl.innerHTML = '';
-			modalActionsEl.classList.toggle('two-cols-row', Boolean(twoCols));
+			modalActionsEl.className = 'modal-actions';
+			if (twoCols) modalActionsEl.classList.add('two-cols-row');
+			if (gridMode === 'format') modalActionsEl.classList.add('format-grid');
 
 			buttons.forEach(btnDef => {
 				const btn = document.createElement('button');
 				btn.className = `modal-btn ${btnDef.variant || 'secondary'}`;
+				if (btnDef.variant === 'cancel-full') {
+					btn.style.gridColumn = '1 / -1';
+				}
 				btn.textContent = btnDef.label;
 				if (btnDef.disabled) {
 					btn.disabled = true;
@@ -3000,11 +3541,28 @@
 			});
 
 			modalBackdropEl.classList.add('active');
+			requestAnimationFrame(() => {
+				fitModalScale();
+			});
+		}
+
+		function fitModalScale() {
+			const modalCard = document.querySelector('.modal-card');
+			if (!modalCard) return;
+			modalCard.style.setProperty('--modal-scale', '1');
+			const availH = window.innerHeight - 18;
+			const cardH = modalCard.offsetHeight;
+			if (cardH > availH && availH > 100) {
+				const scaleFactor = Math.min(1, Math.floor((availH / cardH) * 98) / 100);
+				modalCard.style.setProperty('--modal-scale', String(scaleFactor));
+			}
 		}
 
 		function closeModal() {
 			state.modalOpen = false;
 			modalBackdropEl.classList.remove('active');
+			const modalCard = document.querySelector('.modal-card');
+			if (modalCard) modalCard.style.removeProperty('--modal-scale');
 		}
 
 		modalBackdropEl.addEventListener('click', (e) => {
@@ -3017,6 +3575,7 @@
 			openModal({
 				title: 'リセットの確認',
 				desc: 'リセットする範囲を選択してください。',
+				twoCols: true,
 				buttons: [
 					{
 						label: '現在のゲームをリセット',
@@ -3126,7 +3685,7 @@
 				// 進行中は、既に終了しているゲーム数以下、または既にどちらかが先取数に達している形式へは変更不可
 				const isDisabled = inProgress && (num <= completedGames || maxTeamGames >= neededGames);
 				return {
-					label: `${num}ゲームズ (${neededGames}G先取)` + (state.bestOf === num ? ' ✓' : ''),
+					label: `${num}G` + (state.bestOf === num ? ' ✓' : ''),
 					variant: state.bestOf === num ? 'primary' : 'secondary',
 					disabled: isDisabled,
 					onClick: () => {
@@ -3160,7 +3719,8 @@
 				desc: inProgress
 					? '変更するゲーム数をタップして選択してください。'
 					: 'プレイするゲーム数をタップして選択してください。',
-				buttons: options
+				buttons: options,
+				gridMode: 'format'
 			});
 		}
 
@@ -3208,6 +3768,7 @@
 
 		allUnits.forEach(unit => {
 			unit.el.addEventListener('pointerdown', (e) => {
+				sound.unlock();
 				if (isInteractionLocked()) return;
 				if (e.button === 2) return;
 
@@ -3252,6 +3813,7 @@
 		// ============================================================================
 		// スコアボード中央下の「試合開始」ボタン
 		btnStartMatchEl.addEventListener('click', () => {
+			sound.unlock();
 			if (isInteractionLocked()) return;
 			startMatchNow(true);
 			showToast('試合を開始しました');
@@ -3278,13 +3840,27 @@
 			showResetConfirmModal();
 		});
 
-		// 試合結果ビュー開閉 & 結果クリアボタン
+		// 試合結果ビュー開閉 & エクスポート/インポート & 結果クリアボタン
 		document.getElementById('btn-result').addEventListener('click', () => {
 			if (isInteractionLocked()) return;
-			openResultView();
+			openResultView(false);
 		});
 		document.getElementById('btn-result-close').addEventListener('click', () => {
 			closeResultView();
+		});
+		btnExportResultsEl.addEventListener('click', () => {
+			exportMatchRecordsToJson();
+		});
+		btnImportResultsEl.addEventListener('click', () => {
+			inputImportResultsEl.value = '';
+			inputImportResultsEl.click();
+		});
+		inputImportResultsEl.addEventListener('change', (e) => {
+			const file = e.target.files && e.target.files[0];
+			if (file) {
+				importMatchRecordsFromJsonFile(file);
+			}
+			inputImportResultsEl.value = '';
 		});
 		btnClearResultsEl.addEventListener('click', () => {
 			showDeleteResultConfirmModal(null);
@@ -3300,7 +3876,7 @@
 		document.getElementById('btn-history-close').addEventListener('click', () => {
 			closeHistoryView();
 			if (state.historyReturnTarget === 'results') {
-				openResultView();
+				openResultView(true);
 			}
 		});
 
@@ -3318,15 +3894,19 @@
 
 		btnVoiceEl.addEventListener('click', () => {
 			if (isInteractionLocked()) return;
+			sound.unlock();
 			state.voiceEnabled = !state.voiceEnabled;
 			syncVoiceBtnUI();
 			saveActiveMatchToStorage();
 			if (state.voiceEnabled) {
 				sound.speakEnglishCall(buildEnglishScoreCall());
 			} else if ('speechSynthesis' in window) {
-				window.speechSynthesis.cancel();
+				try {
+					window.speechSynthesis.cancel();
+				} catch (e) {}
 			}
-			showToast(`Voice Call: ${state.voiceEnabled ? 'ON' : 'OFF'}`);
+			const iosNotice = (isIOS && state.voiceEnabled) ? ' (※消音モード時は鳴りません)' : '';
+			showToast(`Voice Call: ${state.voiceEnabled ? 'ON' : 'OFF'}${iosNotice}`);
 		});
 
 		leftServeBarEl.addEventListener('click', () => {
@@ -3382,7 +3962,7 @@
 		window.addEventListener('resize', () => {
 			fitScoreboardNameInput(leftNameInputEl);
 			fitScoreboardNameInput(rightNameInputEl);
-			resultsListContainerEl.querySelectorAll('.result-player-name-input').forEach(el => {
+			resultsListContainerEl.querySelectorAll('.result-player-name-input, .result-memo-input').forEach(el => {
 				autoResizeResultNameTextarea(el);
 			});
 		});
@@ -3401,88 +3981,106 @@
 			});
 		}
 
-		// 画面向き設定: 'landscape_90' (縦持ち時 90° 時計回り) | 'landscape_270' (縦持ち時 270° 反時計回り) | 'free' (端末連動)
-		const ORIENTATION_STORAGE_KEY = 'tt_scoreboard_orientation_mode_v1';
-		let orientationMode = localStorage.getItem(ORIENTATION_STORAGE_KEY) || 'landscape_90';
+		// =========================================================
+		// 画面向き & パネル縦長アスペクト比 (常に縦:横 4:3 以上) の常時自動保護
+		// =========================================================
+		function enforcePanelAspectRatio() {
+			const wrapperEl = document.querySelector('.scoreboard-wrapper');
+			const contentBoxEl = document.getElementById('scoreboard-content-box');
+			if (!wrapperEl || !contentBoxEl) return;
 
-		const btnRotateEl = document.getElementById('btn-rotate');
-		const rotateStateTextEl = document.getElementById('rotate-state-text');
+			// 一旦制限を解除して利用可能な高さを計測
+			contentBoxEl.style.maxWidth = '1400px';
 
+			const wrapperW = wrapperEl.clientWidth;
+			const wrapperH = wrapperEl.clientHeight;
+			if (wrapperW <= 0 || wrapperH <= 0) return;
+
+			// ヘッダー（名前バー）を差し引いたステージ利用可能高さ
+			const headerEl = document.querySelector('.top-header-bar');
+			const headerH = headerEl ? headerEl.offsetHeight : 40;
+			const stageAvailH = Math.max(80, wrapperH - headerH - 12);
+
+			// サーブバーとgapの高さを差し引いた、得点カード自体の利用可能高さ
+			const serveBarEl = document.getElementById('left-serve-bar');
+			const serveBarH = serveBarEl ? serveBarEl.offsetHeight : 16;
+			const colGap = 18;
+			const cardAvailH = Math.max(60, stageAvailH - serveBarH - colGap);
+
+			// 要件: 「常に縦長で表示。少なくとも縦:横が4:3」
+			// 高さ:幅 >= 4:3 (1.333...) => 幅は最大でも 高さ * (3 / 4)
+			// ボーダーやパディングを含めて確実に 4:3 以上の縦長比率を保証 (係数 0.71)
+			const maxCardW = cardAvailH * 0.71;
+
+			// カラム比率: 34fr 14fr 14fr 34fr (全体 96fr)
+			const stageEl = document.getElementById('scoreboard-stage');
+			const stageComputedStyle = window.getComputedStyle(stageEl);
+			const gridGap = parseFloat(stageComputedStyle.gap) || 12;
+			const totalGap = gridGap * 3;
+
+			// カード幅が maxCardW 以下になるステージ全体の最大幅:
+			// (stageWidth - totalGap) * (34 / 96) <= maxCardW
+			// stageWidth <= (maxCardW * 96 / 34) + totalGap
+			const maxStageW = (maxCardW * (96 / 34)) + totalGap;
+
+			const targetMaxW = Math.min(wrapperW, maxStageW, 1400);
+			contentBoxEl.style.maxWidth = `${Math.floor(targetMaxW)}px`;
+		}
+
+		// 常時ランドスケープ表示制御（スマホ縦持ち時は自動で90度回転して全画面横長展開）
 		function applyOrientationMode() {
 			const isPortrait = window.matchMedia('(orientation: portrait)').matches || (window.innerHeight > window.innerWidth);
-			document.body.classList.remove('is-portrait-locked-90', 'is-portrait-locked-270');
-
+			
 			if (isPortrait) {
-				if (orientationMode === 'landscape_90') {
-					document.body.classList.add('is-portrait-locked-90');
-				} else if (orientationMode === 'landscape_270') {
-					document.body.classList.add('is-portrait-locked-270');
-				}
+				document.body.classList.add('is-portrait-locked-90');
+				document.body.classList.remove('is-portrait-locked-270');
+			} else {
+				document.body.classList.remove('is-portrait-locked-90', 'is-portrait-locked-270');
 			}
 
-			if (rotateStateTextEl) {
-				if (orientationMode === 'landscape_90') {
-					rotateStateTextEl.textContent = '90°';
-					btnRotateEl.title = '横画面固定中 (90° 時計回り)。タップで向き反転または解除';
-				} else if (orientationMode === 'landscape_270') {
-					rotateStateTextEl.textContent = '270°';
-					btnRotateEl.title = '横画面固定中 (270° 反時計回り)。タップで向き反転または解除';
-				} else {
-					rotateStateTextEl.textContent = 'FREE';
-					btnRotateEl.title = '端末連動中 (回転なし)。タップで常に横画面モードを有効化';
-				}
-			}
+			enforcePanelAspectRatio();
 
 			// 回転後の寸法に合わせてテキストやパネルの自動フィットを再計算
 			setTimeout(() => {
+				enforcePanelAspectRatio();
 				fitScoreboardNameInput(leftNameInputEl);
 				fitScoreboardNameInput(rightNameInputEl);
-				resultsListContainerEl.querySelectorAll('.result-player-name-input').forEach(el => {
+				resultsListContainerEl.querySelectorAll('.result-player-name-input, .result-memo-input').forEach(el => {
 					autoResizeResultNameTextarea(el);
 				});
 			}, 80);
 		}
 
-		function cycleOrientationMode() {
-			if (orientationMode === 'landscape_90') {
-				orientationMode = 'landscape_270';
-				showToast('横画面固定: 270° (反時計回り)');
-			} else if (orientationMode === 'landscape_270') {
-				orientationMode = 'free';
-				showToast('端末連動モード (画面回転解除)');
-			} else {
-				orientationMode = 'landscape_90';
-				showToast('横画面固定: 90° (時計回り)');
-			}
-			localStorage.setItem(ORIENTATION_STORAGE_KEY, orientationMode);
-			applyOrientationMode();
-			tryLockScreenOrientation();
-		}
-
-		if (btnRotateEl) {
-			btnRotateEl.addEventListener('click', () => {
-				if (isInteractionLocked()) return;
-				cycleOrientationMode();
-			});
-		}
-
-		// Screen Orientation API による横画面ロック試行（Android PWA / フルスクリーン対応ブラウザ向け）
+		// Screen Orientation API による横画面ロック常時試行（Android PWA / フルスクリーン対応ブラウザ向け）
 		function tryLockScreenOrientation() {
-			if (orientationMode !== 'free' && window.screen && window.screen.orientation && typeof window.screen.orientation.lock === 'function') {
+			if (window.screen && window.screen.orientation && typeof window.screen.orientation.lock === 'function') {
 				window.screen.orientation.lock('landscape').catch(() => {
 					// サポート外や未許可ブラウザでは静かにスルー (CSS回転が確実に動作)
 				});
 			}
 		}
 
-		['touchstart', 'click'].forEach(evtType => {
-			document.addEventListener(evtType, tryLockScreenOrientation, { once: true, passive: true });
+		function handleFirstUserInteraction() {
+			sound.unlock();
+			tryLockScreenOrientation();
+		}
+
+		['touchstart', 'touchend', 'pointerdown', 'click'].forEach(evtType => {
+			document.addEventListener(evtType, handleFirstUserInteraction, { once: true, passive: true });
 		});
 
 		window.addEventListener('resize', applyOrientationMode);
 		window.addEventListener('orientationchange', applyOrientationMode);
 		if (window.screen && window.screen.orientation) {
 			window.screen.orientation.addEventListener('change', applyOrientationMode);
+		}
+
+		if (window.ResizeObserver) {
+			const ro = new ResizeObserver(() => {
+				enforcePanelAspectRatio();
+			});
+			const wrapperEl = document.querySelector('.scoreboard-wrapper');
+			if (wrapperEl) ro.observe(wrapperEl);
 		}
 
 		// 初期描画実行 & リロード前の状態（ゲーム終了／マッチ終了バー含む）を復元
