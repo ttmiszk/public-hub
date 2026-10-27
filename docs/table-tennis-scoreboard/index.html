@@ -28,35 +28,11 @@
 			--accent-blue: #2563eb;
 			--accent-gold: #facc15;
 
-			/* Safe Area CSS Variables (Dynamic for portrait-rotation) */
+			/* Safe Area CSS Variables (Device-Native Insets) */
 			--safe-top: env(safe-area-inset-top, 0px);
 			--safe-bottom: env(safe-area-inset-bottom, 0px);
 			--safe-left: env(safe-area-inset-left, 0px);
 			--safe-right: env(safe-area-inset-right, 0px);
-
-			/* Logical Viewport dimensions */
-			--vw: 1vw;
-			--vh: 1vh;
-		}
-
-		/* 縦持ち時: 90° 時計回り回転（元の物理Top/上部バーが画面右側、物理Bottom/ホームバーが画面左側に移動） */
-		body.is-portrait-locked-90 {
-			--safe-top: env(safe-area-inset-left, 0px);
-			--safe-bottom: env(safe-area-inset-right, 0px);
-			--safe-left: max(env(safe-area-inset-bottom, 0px), 16px);
-			--safe-right: max(env(safe-area-inset-top, 0px), 48px);
-			--vw: 1vh;
-			--vh: 1vw;
-		}
-
-		/* 縦持ち時: 270° (-90°) 反時計回り回転（元の物理Top/上部バーが画面左側、物理Bottom/ホームバーが画面右側に移動） */
-		body.is-portrait-locked-270 {
-			--safe-top: env(safe-area-inset-right, 0px);
-			--safe-bottom: env(safe-area-inset-left, 0px);
-			--safe-left: max(env(safe-area-inset-top, 0px), 48px);
-			--safe-right: max(env(safe-area-inset-bottom, 0px), 16px);
-			--vw: 1vh;
-			--vh: 1vw;
 		}
 
 		* {
@@ -77,10 +53,10 @@
 			background-color: var(--bg-black);
 			color: var(--text-white);
 			font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Hiragino Kaku Gothic ProN', 'BIZ UDPGothic', Meiryo, sans-serif;
-			touch-action: none;
+			touch-action: manipulation;
 		}
 
-		/* ルートビューポートコンテナ: 縦画面時は90度/270度自動回転してフルスクリーン横画面化 */
+		/* ルートビューポートコンテナ (全画面フィット・回転処理は完全撤廃しネイティブ表示) */
 		#app-viewport-root {
 			position: relative;
 			width: 100%;
@@ -89,26 +65,6 @@
 			overflow: hidden;
 			container-type: size;
 			container-name: viewport;
-			transform-origin: center center;
-			transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
-		}
-
-		body.is-portrait-locked-90 #app-viewport-root {
-			position: fixed;
-			top: 50%;
-			left: 50%;
-			width: 100dvh;
-			height: 100dvw;
-			transform: translate(-50%, -50%) rotate(90deg);
-		}
-
-		body.is-portrait-locked-270 #app-viewport-root {
-			position: fixed;
-			top: 50%;
-			left: 50%;
-			width: 100dvh;
-			height: 100dvw;
-			transform: translate(-50%, -50%) rotate(-90deg);
 		}
 
 		#app {
@@ -118,10 +74,10 @@
 			display: flex;
 			flex-direction: column;
 			justify-content: space-between;
-			padding-top: max(2px, var(--safe-top));
-			padding-bottom: max(3px, var(--safe-bottom));
-			padding-left: max(clamp(4px, 1.2vw, 14px), calc(var(--safe-left) + 2px));
-			padding-right: max(clamp(4px, 1.2vw, 14px), calc(var(--safe-right) + 2px));
+			padding-top: max(4px, var(--safe-top));
+			padding-bottom: max(6px, var(--safe-bottom));
+			padding-left: max(8px, var(--safe-left));
+			padding-right: max(8px, var(--safe-right));
 		}
 
 		/* =========================================================
@@ -654,11 +610,9 @@
 		.bottom-controls-layer {
 			position: relative;
 			z-index: 25;
-			display: grid;
-			grid-template-columns: 1fr auto 1fr;
+			display: flex;
 			align-items: center;
-			gap: clamp(4px, 1.2vw, 14px);
-			flex-shrink: 0;
+			justify-content: space-between;
 			width: 100%;
 			max-width: 1400px;
 			margin: 0 auto;
@@ -666,29 +620,20 @@
 			pointer-events: none;
 		}
 
-		@media (max-width: 520px) {
-			.bottom-controls-layer {
-				display: flex;
-				justify-content: space-between;
-			}
-		}
-
 		.left-controls,
 		.center-controls,
 		.right-controls {
 			display: flex;
 			align-items: center;
-			gap: clamp(3px, calc(1.1 * var(--vw)), 10px);
+			gap: clamp(4px, 1.5vw, 10px);
 			pointer-events: auto;
 		}
 
-		.left-controls { justify-self: start; }
-		.center-controls { justify-self: center; }
-		.right-controls { justify-self: end; }
-
 		.circle-btn {
-			width: clamp(32px, calc(4.6 * var(--vw)), 48px);
-			height: clamp(32px, calc(4.6 * var(--vw)), 48px);
+			aspect-ratio: 1 / 1;
+			width: clamp(36px, min(9.5vw, 7vh), 48px);
+			height: clamp(36px, min(9.5vw, 7vh), 48px);
+			flex-shrink: 0;
 			border-radius: 50%;
 			background: rgba(26, 28, 35, 0.95);
 			border: 1.5px solid rgba(255, 255, 255, 0.24);
@@ -701,6 +646,7 @@
 			box-shadow: 0 4px 16px rgba(0, 0, 0, 0.65);
 			transition: transform 0.12s, background 0.15s, border-color 0.15s;
 			padding: 0;
+			overflow: hidden;
 		}
 
 		.circle-btn:active {
@@ -714,21 +660,24 @@
 		}
 
 		.circle-btn svg {
-			width: clamp(16px, 2.2vw, 22px);
-			height: clamp(16px, 2.2vw, 22px);
+			width: clamp(15px, 44%, 21px);
+			height: clamp(15px, 44%, 21px);
 			stroke: currentColor;
 			fill: none;
 			stroke-width: 2.2;
 			stroke-linecap: round;
 			stroke-linejoin: round;
+			flex-shrink: 0;
 		}
 
 		.btn-subtext {
-			font-size: clamp(0.55rem, 0.9vw, 0.68rem);
+			font-size: clamp(0.52rem, 1.8vw, 0.66rem);
 			font-weight: 900;
 			letter-spacing: 0.02em;
 			line-height: 1;
 			margin-top: 1px;
+			white-space: nowrap;
+			flex-shrink: 0;
 		}
 
 		/* =========================================================
@@ -789,18 +738,19 @@
 			background: #e4dcbf;
 			color: #1e293b;
 			position: relative;
-			display: flex;
+			display: grid;
+			grid-template-columns: 44px 1fr auto;
 			align-items: center;
-			justify-content: space-between;
-			padding-top: max(10px, calc(var(--safe-top) + 10px));
-			padding-bottom: 10px;
-			padding-left: max(12px, calc(var(--safe-left) + 12px));
-			padding-right: max(14px, calc(var(--safe-right) + 14px));
-			min-height: 56px;
+			padding-top: max(8px, calc(var(--safe-top) + 6px));
+			padding-bottom: 8px;
+			padding-left: max(8px, calc(var(--safe-left) + 8px));
+			padding-right: max(10px, calc(var(--safe-right) + 10px));
+			min-height: 50px;
 			border-bottom: 1.5px solid rgba(0, 0, 0, 0.08);
 			box-shadow: 0 4px 14px rgba(160, 145, 120, 0.25);
 			flex-shrink: 0;
 			z-index: 10;
+			gap: 4px;
 		}
 
 		.screen-back-btn {
@@ -846,24 +796,25 @@
 			display: flex;
 			align-items: center;
 			justify-content: flex-end;
-			gap: clamp(3px, 0.8vw, 6px);
-			margin-left: auto;
+			gap: clamp(3px, 1.2vw, 6px);
 			z-index: 2;
+			flex-shrink: 0;
 		}
 
 		.screen-action-btn {
 			background: #2563eb;
 			border: 1px solid #1d4ed8;
 			color: #ffffff;
-			border-radius: 8px;
-			min-height: clamp(30px, 5.5vh, 35px);
-			padding: clamp(3px, 0.6vh, 4px) clamp(8px, 1.2vw, 12px);
-			font-size: clamp(0.74rem, 1.35vw, 0.86rem);
+			border-radius: 7px;
+			min-height: 28px;
+			padding: 3px clamp(6px, 1.5vw, 10px);
+			font-size: clamp(0.7rem, 2vw, 0.82rem);
 			font-weight: 800;
 			cursor: pointer;
 			box-shadow: 0 2px 4px rgba(37, 99, 235, 0.25);
 			transition: background 0.15s, transform 0.1s;
 			white-space: nowrap;
+			flex-shrink: 0;
 		}
 
 		.screen-action-btn:active {
@@ -880,15 +831,16 @@
 			background: #dc2626;
 			border: 1px solid #b91c1c;
 			color: #ffffff;
-			border-radius: 8px;
-			min-height: clamp(30px, 5.5vh, 35px);
-			padding: clamp(3px, 0.6vh, 4px) clamp(8px, 1.2vw, 12px);
-			font-size: clamp(0.74rem, 1.35vw, 0.86rem);
+			border-radius: 7px;
+			min-height: 28px;
+			padding: 3px clamp(6px, 1.5vw, 10px);
+			font-size: clamp(0.7rem, 2vw, 0.82rem);
 			font-weight: 800;
 			cursor: pointer;
 			box-shadow: 0 2px 4px rgba(220, 38, 38, 0.25);
 			transition: background 0.15s, transform 0.1s;
 			white-space: nowrap;
+			flex-shrink: 0;
 		}
 
 		.screen-danger-btn:active {
@@ -902,18 +854,18 @@
 		}
 
 		.screen-title-center {
-			position: absolute;
-			left: 50%;
-			top: 50%;
-			transform: translate(-50%, -50%);
+			position: static;
+			transform: none;
 			text-align: center;
-			font-size: clamp(0.95rem, 2.1vw, 1.25rem);
+			font-size: clamp(0.92rem, 3.2vw, 1.25rem);
 			font-weight: 900;
 			letter-spacing: 0.04em;
 			color: #1e293b;
 			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
 			pointer-events: none;
-			z-index: 1;
+			padding: 0 4px;
 		}
 
 		.screen-body {
@@ -931,14 +883,6 @@
 			align-items: center;
 			justify-content: flex-start;
 			gap: 16px;
-		}
-
-		/* 縦持ち90度回転時はブラウザの誤ったパン認識を抑止し、JSタッチスクローラーで確実に滑らかスクロール */
-		body.is-portrait-locked-90 .overlay-screen,
-		body.is-portrait-locked-90 .screen-body,
-		body.is-portrait-locked-270 .overlay-screen,
-		body.is-portrait-locked-270 .screen-body {
-			touch-action: none;
 		}
 
 		/* --- Match Result History Cards List & Date Grouping --- */
@@ -1065,11 +1009,10 @@
 		/* Match Metadata Bar (Start/End Datetime, Duration, and Score Progression Button) */
 		.result-meta-bar {
 			display: flex;
-			flex-wrap: wrap;
 			align-items: center;
 			justify-content: space-between;
-			gap: 8px;
-			padding: 8px 12px;
+			gap: 6px;
+			padding: 6px 10px;
 			background: #ded5bb;
 			border-bottom: 1.5px solid rgba(0, 0, 0, 0.08);
 		}
@@ -1078,8 +1021,8 @@
 			display: flex;
 			flex-wrap: wrap;
 			align-items: center;
-			gap: 6px 12px;
-			font-size: clamp(0.78rem, 1.6vw, 0.92rem);
+			gap: 4px 8px;
+			font-size: clamp(0.7rem, 2.2vw, 0.86rem);
 			font-weight: 800;
 			color: #334155;
 		}
@@ -1088,7 +1031,7 @@
 			background: #cfc5a7;
 			color: #1e293b;
 			border: 1px solid rgba(0, 0, 0, 0.12);
-			padding: 2px 8px;
+			padding: 1px 6px;
 			border-radius: 999px;
 			font-weight: 900;
 		}
@@ -1103,11 +1046,11 @@
 
 		.result-to-progression-btn,
 		.result-delete-one-btn {
-			width: 68px;
-			min-height: 32px;
-			padding: 4px 0;
-			border-radius: 8px;
-			font-size: clamp(0.8rem, 1.7vw, 0.92rem);
+			width: clamp(52px, 15vw, 68px);
+			min-height: 28px;
+			padding: 2px 0;
+			border-radius: 7px;
+			font-size: clamp(0.72rem, 2vw, 0.86rem);
 			font-weight: 900;
 			cursor: pointer;
 			display: inline-flex;
@@ -1145,9 +1088,9 @@
 
 		.result-body-grid {
 			display: grid;
-			grid-template-columns: 29% 10% 22% 10% 29%;
+			grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.45fr) minmax(0, 1fr) minmax(0, 0.45fr) minmax(0, 1.4fr);
 			align-items: stretch;
-			min-height: clamp(86px, 19vh, 140px);
+			min-height: clamp(68px, 14vh, 120px);
 			background: #e6dec5;
 		}
 
@@ -1156,9 +1099,10 @@
 			flex-direction: column;
 			align-items: center;
 			justify-content: center;
-			padding: 8px 6px;
+			padding: 6px 4px;
 			border-right: 1px solid rgba(0, 0, 0, 0.08);
 			text-align: center;
+			min-width: 0;
 		}
 
 		.result-cell:last-child {
@@ -1166,17 +1110,19 @@
 		}
 
 		.result-player-name {
-			font-size: clamp(0.95rem, 2.2vw, 1.35rem);
+			font-size: clamp(0.78rem, 2.6vw, 1.25rem);
 			font-weight: 900;
 			color: #0f172a;
-			word-break: break-word;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
 		}
 
 		.result-player-name-input {
-			width: 96%;
+			width: 100%;
 			max-width: 240px;
 			font-family: inherit;
-			font-size: clamp(0.92rem, 2.2vw, 1.3rem);
+			font-size: clamp(0.76rem, 2.8vw, 1.2rem);
 			font-weight: 900;
 			line-height: 1.25;
 			color: #0f172a;
@@ -1184,13 +1130,12 @@
 			background: transparent;
 			border: 2px solid transparent;
 			border-radius: 6px;
-			padding: 2px 4px;
+			padding: 2px 2px;
 			outline: none;
 			resize: none;
 			overflow: hidden;
-			white-space: pre-wrap;
-			overflow-wrap: anywhere;
-			word-break: break-word;
+			white-space: nowrap;
+			text-overflow: ellipsis;
 			transition: border-color 0.2s, background-color 0.2s;
 			user-select: text;
 			-webkit-user-select: text;
@@ -1315,20 +1260,22 @@
 			max-width: 100%;
 			text-align: center;
 			line-height: 1.22;
-			overflow-wrap: anywhere;
-			word-break: break-word;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
 			color: #0f172a;
+			font-size: clamp(0.78rem, 2.8vw, 1.15rem);
 		}
 
 		.history-header-summary .score-pill {
-			font-size: clamp(1.05rem, 2.4vw, 1.4rem);
+			font-size: clamp(0.95rem, 2.4vw, 1.35rem);
 			letter-spacing: 0.05em;
 			white-space: nowrap;
 			flex-shrink: 0;
 			background: #ded5bb;
 			border: none;
 			box-shadow: inset 1.5px 1.5px 3px rgba(165, 150, 125, 0.3), inset -1.5px -1.5px 3px rgba(255, 255, 255, 0.8);
-			padding: 2px 12px;
+			padding: 2px 10px;
 			border-radius: 999px;
 			color: #1e293b;
 		}
@@ -1342,31 +1289,77 @@
 			max-width: 1100px;
 			display: flex;
 			flex-direction: column;
-			gap: 14px;
+			gap: 12px;
 		}
 
 		.game-history-card {
 			background: #e6dec5;
-			border-radius: 14px;
+			border-radius: 12px;
 			border: none;
 			box-shadow: 3px 3px 16px rgba(165, 150, 125, 0.35), -3px -3px 16px rgba(255, 255, 255, 0.85);
-			padding: 12px 14px 14px;
+			padding: clamp(8px, 2vw, 12px) clamp(10px, 2.5vw, 14px);
 			width: 100%;
 		}
 
 		.game-history-heading {
 			text-align: center;
-			font-size: clamp(0.98rem, 2.2vw, 1.25rem);
+			font-size: clamp(0.85rem, 2.2vw, 1.1rem);
 			font-weight: 900;
 			color: #1e293b;
-			margin-bottom: 8px;
+			margin-bottom: 6px;
 		}
 
-		.timeline-swipe-area {
+		.timeline-table-wrapper {
 			width: 100%;
+			display: flex;
+			align-items: stretch;
+			background: #e1d8bc;
+			border-radius: 9px;
+			overflow: hidden;
+			box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.12);
+			border: 1.5px solid rgba(0, 0, 0, 0.1);
+		}
+
+		.timeline-fixed-col {
+			width: clamp(62px, 17vw, 100px);
+			flex-shrink: 0;
+			display: flex;
+			flex-direction: column;
+			justify-content: space-around;
+			background: #d8ceb0;
+			border-right: 2px solid rgba(0, 0, 0, 0.12);
+			padding: 2px 4px;
+			z-index: 2;
+			box-shadow: 2px 0 6px rgba(0, 0, 0, 0.06);
+		}
+
+		.timeline-name-cell {
+			height: 50%;
+			display: flex;
+			align-items: center;
+			justify-content: flex-start;
+			padding: 0 4px;
+			font-size: clamp(0.68rem, 2.1vw, 0.86rem);
+			font-weight: 900;
+			color: #0f172a;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+			line-height: 1.2;
+		}
+
+		.timeline-name-cell:first-child {
+			border-bottom: 1.5px solid rgba(0, 0, 0, 0.08);
+		}
+
+		.timeline-scroll-track {
+			flex: 1;
+			min-width: 0;
 			overflow-x: auto;
 			-webkit-overflow-scrolling: touch;
-			padding-bottom: 4px;
+			touch-action: pan-x pan-y;
+			overscroll-behavior-x: contain;
+			padding-bottom: 2px;
 		}
 
 		.empty-state-box {
@@ -1461,14 +1454,20 @@
 			grid-template-columns: 1fr 1fr;
 		}
 
+		@media (max-width: 480px) {
+			.modal-actions.two-cols-row {
+				grid-template-columns: 1fr;
+			}
+		}
+
 		.modal-btn {
 			width: 100%;
 			min-width: 0;
-			min-height: clamp(36px, 6.5vh, 44px);
-			padding: 7px 10px;
+			min-height: clamp(38px, 6.5vh, 46px);
+			padding: 8px 12px;
 			border-radius: 12px;
 			border: 2px solid rgba(255, 255, 255, 0.2);
-			font-size: clamp(0.82rem, 1.6vw, 0.98rem);
+			font-size: clamp(0.82rem, 2.4vw, 1.02rem);
 			font-weight: 900;
 			cursor: pointer;
 			transition: transform 0.1s;
@@ -3392,6 +3391,7 @@
 				const card = document.createElement('div');
 				card.className = 'game-history-card';
 
+				// 見出し (Game X)
 				const heading = document.createElement('div');
 				heading.className = 'game-history-heading';
 				heading.textContent = gameData.inProgress
@@ -3399,23 +3399,47 @@
 					: `Game ${gameData.gameNumber}`;
 				card.appendChild(heading);
 
-				const swipeArea = document.createElement('div');
-				swipeArea.className = 'timeline-swipe-area';
-				swipeArea.appendChild(buildLargeGameTimelineSVG(gameData, player0Name, player1Name));
-				card.appendChild(swipeArea);
+				// テーブルラッパー: 左側「固定プレイヤー名列」＋ 右側「スクロール可能推移トラック」
+				const tableWrap = document.createElement('div');
+				tableWrap.className = 'timeline-table-wrapper';
 
+				// 1. 左側: 固定プレイヤー名列 (スクロールしても常に固定表示)
+				const fixedCol = document.createElement('div');
+				fixedCol.className = 'timeline-fixed-col';
+
+				const name0Cell = document.createElement('div');
+				name0Cell.className = 'timeline-name-cell';
+				name0Cell.textContent = player0Name;
+				name0Cell.title = player0Name;
+
+				const name1Cell = document.createElement('div');
+				name1Cell.className = 'timeline-name-cell';
+				name1Cell.textContent = player1Name;
+				name1Cell.title = player1Name;
+
+				fixedCol.appendChild(name0Cell);
+				fixedCol.appendChild(name1Cell);
+				tableWrap.appendChild(fixedCol);
+
+				// 2. 右側: スコア推移スクロールトラック
+				const scrollTrack = document.createElement('div');
+				scrollTrack.className = 'timeline-scroll-track';
+				scrollTrack.appendChild(buildGameTimelineSVG(gameData));
+				tableWrap.appendChild(scrollTrack);
+
+				card.appendChild(tableWrap);
 				historyContentEl.appendChild(card);
 			});
 		}
 
-		function buildLargeGameTimelineSVG(gameData, name0, name1) {
+		function buildGameTimelineSVG(gameData) {
 			const log = gameData.log || [];
-			const nameColWidth = 150;
-			const colStep = 62;
-			const finalColWidth = 78;
-			const rowHeight = 74;
+			const startPad = 8;
+			const colStep = 36;
+			const finalColWidth = 52;
+			const rowHeight = 38;
 			const totalHeight = rowHeight * 2;
-			const totalWidth = nameColWidth + Math.max(log.length, 1) * colStep + finalColWidth;
+			const totalWidth = startPad + Math.max(log.length, 1) * colStep + finalColWidth;
 
 			const svgNS = 'http://www.w3.org/2000/svg';
 			const svg = document.createElementNS(svgNS, 'svg');
@@ -3439,9 +3463,9 @@
 				svg.appendChild(line);
 			};
 
-			addLine(0, 1, totalWidth, 1, 'rgba(0, 0, 0, 0.12)', 2);
-			addLine(0, rowHeight, totalWidth - finalColWidth, rowHeight, 'rgba(0, 0, 0, 0.08)', 1.5);
-			addLine(0, totalHeight - 1, totalWidth, totalHeight - 1, 'rgba(0, 0, 0, 0.12)', 2);
+			addLine(0, 1, totalWidth, 1, 'rgba(0, 0, 0, 0.12)', 1.5);
+			addLine(0, rowHeight, totalWidth - finalColWidth, rowHeight, 'rgba(0, 0, 0, 0.08)', 1.2);
+			addLine(0, totalHeight - 1, totalWidth, totalHeight - 1, 'rgba(0, 0, 0, 0.12)', 1.5);
 
 			const finalX = totalWidth - finalColWidth;
 			const rect = document.createElementNS(svgNS, 'rect');
@@ -3450,10 +3474,10 @@
 			rect.setAttribute('width', finalColWidth);
 			rect.setAttribute('height', totalHeight - 4);
 			rect.setAttribute('fill', '#d97706');
-			rect.setAttribute('rx', '8');
+			rect.setAttribute('rx', '6');
 			svg.appendChild(rect);
 
-			const addText = (txt, x, y, color, size, weight = '800', anchor = 'start') => {
+			const addText = (txt, x, y, color, size, weight = '800', anchor = 'middle') => {
 				const t = document.createElementNS(svgNS, 'text');
 				t.setAttribute('x', x);
 				t.setAttribute('y', y);
@@ -3467,35 +3491,12 @@
 				return t;
 			};
 
-			// SVG内のプレイヤー名表示: 長い名前の場合は2行に折り返し、さらに列幅を超える場合は横幅に合わせて縮小
-			const addPlayerNameSVG = (rawName, x, centerY) => {
-				const str = String(rawName || '');
-				const maxColW = nameColWidth - x - 10; // 約128px
-				const lines = str.length > 8
-					? [str.slice(0, Math.ceil(str.length / 2)), str.slice(Math.ceil(str.length / 2))]
-					: [str];
-				const fontSizePx = lines.length > 1 ? 15 : 18;
-				const lineOffsets = lines.length > 1 ? [-10, 10] : [0];
-
-				lines.forEach((lineStr, idx) => {
-					const tEl = addText(lineStr, x, centerY + lineOffsets[idx], '#0f172a', `${fontSizePx}px`, '900', 'start');
-					const measuredW = measureTextWidthPx(lineStr, '900', fontSizePx, 'sans-serif');
-					if (measuredW > maxColW) {
-						tEl.setAttribute('textLength', String(maxColW));
-						tEl.setAttribute('lengthAdjust', 'spacingAndGlyphs');
-					}
-				});
-			};
-
-			addPlayerNameSVG(name0, 12, yRow0);
-			addPlayerNameSVG(name1, 12, yRow1);
-
-			addText(String(gameData.p0), finalX + finalColWidth / 2, yRow0, '#ffffff', '22px', '900', 'middle');
-			addText(String(gameData.p1), finalX + finalColWidth / 2, yRow1, '#ffffff', '22px', '900', 'middle');
+			addText(String(gameData.p0), finalX + finalColWidth / 2, yRow0, '#ffffff', '14px', '900');
+			addText(String(gameData.p1), finalX + finalColWidth / 2, yRow1, '#ffffff', '14px', '900');
 
 			if (log.length > 1) {
 				const polyPoints = log.map((entry, idx) => {
-					const cx = nameColWidth + idx * colStep + colStep / 2;
+					const cx = startPad + idx * colStep + colStep / 2;
 					const cy = entry.scorer === 0 ? yRow0 : yRow1;
 					return `${cx},${cy}`;
 				}).join(' ');
@@ -3504,12 +3505,12 @@
 				polyline.setAttribute('points', polyPoints);
 				polyline.setAttribute('fill', 'none');
 				polyline.setAttribute('stroke', '#0284c7');
-				polyline.setAttribute('stroke-width', '3.5');
+				polyline.setAttribute('stroke-width', '2.5');
 				svg.appendChild(polyline);
 			}
 
 			log.forEach((entry, idx) => {
-				const cx = nameColWidth + idx * colStep + colStep / 2;
+				const cx = startPad + idx * colStep + colStep / 2;
 
 				[0, 1].forEach(teamId => {
 					const cy = teamId === 0 ? yRow0 : yRow1;
@@ -3519,7 +3520,7 @@
 					const circle = document.createElementNS(svgNS, 'circle');
 					circle.setAttribute('cx', cx);
 					circle.setAttribute('cy', cy);
-					circle.setAttribute('r', isScorer ? '18' : '15.5');
+					circle.setAttribute('r', isScorer ? '11' : '9.5');
 					circle.setAttribute('fill', isScorer ? '#0284c7' : 'rgba(0, 0, 0, 0.06)');
 					svg.appendChild(circle);
 
@@ -3528,13 +3529,12 @@
 						cx,
 						cy,
 						isScorer ? '#ffffff' : '#475569',
-						isScorer ? '16px' : '14.5px',
-						'900',
-						'middle'
+						isScorer ? '10.5px' : '9.5px',
+						'900'
 					);
 
 					if (entry.server === teamId) {
-						addLine(cx - 17, cy + 25, cx + 17, cy + 25, '#dc2626', 4);
+						addLine(cx - 10, cy + 15, cx + 10, cy + 15, '#dc2626', 2.5);
 					}
 				});
 			});
@@ -3588,10 +3588,7 @@
 			if (!modalCard) return;
 			modalCard.style.setProperty('--modal-scale', '1');
 
-			const isRotated = document.body.classList.contains('is-portrait-locked-90') || document.body.classList.contains('is-portrait-locked-270');
-			// 縦持ち回転時はブラウザ幅が利用可能高さ、通常横持ち時はブラウザ高さが利用可能高さ
-			const logicalH = isRotated ? window.innerWidth : window.innerHeight;
-			const availH = logicalH - 16;
+			const availH = window.innerHeight - 20;
 			const cardH = modalCard.offsetHeight;
 
 			if (cardH > availH && availH > 100) {
@@ -4059,223 +4056,74 @@
 			const contentBoxEl = document.getElementById('scoreboard-content-box');
 			if (!wrapperEl || !contentBoxEl) return;
 
-			// 一旦制限を解除して利用可能な高さを計測
 			contentBoxEl.style.maxWidth = '1400px';
+			contentBoxEl.style.maxHeight = '840px';
 
 			const wrapperW = wrapperEl.clientWidth;
 			const wrapperH = wrapperEl.clientHeight;
 			if (wrapperW <= 0 || wrapperH <= 0) return;
 
-			// ヘッダー（名前バー）を差し引いたステージ利用可能高さ
-			const headerEl = document.querySelector('.top-header-bar');
-			const headerH = headerEl ? headerEl.offsetHeight : 30;
-			const contentBoxGap = parseFloat(window.getComputedStyle(contentBoxEl).gap) || 4;
-			const stageAvailH = Math.max(80, wrapperH - headerH - contentBoxGap);
+			const isPortrait = wrapperH > wrapperW;
 
-			// サーブバーとgapの高さを差し引いた、得点カード自体の利用可能高さ
-			const serveBarEl = document.getElementById('left-serve-bar');
-			const serveBarH = serveBarEl ? serveBarEl.offsetHeight : 12;
-			const pointColEl = document.querySelector('.point-col');
-			const colGap = pointColEl ? (parseFloat(window.getComputedStyle(pointColEl).gap) || 6) : 6;
-			const cardAvailH = Math.max(60, stageAvailH - serveBarH - colGap);
-
-			// 要件: 「常に縦長で表示。少なくとも縦:横が4:3」
-			// 高さ:幅 >= 4:3 (1.333...) => 幅は最大でも 高さ * (3 / 4)
-			// ボーダーやパディングを含めて確実に 4:3 以上の縦長比率を保証 (係数 0.71)
-			const maxCardW = cardAvailH * 0.71;
-
-			// カラム比率: 34fr 14fr 14fr 34fr (全体 96fr)
-			const stageEl = document.getElementById('scoreboard-stage');
-			const stageComputedStyle = window.getComputedStyle(stageEl);
-			const gridGap = parseFloat(stageComputedStyle.gap) || 12;
-			const totalGap = gridGap * 3;
-
-			// カード幅が maxCardW 以下になるステージ全体の最大幅:
-			// (stageWidth - totalGap) * (34 / 96) <= maxCardW
-			// stageWidth <= (maxCardW * 96 / 34) + totalGap
-			const maxStageW = (maxCardW * (96 / 34)) + totalGap;
-
-			const targetMaxW = Math.min(wrapperW, maxStageW, 1400);
-			contentBoxEl.style.maxWidth = `${Math.floor(targetMaxW)}px`;
-		}
-
-		// 縦持ち回転時およびiOS Safariステータスバー表示時のタッチスクロール補助
-		function setupRotatedTouchScroll(scrollEl) {
-			if (!scrollEl || scrollEl._hasRotatedTouchScroll) return;
-			scrollEl._hasRotatedTouchScroll = true;
-
-			let startX = 0;
-			let startY = 0;
-			let lastX = 0;
-			let lastY = 0;
-			let isTracking = false;
-			let isHorizontalDrag = false;
-			let velocity = 0;
-			let lastTime = 0;
-			let animId = null;
-
-			const cancelMomentum = () => {
-				if (animId) {
-					cancelAnimationFrame(animId);
-					animId = null;
-				}
-			};
-
-			scrollEl.addEventListener('touchstart', (e) => {
-				if (e.touches.length !== 1) return;
-				cancelMomentum();
-
-				const touch = e.touches[0];
-				startX = touch.clientX;
-				startY = touch.clientY;
-				lastX = startX;
-				lastY = startY;
-				lastTime = performance.now();
-				velocity = 0;
-				isTracking = true;
-				isHorizontalDrag = false;
-			}, { passive: true });
-
-			scrollEl.addEventListener('touchmove', (e) => {
-				if (!isTracking || e.touches.length !== 1) return;
-
-				const touch = e.touches[0];
-				const currentX = touch.clientX;
-				const currentY = touch.clientY;
-				const now = performance.now();
-				const dt = Math.max(now - lastTime, 1);
-
-				const isRotated90 = document.body.classList.contains('is-portrait-locked-90');
-				const isRotated270 = document.body.classList.contains('is-portrait-locked-270');
-				const inSwipeArea = e.target && e.target.closest && e.target.closest('.timeline-swipe-area');
-
-				let delta = 0;
-
-				if (isRotated90) {
-					// 90度回転時: 見た目の上下スワイプは端末物理の左右(X軸)に対応
-					// 見た目上へスワイプ（下へスクロール） = clientX 減少
-					const dx = lastX - currentX;
-					const dy = lastY - currentY;
-
-					if (!isHorizontalDrag && inSwipeArea && Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 6) {
-						isHorizontalDrag = true;
-					}
-
-					if (isHorizontalDrag && inSwipeArea) {
-						inSwipeArea.scrollLeft += dy;
-						lastX = currentX;
-						lastY = currentY;
-						return;
-					}
-
-					delta = dx;
-				} else if (isRotated270) {
-					const dx = lastX - currentX;
-					const dy = lastY - currentY;
-
-					if (!isHorizontalDrag && inSwipeArea && Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 6) {
-						isHorizontalDrag = true;
-					}
-
-					if (isHorizontalDrag && inSwipeArea) {
-						inSwipeArea.scrollLeft -= dy;
-						lastX = currentX;
-						lastY = currentY;
-						return;
-					}
-
-					delta = -dx;
-				}
-
-				if (Math.abs(delta) > 0.5) {
-					scrollEl.scrollTop += delta;
-					velocity = delta / dt;
-				}
-
-				lastX = currentX;
-				lastY = currentY;
-				lastTime = now;
-			}, { passive: true });
-
-			scrollEl.addEventListener('touchend', () => {
-				if (!isTracking) return;
-				isTracking = false;
-
-				// 慣性スクロール（回転モード時のみJSでエミュレート）
-				const isRotated = document.body.classList.contains('is-portrait-locked-90') || document.body.classList.contains('is-portrait-locked-270');
-				if (isRotated && Math.abs(velocity) > 0.12) {
-					let currentVel = velocity * 15;
-					const decay = 0.93;
-
-					const step = () => {
-						if (Math.abs(currentVel) < 0.5) return;
-						scrollEl.scrollTop += currentVel;
-						currentVel *= decay;
-						animId = requestAnimationFrame(step);
-					};
-					animId = requestAnimationFrame(step);
-				}
-			}, { passive: true });
-
-			scrollEl.addEventListener('touchcancel', () => {
-				isTracking = false;
-				cancelMomentum();
-			}, { passive: true });
-		}
-
-		// 端末の向きの高精度判定（iOS Safariのステータスバー出現時の誤判定を防止）
-		function checkIsPortrait() {
-			// 1. window.orientation が利用可能な場合（iOS Safari等で最も信頼性が高い）
-			if (typeof window.orientation === 'number') {
-				const angle = Math.abs(window.orientation);
-				if (angle === 90) return false; // 確実にランドスケープ（横向き）
-				if (angle === 0 || angle === 180) return true; // 確実にポートレート（縦向き）
-			}
-
-			// 2. Screen Orientation API による判定
-			if (window.screen && window.screen.orientation && typeof window.screen.orientation.type === 'string') {
-				if (window.screen.orientation.type.startsWith('landscape')) return false;
-				if (window.screen.orientation.type.startsWith('portrait')) return true;
-			}
-
-			// 3. matchMedia および寸法によるフォールバック
-			const isMediaPortrait = window.matchMedia('(orientation: portrait)').matches;
-			const isDimPortrait = window.innerHeight > window.innerWidth;
-			return isMediaPortrait || isDimPortrait;
-		}
-
-		// 常時ランドスケープ表示制御（スマホ縦持ち時は自動で90度回転して全画面横長展開）
-		function applyOrientationMode() {
-			const isPortrait = checkIsPortrait();
-			
 			if (isPortrait) {
-				document.body.classList.add('is-portrait-locked-90');
-				document.body.classList.remove('is-portrait-locked-270');
+				// 1. ポートレート（縦持ち）: 画面の横幅を基準に縮小表示し、カードが縦長になりすぎないよう高さを制御
+				contentBoxEl.style.maxWidth = `${Math.floor(wrapperW)}px`;
+
+				// カード幅から理想のカード高さ（縦横比 約1.36:1）を逆算
+				const gridGap = 8;
+				const totalGap = gridGap * 3;
+				const cardW = Math.max(40, (wrapperW - totalGap) * (34 / 96));
+				const idealCardH = cardW * 1.36;
+				const idealStageH = idealCardH + 16 + 6; // serveBar + colGap
+				const headerH = 34;
+				const targetBoxH = Math.min(wrapperH, idealStageH + headerH + 8);
+
+				contentBoxEl.style.maxHeight = `${Math.floor(targetBoxH)}px`;
 			} else {
-				document.body.classList.remove('is-portrait-locked-90', 'is-portrait-locked-270');
+				// 2. ランドスケープ（横持ち）: 画面高さを活かして大画面展開（縦横比 4:3 以上を保証）
+				contentBoxEl.style.maxHeight = '840px';
+
+				const headerEl = document.querySelector('.top-header-bar');
+				const headerH = headerEl ? headerEl.offsetHeight : 30;
+				const contentBoxGap = parseFloat(window.getComputedStyle(contentBoxEl).gap) || 4;
+				const stageAvailH = Math.max(80, wrapperH - headerH - contentBoxGap);
+
+				const serveBarEl = document.getElementById('left-serve-bar');
+				const serveBarH = serveBarEl ? serveBarEl.offsetHeight : 12;
+				const pointColEl = document.querySelector('.point-col');
+				const colGap = pointColEl ? (parseFloat(window.getComputedStyle(pointColEl).gap) || 6) : 6;
+				const cardAvailH = Math.max(60, stageAvailH - serveBarH - colGap);
+
+				const maxCardW = cardAvailH * 0.71;
+				const stageEl = document.getElementById('scoreboard-stage');
+				const stageComputedStyle = window.getComputedStyle(stageEl);
+				const gridGap = parseFloat(stageComputedStyle.gap) || 12;
+				const totalGap = gridGap * 3;
+
+				const maxStageW = (maxCardW * (96 / 34)) + totalGap;
+				const targetMaxW = Math.min(wrapperW, maxStageW, 1400);
+				contentBoxEl.style.maxWidth = `${Math.floor(targetMaxW)}px`;
 			}
-
-			enforcePanelAspectRatio();
-
-			// 回転後の寸法に合わせてテキストやパネルの自動フィットを再計算
-			setTimeout(() => {
-				enforcePanelAspectRatio();
-				if (state.modalOpen) {
-					fitModalScale();
-				}
-				fitScoreboardNameInput(leftNameInputEl);
-				fitScoreboardNameInput(rightNameInputEl);
-				resultsListContainerEl.querySelectorAll('.result-player-name-input, .result-memo-input').forEach(el => {
-					autoResizeResultNameTextarea(el);
-				});
-			}, 80);
 		}
 
-		// Screen Orientation API による横画面ロック常時試行（Android PWA / フルスクリーン対応ブラウザ向け）
+		// 画面サイズ変更・端末回転時のレイアウト自動追従
+		function handleResizeAndLayout() {
+			enforcePanelAspectRatio();
+			if (state.modalOpen) {
+				fitModalScale();
+			}
+			fitScoreboardNameInput(leftNameInputEl);
+			fitScoreboardNameInput(rightNameInputEl);
+			resultsListContainerEl.querySelectorAll('.result-player-name-input, .result-memo-input').forEach(el => {
+				autoResizeResultNameTextarea(el);
+			});
+		}
+
+		// Screen Orientation API による横画面ロック試行（対応ブラウザ向け）
 		function tryLockScreenOrientation() {
 			if (window.screen && window.screen.orientation && typeof window.screen.orientation.lock === 'function') {
 				window.screen.orientation.lock('landscape').catch(() => {
-					// サポート外や未許可ブラウザでは静かにスルー (CSS回転が確実に動作)
+					// サポート外や未許可ブラウザでは静かにスルー
 				});
 			}
 		}
@@ -4289,10 +4137,10 @@
 			document.addEventListener(evtType, handleFirstUserInteraction, { once: true, passive: true });
 		});
 
-		window.addEventListener('resize', applyOrientationMode);
-		window.addEventListener('orientationchange', applyOrientationMode);
+		window.addEventListener('resize', handleResizeAndLayout);
+		window.addEventListener('orientationchange', handleResizeAndLayout);
 		if (window.screen && window.screen.orientation) {
-			window.screen.orientation.addEventListener('change', applyOrientationMode);
+			window.screen.orientation.addEventListener('change', handleResizeAndLayout);
 		}
 
 		if (window.ResizeObserver) {
@@ -4303,11 +4151,8 @@
 			if (wrapperEl) ro.observe(wrapperEl);
 		}
 
-		// 初期描画実行 & リロード前の状態（ゲーム終了／マッチ終了バー含む）を復元
-		document.querySelectorAll('.screen-body').forEach(el => {
-			setupRotatedTouchScroll(el);
-		});
-		applyOrientationMode();
+		// 初期描画実行 & リロード前の状態を復元
+		handleResizeAndLayout();
 		tryLockScreenOrientation();
 		syncVoiceBtnUI();
 		syncUIAndBoard({ animate: false });
