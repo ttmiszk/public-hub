@@ -39,22 +39,22 @@
 			--vh: 1vh;
 		}
 
-		/* 縦持ち時: 90° 時計回り回転（ノッチが左側、ホームバーが右側に移動） */
+		/* 縦持ち時: 90° 時計回り回転（元の物理Top/上部バーが画面右側、物理Bottom/ホームバーが画面左側に移動） */
 		body.is-portrait-locked-90 {
-			--safe-top: env(safe-area-inset-right, 0px);
-			--safe-bottom: env(safe-area-inset-left, 0px);
-			--safe-left: env(safe-area-inset-top, 0px);
-			--safe-right: env(safe-area-inset-bottom, 0px);
+			--safe-top: env(safe-area-inset-left, 0px);
+			--safe-bottom: env(safe-area-inset-right, 0px);
+			--safe-left: max(env(safe-area-inset-bottom, 0px), 16px);
+			--safe-right: max(env(safe-area-inset-top, 0px), 48px);
 			--vw: 1vh;
 			--vh: 1vw;
 		}
 
-		/* 縦持ち時: 270° (-90°) 反時計回り回転（ノッチが右側、ホームバーが左側に移動） */
+		/* 縦持ち時: 270° (-90°) 反時計回り回転（元の物理Top/上部バーが画面左側、物理Bottom/ホームバーが画面右側に移動） */
 		body.is-portrait-locked-270 {
-			--safe-top: env(safe-area-inset-left, 0px);
-			--safe-bottom: env(safe-area-inset-right, 0px);
-			--safe-left: env(safe-area-inset-bottom, 0px);
-			--safe-right: env(safe-area-inset-top, 0px);
+			--safe-top: env(safe-area-inset-right, 0px);
+			--safe-bottom: env(safe-area-inset-left, 0px);
+			--safe-left: max(env(safe-area-inset-top, 0px), 48px);
+			--safe-right: max(env(safe-area-inset-bottom, 0px), 16px);
 			--vw: 1vh;
 			--vh: 1vw;
 		}
@@ -776,7 +776,7 @@
 			pointer-events: none;
 			transform: translateY(15px);
 			transition: opacity 0.22s ease, transform 0.22s ease;
-			touch-action: pan-x pan-y;
+			touch-action: pan-y;
 		}
 
 		.overlay-screen.active {
@@ -920,15 +920,25 @@
 			flex: 1;
 			overflow-y: auto;
 			-webkit-overflow-scrolling: touch;
+			touch-action: pan-y;
+			overscroll-behavior-y: none;
 			padding-top: 14px;
-			padding-bottom: max(32px, calc(env(safe-area-inset-bottom, 0px) + 24px));
-			padding-left: max(14px, calc(env(safe-area-inset-left, 0px) + 14px));
-			padding-right: max(14px, calc(env(safe-area-inset-right, 0px) + 14px));
+			padding-bottom: max(32px, calc(var(--safe-bottom) + 24px));
+			padding-left: max(16px, calc(var(--safe-left) + 14px));
+			padding-right: max(16px, calc(var(--safe-right) + 14px));
 			display: flex;
 			flex-direction: column;
 			align-items: center;
 			justify-content: flex-start;
 			gap: 16px;
+		}
+
+		/* 縦持ち90度回転時はブラウザの誤ったパン認識を抑止し、JSタッチスクローラーで確実に滑らかスクロール */
+		body.is-portrait-locked-90 .overlay-screen,
+		body.is-portrait-locked-90 .screen-body,
+		body.is-portrait-locked-270 .overlay-screen,
+		body.is-portrait-locked-270 .screen-body {
+			touch-action: none;
 		}
 
 		/* --- Match Result History Cards List & Date Grouping --- */
@@ -1399,11 +1409,12 @@
 			background: #181b23;
 			border: 2px solid rgba(255, 255, 255, 0.25);
 			border-radius: 18px;
-			max-width: 660px;
-			width: min(94vw, 660px);
-			max-height: 94dvh;
-			overflow-y: hidden; /* 縦スクロールバーを完全に抑制 */
-			padding: clamp(10px, 2.5vh, 20px) clamp(14px, 3.5vw, 24px);
+			max-width: 540px;
+			width: min(calc(100% - 32px), 540px);
+			max-height: min(calc(100% - 16px), 94%);
+			overflow-y: auto;
+			overscroll-behavior: contain;
+			padding: clamp(10px, 2.5%, 16px) clamp(14px, 3.5%, 22px);
 			box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
 			text-align: center;
 			transform: scale(0.95);
@@ -1420,7 +1431,7 @@
 		}
 
 		.modal-title {
-			font-size: clamp(1.15rem, 2.8vw, 1.45rem);
+			font-size: clamp(1.08rem, 2.4vw, 1.35rem);
 			font-weight: 900;
 			margin-bottom: 4px;
 			color: #ffffff;
@@ -1428,10 +1439,10 @@
 		}
 
 		.modal-desc {
-			font-size: clamp(0.85rem, 2vw, 1.02rem);
+			font-size: clamp(0.82rem, 1.8vw, 0.96rem);
 			color: #cbd5e1;
 			line-height: 1.35;
-			margin-bottom: 12px;
+			margin-bottom: 10px;
 			white-space: pre-line;
 		}
 
@@ -1452,11 +1463,12 @@
 
 		.modal-btn {
 			width: 100%;
-			min-height: clamp(38px, 7vh, 48px);
-			padding: 8px 12px;
+			min-width: 0;
+			min-height: clamp(36px, 6.5vh, 44px);
+			padding: 7px 10px;
 			border-radius: 12px;
 			border: 2px solid rgba(255, 255, 255, 0.2);
-			font-size: clamp(0.9rem, 2vw, 1.1rem);
+			font-size: clamp(0.82rem, 1.6vw, 0.98rem);
 			font-weight: 900;
 			cursor: pointer;
 			transition: transform 0.1s;
@@ -1464,6 +1476,7 @@
 			align-items: center;
 			justify-content: center;
 			white-space: nowrap;
+			text-overflow: ellipsis;
 		}
 
 		.modal-btn:active {
@@ -1659,8 +1672,7 @@
 			</button>
 			<div class="screen-title-center">試合結果</div>
 			<div class="screen-topbar-actions">
-				<button id="btn-export-results" class="screen-action-btn" title="全試合結果をJSON形式でダウンロード">エクスポート</button>
-				<button id="btn-import-results" class="screen-action-btn" title="JSONファイルから試合結果を追加登録">インポート</button>
+				<button id="btn-data-manage" class="screen-action-btn" title="試合結果データのエクスポート・インポート">データ管理</button>
 				<button id="btn-clear-results" class="screen-danger-btn">全て削除</button>
 				<input type="file" id="input-import-results" accept=".json,application/json,text/plain" style="display:none;" />
 			</div>
@@ -2805,8 +2817,7 @@
 		// ============================================================================
 		const resultViewEl = document.getElementById('result-view');
 		const resultsListContainerEl = document.getElementById('results-list-container');
-		const btnExportResultsEl = document.getElementById('btn-export-results');
-		const btnImportResultsEl = document.getElementById('btn-import-results');
+		const btnDataManageEl = document.getElementById('btn-data-manage');
 		const inputImportResultsEl = document.getElementById('input-import-results');
 		const btnClearResultsEl = document.getElementById('btn-clear-results');
 
@@ -3025,7 +3036,6 @@
 			resultsListContainerEl.innerHTML = '';
 			const hasRecords = state.matchRecords.length > 0;
 			btnClearResultsEl.disabled = !hasRecords;
-			btnExportResultsEl.disabled = !hasRecords;
 
 			if (!hasRecords) {
 				const emptyDiv = document.createElement('div');
@@ -3577,10 +3587,15 @@
 			const modalCard = document.querySelector('.modal-card');
 			if (!modalCard) return;
 			modalCard.style.setProperty('--modal-scale', '1');
-			const availH = window.innerHeight - 18;
+
+			const isRotated = document.body.classList.contains('is-portrait-locked-90') || document.body.classList.contains('is-portrait-locked-270');
+			// 縦持ち回転時はブラウザ幅が利用可能高さ、通常横持ち時はブラウザ高さが利用可能高さ
+			const logicalH = isRotated ? window.innerWidth : window.innerHeight;
+			const availH = logicalH - 16;
 			const cardH = modalCard.offsetHeight;
+
 			if (cardH > availH && availH > 100) {
-				const scaleFactor = Math.min(1, Math.floor((availH / cardH) * 98) / 100);
+				const scaleFactor = Math.min(1, Math.floor((availH / cardH) * 96) / 100);
 				modalCard.style.setProperty('--modal-scale', String(scaleFactor));
 			}
 		}
@@ -3683,6 +3698,38 @@
 					{
 						label: 'キャンセル',
 						variant: 'secondary'
+					}
+				]
+			});
+		}
+
+		function showDataManagementModal() {
+			const hasRecords = state.matchRecords.length > 0;
+			openModal({
+				title: 'データ管理',
+				desc: '試合結果履歴データをファイルへ保存（エクスポート）するか、過去のバックアップファイルを取り込み（インポート）します。',
+				twoCols: true,
+				buttons: [
+					{
+						label: 'エクスポート (保存)',
+						variant: 'primary',
+						disabled: !hasRecords,
+						onClick: () => {
+							exportMatchRecordsToJson();
+						}
+					},
+					{
+						label: 'インポート (読込)',
+						variant: 'primary',
+						onClick: () => {
+							inputImportResultsEl.value = '';
+							inputImportResultsEl.click();
+						}
+					},
+					{
+						label: '閉じる',
+						variant: 'cancel-full',
+						onClick: () => {}
 					}
 				]
 			});
@@ -3875,12 +3922,8 @@
 		document.getElementById('btn-result-close').addEventListener('click', () => {
 			closeResultView();
 		});
-		btnExportResultsEl.addEventListener('click', () => {
-			exportMatchRecordsToJson();
-		});
-		btnImportResultsEl.addEventListener('click', () => {
-			inputImportResultsEl.value = '';
-			inputImportResultsEl.click();
+		btnDataManageEl.addEventListener('click', () => {
+			showDataManagementModal();
 		});
 		inputImportResultsEl.addEventListener('change', (e) => {
 			const file = e.target.files && e.target.files[0];
@@ -4056,9 +4099,154 @@
 			contentBoxEl.style.maxWidth = `${Math.floor(targetMaxW)}px`;
 		}
 
+		// 縦持ち回転時およびiOS Safariステータスバー表示時のタッチスクロール補助
+		function setupRotatedTouchScroll(scrollEl) {
+			if (!scrollEl || scrollEl._hasRotatedTouchScroll) return;
+			scrollEl._hasRotatedTouchScroll = true;
+
+			let startX = 0;
+			let startY = 0;
+			let lastX = 0;
+			let lastY = 0;
+			let isTracking = false;
+			let isHorizontalDrag = false;
+			let velocity = 0;
+			let lastTime = 0;
+			let animId = null;
+
+			const cancelMomentum = () => {
+				if (animId) {
+					cancelAnimationFrame(animId);
+					animId = null;
+				}
+			};
+
+			scrollEl.addEventListener('touchstart', (e) => {
+				if (e.touches.length !== 1) return;
+				cancelMomentum();
+
+				const touch = e.touches[0];
+				startX = touch.clientX;
+				startY = touch.clientY;
+				lastX = startX;
+				lastY = startY;
+				lastTime = performance.now();
+				velocity = 0;
+				isTracking = true;
+				isHorizontalDrag = false;
+			}, { passive: true });
+
+			scrollEl.addEventListener('touchmove', (e) => {
+				if (!isTracking || e.touches.length !== 1) return;
+
+				const touch = e.touches[0];
+				const currentX = touch.clientX;
+				const currentY = touch.clientY;
+				const now = performance.now();
+				const dt = Math.max(now - lastTime, 1);
+
+				const isRotated90 = document.body.classList.contains('is-portrait-locked-90');
+				const isRotated270 = document.body.classList.contains('is-portrait-locked-270');
+				const inSwipeArea = e.target && e.target.closest && e.target.closest('.timeline-swipe-area');
+
+				let delta = 0;
+
+				if (isRotated90) {
+					// 90度回転時: 見た目の上下スワイプは端末物理の左右(X軸)に対応
+					// 見た目上へスワイプ（下へスクロール） = clientX 減少
+					const dx = lastX - currentX;
+					const dy = lastY - currentY;
+
+					if (!isHorizontalDrag && inSwipeArea && Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 6) {
+						isHorizontalDrag = true;
+					}
+
+					if (isHorizontalDrag && inSwipeArea) {
+						inSwipeArea.scrollLeft += dy;
+						lastX = currentX;
+						lastY = currentY;
+						return;
+					}
+
+					delta = dx;
+				} else if (isRotated270) {
+					const dx = lastX - currentX;
+					const dy = lastY - currentY;
+
+					if (!isHorizontalDrag && inSwipeArea && Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 6) {
+						isHorizontalDrag = true;
+					}
+
+					if (isHorizontalDrag && inSwipeArea) {
+						inSwipeArea.scrollLeft -= dy;
+						lastX = currentX;
+						lastY = currentY;
+						return;
+					}
+
+					delta = -dx;
+				}
+
+				if (Math.abs(delta) > 0.5) {
+					scrollEl.scrollTop += delta;
+					velocity = delta / dt;
+				}
+
+				lastX = currentX;
+				lastY = currentY;
+				lastTime = now;
+			}, { passive: true });
+
+			scrollEl.addEventListener('touchend', () => {
+				if (!isTracking) return;
+				isTracking = false;
+
+				// 慣性スクロール（回転モード時のみJSでエミュレート）
+				const isRotated = document.body.classList.contains('is-portrait-locked-90') || document.body.classList.contains('is-portrait-locked-270');
+				if (isRotated && Math.abs(velocity) > 0.12) {
+					let currentVel = velocity * 15;
+					const decay = 0.93;
+
+					const step = () => {
+						if (Math.abs(currentVel) < 0.5) return;
+						scrollEl.scrollTop += currentVel;
+						currentVel *= decay;
+						animId = requestAnimationFrame(step);
+					};
+					animId = requestAnimationFrame(step);
+				}
+			}, { passive: true });
+
+			scrollEl.addEventListener('touchcancel', () => {
+				isTracking = false;
+				cancelMomentum();
+			}, { passive: true });
+		}
+
+		// 端末の向きの高精度判定（iOS Safariのステータスバー出現時の誤判定を防止）
+		function checkIsPortrait() {
+			// 1. window.orientation が利用可能な場合（iOS Safari等で最も信頼性が高い）
+			if (typeof window.orientation === 'number') {
+				const angle = Math.abs(window.orientation);
+				if (angle === 90) return false; // 確実にランドスケープ（横向き）
+				if (angle === 0 || angle === 180) return true; // 確実にポートレート（縦向き）
+			}
+
+			// 2. Screen Orientation API による判定
+			if (window.screen && window.screen.orientation && typeof window.screen.orientation.type === 'string') {
+				if (window.screen.orientation.type.startsWith('landscape')) return false;
+				if (window.screen.orientation.type.startsWith('portrait')) return true;
+			}
+
+			// 3. matchMedia および寸法によるフォールバック
+			const isMediaPortrait = window.matchMedia('(orientation: portrait)').matches;
+			const isDimPortrait = window.innerHeight > window.innerWidth;
+			return isMediaPortrait || isDimPortrait;
+		}
+
 		// 常時ランドスケープ表示制御（スマホ縦持ち時は自動で90度回転して全画面横長展開）
 		function applyOrientationMode() {
-			const isPortrait = window.matchMedia('(orientation: portrait)').matches || (window.innerHeight > window.innerWidth);
+			const isPortrait = checkIsPortrait();
 			
 			if (isPortrait) {
 				document.body.classList.add('is-portrait-locked-90');
@@ -4072,6 +4260,9 @@
 			// 回転後の寸法に合わせてテキストやパネルの自動フィットを再計算
 			setTimeout(() => {
 				enforcePanelAspectRatio();
+				if (state.modalOpen) {
+					fitModalScale();
+				}
 				fitScoreboardNameInput(leftNameInputEl);
 				fitScoreboardNameInput(rightNameInputEl);
 				resultsListContainerEl.querySelectorAll('.result-player-name-input, .result-memo-input').forEach(el => {
@@ -4113,6 +4304,9 @@
 		}
 
 		// 初期描画実行 & リロード前の状態（ゲーム終了／マッチ終了バー含む）を復元
+		document.querySelectorAll('.screen-body').forEach(el => {
+			setupRotatedTouchScroll(el);
+		});
 		applyOrientationMode();
 		tryLockScreenOrientation();
 		syncVoiceBtnUI();
