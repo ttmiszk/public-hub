@@ -631,8 +631,8 @@
 
 		.circle-btn {
 			aspect-ratio: 1 / 1;
-			width: clamp(36px, min(9.5vw, 7vh), 48px);
-			height: clamp(36px, min(9.5vw, 7vh), 48px);
+			width: clamp(38px, min(10.2vw, 7.8vh), 48px);
+			height: clamp(38px, min(10.2vw, 7.8vh), 48px);
 			flex-shrink: 0;
 			border-radius: 50%;
 			background: rgba(26, 28, 35, 0.95);
@@ -645,8 +645,10 @@
 			cursor: pointer;
 			box-shadow: 0 4px 16px rgba(0, 0, 0, 0.65);
 			transition: transform 0.12s, background 0.15s, border-color 0.15s;
-			padding: 0;
+			padding: 2px 1px 3px 1px;
 			overflow: hidden;
+			box-sizing: border-box;
+			container-type: size;
 		}
 
 		.circle-btn:active {
@@ -660,24 +662,33 @@
 		}
 
 		.circle-btn svg {
-			width: clamp(15px, 44%, 21px);
-			height: clamp(15px, 44%, 21px);
+			width: 38cqw;
+			height: 38cqw;
+			max-width: 20px;
+			max-height: 20px;
 			stroke: currentColor;
 			fill: none;
-			stroke-width: 2.2;
+			stroke-width: 2.3;
 			stroke-linecap: round;
 			stroke-linejoin: round;
 			flex-shrink: 0;
 		}
 
-		.btn-subtext {
-			font-size: clamp(0.52rem, 1.8vw, 0.66rem);
-			font-weight: 900;
-			letter-spacing: 0.02em;
+		#format-main-label {
+			font-size: 36cqw !important;
 			line-height: 1;
 			margin-top: 1px;
+		}
+
+		.btn-subtext {
+			font-size: 18cqw;
+			font-weight: 900;
+			letter-spacing: 0.01em;
+			line-height: 1;
+			margin-top: 1.5px;
 			white-space: nowrap;
 			flex-shrink: 0;
+			text-align: center;
 		}
 
 		/* =========================================================
@@ -1027,6 +1038,11 @@
 			color: #334155;
 		}
 
+		.meta-date-part,
+		.meta-time-range {
+			white-space: nowrap;
+		}
+
 		.meta-duration-badge {
 			background: #cfc5a7;
 			color: #1e293b;
@@ -1161,34 +1177,43 @@
 		.result-set-list {
 			display: flex;
 			flex-direction: column;
+			align-items: center;
+			justify-content: center;
 			gap: 3px;
 			width: 100%;
 		}
 
 		.result-set-row {
-			display: grid;
-			grid-template-columns: 1fr auto 1fr;
+			display: flex;
 			align-items: center;
-			gap: clamp(4px, 1vw, 8px);
-			font-size: clamp(1.02rem, 2.25vw, 1.32rem);
+			justify-content: center;
+			gap: 2px;
 			line-height: 1.25;
+			white-space: nowrap;
+		}
+
+		.result-set-row .pt-num {
+			width: clamp(24px, 5.5vw, 36px);
+			text-align: center;
+			font-size: clamp(0.95rem, 2.4vw, 1.25rem);
 			font-weight: 800;
 			color: #475569;
-			white-space: nowrap;
 			font-variant-numeric: tabular-nums;
+			display: inline-block;
 		}
 
-		.result-set-row .pt-left {
-			text-align: right;
-		}
-
-		.result-set-row .pt-right {
-			text-align: left;
-		}
-
-		.result-set-row .pt-win {
+		.result-set-row .pt-num.pt-win {
 			color: #dc2626;
 			font-weight: 900;
+		}
+
+		.result-set-row .pt-dash {
+			width: clamp(10px, 2.4vw, 16px);
+			text-align: center;
+			font-size: clamp(0.85rem, 2vw, 1.15rem);
+			font-weight: 800;
+			color: #64748b;
+			display: inline-block;
 		}
 
 		/* Match Memo Input Section */
@@ -1511,6 +1536,99 @@
 			border-color: rgba(255, 255, 255, 0.3);
 			color: #cbd5e1;
 		}
+
+		/* マッチ形式設定モーダル専用スタイル */
+		.format-modal-content {
+			width: 100%;
+			display: flex;
+			flex-direction: column;
+			gap: 12px;
+			margin-bottom: 12px;
+		}
+
+		.format-setting-group {
+			width: 100%;
+			text-align: left;
+		}
+
+		.format-setting-label {
+			font-size: clamp(0.78rem, 1.8vw, 0.88rem);
+			font-weight: 800;
+			color: #94a3b8;
+			margin-bottom: 6px;
+			display: flex;
+			align-items: center;
+			gap: 6px;
+		}
+
+		.format-btn-grid {
+			display: grid;
+			gap: 6px;
+			width: 100%;
+		}
+
+		.format-btn-grid.cols-4 {
+			grid-template-columns: repeat(4, 1fr);
+		}
+
+		.format-btn-grid.cols-5 {
+			grid-template-columns: repeat(5, 1fr);
+		}
+
+		.format-choice-btn {
+			width: 100%;
+			min-width: 0;
+			min-height: clamp(36px, 5.2vh, 42px);
+			padding: 6px 4px;
+			border-radius: 8px;
+			border: 1px solid rgba(255, 255, 255, 0.12);
+			background: rgba(255, 255, 255, 0.04);
+			color: #94a3b8;
+			font-size: clamp(0.82rem, 2vw, 0.94rem);
+			font-weight: 700;
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			transition: all 0.15s ease;
+			user-select: none;
+			-webkit-user-select: none;
+			white-space: nowrap;
+		}
+
+		.format-choice-btn:active {
+			transform: scale(0.98);
+		}
+
+		/* 選択状態: アクション決定ボタン（青ベタ塗り）との混同を防ぐため、シアン枠線＋薄いtint背景でセレクト状態を明確化 */
+		.format-choice-btn.active {
+			background: rgba(56, 189, 248, 0.14);
+			border: 2px solid #38bdf8;
+			box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.3);
+			color: #ffffff;
+			font-weight: 900;
+		}
+
+		.format-choice-btn:disabled {
+			opacity: 0.3;
+			cursor: not-allowed;
+			border-color: rgba(255, 255, 255, 0.06);
+			pointer-events: none;
+		}
+
+		.meta-format-badge {
+			background: #e0f2fe;
+			border: 1px solid #7dd3fc;
+			color: #0369a1;
+			padding: 2px 8px;
+			border-radius: 9999px;
+			font-size: clamp(0.72rem, 1.4vw, 0.82rem);
+			font-weight: 800;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			white-space: nowrap;
+		}
 	</style>
 </head>
 <body>
@@ -1603,9 +1721,9 @@
 					<span class="btn-subtext">UNDO</span>
 				</button>
 
-				<button id="btn-match-format" class="circle-btn" title="マッチ形式の選択 (1G / 3G / 5G / 7G)">
+				<button id="btn-match-format" class="circle-btn" title="マッチ形式の設定 (ゲーム数・デュース上限)">
 					<span style="font-size:clamp(1.05rem, 2.2vw, 1.25rem); font-weight:900; line-height:1;" id="format-main-label">5G</span>
-					<span class="btn-subtext">MATCH</span>
+					<span class="btn-subtext" id="format-sub-label">MATCH</span>
 				</button>
 			</div>
 
@@ -1710,6 +1828,7 @@
 		<div class="modal-card">
 			<h2 id="modal-title" class="modal-title">タイトル</h2>
 			<p id="modal-desc" class="modal-desc">説明</p>
+			<div id="modal-body" class="modal-body" style="display:none; width:100%;"></div>
 			<div id="modal-actions" class="modal-actions"></div>
 		</div>
 	</div>
@@ -1724,6 +1843,7 @@
 
 		const state = {
 			bestOf: 5, // 1, 3, 5, 7
+			deuceLimit: null, // null (上限なし・公式ルール) | 11 | 12 | 13 | 14 | 15
 			teams: [
 				{ id: 0, name: 'Player1', points: 0, games: 0 },
 				{ id: 1, name: 'Player2', points: 0, games: 0 }
@@ -1788,6 +1908,11 @@
 				if ([1, 3, 5, 7].includes(parsed.bestOf)) {
 					state.bestOf = parsed.bestOf;
 				}
+				if ([11, 12, 13, 14, 15].includes(Number(parsed.deuceLimit))) {
+					state.deuceLimit = Number(parsed.deuceLimit);
+				} else {
+					state.deuceLimit = null;
+				}
 				if (Array.isArray(parsed.teams) && parsed.teams.length === 2) {
 					state.teams[0] = {
 						id: 0,
@@ -1845,6 +1970,7 @@
 				const effectiveRightIdx = state.autoSwapPending ? state.leftTeamIdx : state.rightTeamIdx;
 				const snapshot = {
 					bestOf: state.bestOf,
+					deuceLimit: state.deuceLimit,
 					teams: state.teams,
 					leftTeamIdx: effectiveLeftIdx,
 					rightTeamIdx: effectiveRightIdx,
@@ -2105,6 +2231,15 @@
 				return this.voices || [];
 			}
 
+			cancelSpeech() {
+				if ('speechSynthesis' in window) {
+					try {
+						window.speechSynthesis.cancel();
+					} catch (e) {}
+				}
+				this.activeUtterances.clear();
+			}
+
 			speakEnglishCall(enText, onComplete = null) {
 				if (!state.voiceEnabled || !('speechSynthesis' in window)) {
 					if (onComplete) {
@@ -2125,13 +2260,9 @@
 				};
 
 				try {
-					// iOS WebKit では cancel() の直後に speak() を呼ぶと音声合成デーモンがハングする長年のバグがあるため
-					// iOS の場合は cancel() ではなく paused からの resume() を行い、自然にキューで再生する
-					if (!isIOS) {
-						window.speechSynthesis.cancel();
-					} else if (window.speechSynthesis.paused) {
-						window.speechSynthesis.resume();
-					}
+					// 連続タップ時に古い音声キューが溜まるのを防ぐため、保留中音声をすべて破棄
+					window.speechSynthesis.cancel();
+					this.activeUtterances.clear();
 
 					const utter = new SpeechSynthesisUtterance(enText);
 					const voices = this.getAvailableVoices();
@@ -2166,7 +2297,12 @@
 						autoSwapTimerId = setTimeout(done, 2100);
 					}
 
-					window.speechSynthesis.speak(utter);
+					// cancel() 直後の同期 speak() がブラウザ側で破棄されるのを防ぐため、わずかな非同期ディレイで発声
+					setTimeout(() => {
+						try {
+							window.speechSynthesis.speak(utter);
+						} catch (e) {}
+					}, 10);
 				} catch (e) {
 					if (onComplete) {
 						autoSwapTimerId = setTimeout(done, 650);
@@ -2185,11 +2321,8 @@
 					return;
 				}
 				try {
-					if (!isIOS) {
-						window.speechSynthesis.cancel();
-					} else if (window.speechSynthesis.paused) {
-						window.speechSynthesis.resume();
-					}
+					window.speechSynthesis.cancel();
+					this.activeUtterances.clear();
 
 					const voices = this.getAvailableVoices();
 					const enVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en-us'))
@@ -2294,7 +2427,18 @@
 		function checkGameWinnerTeamIdx() {
 			const p0 = state.teams[0].points;
 			const p1 = state.teams[1].points;
-			if ((p0 >= 11 || p1 >= 11) && Math.abs(p0 - p1) >= 2) {
+			const maxP = Math.max(p0, p1);
+			const minP = Math.min(p0, p1);
+			const diff = maxP - minP;
+
+			// 1. 通常勝利（11点以上かつ2点差）: 11-0〜11-9、またはデュース後の2点差勝ち(12-10, 13-11等)
+			if (maxP >= 11 && diff >= 2) {
+				return p0 > p1 ? 0 : 1;
+			}
+			// 2. デュース突入後（両者10点以上）のデュース上限到達判定（1点差勝ち可）
+			// 例: 上限11本なら 10-10 の後 11点に達した側 (11-10) が即勝利（デュースなし）
+			// 例: 上限12〜15本なら 10-10 の後その点数に達した側が即勝利
+			if (state.deuceLimit && minP >= 10 && maxP >= state.deuceLimit) {
 				return p0 > p1 ? 0 : 1;
 			}
 			return -1;
@@ -2492,6 +2636,16 @@
 			fitScoreboardNameInput(rightNameInputEl);
 
 			formatMainLabelEl.textContent = `${state.bestOf}G`;
+			const formatSubLabelEl = document.getElementById('format-sub-label');
+			if (formatSubLabelEl) {
+				formatSubLabelEl.textContent = state.deuceLimit ? `MAX ${state.deuceLimit}` : 'MATCH';
+			}
+			const btnMatchFormatEl = document.getElementById('btn-match-format');
+			if (btnMatchFormatEl) {
+				btnMatchFormatEl.title = state.deuceLimit
+					? `マッチ形式: ${state.bestOf}ゲームズ (デュース上限: ${state.deuceLimit}本)`
+					: `マッチ形式: ${state.bestOf}ゲームズ (上限なし)`;
+			}
 			updateMatchTimerUI();
 			saveActiveMatchToStorage();
 		}
@@ -2507,6 +2661,7 @@
 			const record = {
 				id: matchId,
 				bestOf: state.bestOf,
+				deuceLimit: state.deuceLimit,
 				startTime,
 				endTime,
 				durationMs: Math.max(0, endTime - startTime),
@@ -2677,6 +2832,7 @@
 			const team = state.teams[teamIdx];
 
 			if (unit.role === 'point') {
+				sound.cancelSpeech();
 				const nextPoints = team.points + 1;
 				if (nextPoints > 99) return;
 
@@ -2793,6 +2949,10 @@
 			syncUIAndBoard({ animate: true, direction: 1 });
 
 			const matchWinnerIdx = checkMatchWinnerTeamIdx();
+			// タップ連打による次ポイント混入を即時防止するため、400msディレイを待たずに即時ロック
+			state.pendingPhase = (matchWinnerIdx !== -1) ? 'match_end' : 'game_end';
+			state.pendingWinnerIdx = (matchWinnerIdx !== -1) ? matchWinnerIdx : winnerTeamIdx;
+
 			if (matchWinnerIdx !== -1) {
 				sound.playChime('match');
 				sound.speakWinnerCall('Game and Match', winner.name);
@@ -2844,18 +3004,37 @@
 			const metaInfo = document.createElement('div');
 			metaInfo.className = 'result-meta-info';
 
-			const startStr = formatDateTimeJP(rec.startTime);
-			const endStr = formatTimeOnlyJP(rec.endTime);
+			const startD = new Date(rec.startTime);
+			const yyyy = isNaN(startD.getTime()) ? '-' : startD.getFullYear();
+			const mo = isNaN(startD.getTime()) ? '-' : String(startD.getMonth() + 1).padStart(2, '0');
+			const da = isNaN(startD.getTime()) ? '-' : String(startD.getDate()).padStart(2, '0');
+			const dateOnlyStr = isNaN(startD.getTime()) ? '-' : `${yyyy}/${mo}/${da}`;
+
+			const startTimeStr = formatTimeOnlyJP(rec.startTime);
+			const endTimeStr = formatTimeOnlyJP(rec.endTime);
+			const timeRangeStr = `${startTimeStr} ～ ${endTimeStr}`;
 			const durStr = formatElapsedMMSS(rec.durationMs || 0);
 
 			const dateSpan = document.createElement('span');
-			dateSpan.textContent = `${startStr} 〜 ${endStr}`;
+			dateSpan.className = 'meta-date-part';
+			dateSpan.textContent = dateOnlyStr;
+
+			const timeRangeSpan = document.createElement('span');
+			timeRangeSpan.className = 'meta-time-range';
+			timeRangeSpan.textContent = timeRangeStr;
+
 			const durBadge = document.createElement('span');
 			durBadge.className = 'meta-duration-badge';
 			durBadge.textContent = `試合時間 ${durStr}`;
 
+			const formatBadge = document.createElement('span');
+			formatBadge.className = 'meta-format-badge';
+			formatBadge.textContent = rec.deuceLimit ? `${rec.bestOf}G (上限${rec.deuceLimit})` : `${rec.bestOf}G`;
+
 			metaInfo.appendChild(dateSpan);
+			metaInfo.appendChild(timeRangeSpan);
 			metaInfo.appendChild(durBadge);
+			metaInfo.appendChild(formatBadge);
 
 			const actionsWrap = document.createElement('div');
 			actionsWrap.className = 'result-meta-actions';
@@ -2941,15 +3120,15 @@
 				rec.gamesHistory.forEach(g => {
 					const row = document.createElement('div');
 					row.className = 'result-set-row';
-					const c0 = g.p0 > g.p1 ? 'pt-left pt-win' : 'pt-left';
-					const c1 = g.p1 > g.p0 ? 'pt-right pt-win' : 'pt-right';
-					row.innerHTML = `<span class="${c0}">${g.p0}</span><span>-</span><span class="${c1}">${g.p1}</span>`;
+					const c0 = g.p0 > g.p1 ? 'pt-num pt-win' : 'pt-num';
+					const c1 = g.p1 > g.p0 ? 'pt-num pt-win' : 'pt-num';
+					row.innerHTML = `<span class="${c0}">${g.p0}</span><span class="pt-dash">-</span><span class="${c1}">${g.p1}</span>`;
 					setListDiv.appendChild(row);
 				});
 			} else {
 				const row = document.createElement('div');
 				row.className = 'result-set-row';
-				row.innerHTML = `<span class="pt-left">-</span><span>-</span><span class="pt-right">-</span>`;
+				row.innerHTML = `<span class="pt-num">-</span><span class="pt-dash">-</span><span class="pt-num">-</span>`;
 				setListDiv.appendChild(row);
 			}
 			cellSets.appendChild(setListDiv);
@@ -3190,6 +3369,7 @@
 				? item.id.trim()
 				: `match_${endTime}_${Math.random().toString(36).slice(2, 7)}`;
 			const bestOf = [1, 3, 5, 7].includes(Number(item.bestOf)) ? Number(item.bestOf) : 5;
+			const deuceLimit = [11, 12, 13, 14, 15].includes(Number(item.deuceLimit)) ? Number(item.deuceLimit) : null;
 			const player0Name = (typeof item.player0Name === 'string' && item.player0Name.trim()) ? item.player0Name.trim() : 'Player1';
 			const player1Name = (typeof item.player1Name === 'string' && item.player1Name.trim()) ? item.player1Name.trim() : 'Player2';
 			const games0 = Math.max(0, Number(item.games0) || 0);
@@ -3227,6 +3407,7 @@
 			return {
 				id,
 				bestOf,
+				deuceLimit,
 				startTime,
 				endTime,
 				durationMs,
@@ -3548,12 +3729,34 @@
 		const modalBackdropEl = document.getElementById('modal-backdrop');
 		const modalTitleEl = document.getElementById('modal-title');
 		const modalDescEl = document.getElementById('modal-desc');
+		const modalBodyEl = document.getElementById('modal-body');
 		const modalActionsEl = document.getElementById('modal-actions');
 
-		function openModal({ title, desc, buttons, twoCols = false, gridMode = 'default' }) {
+		function openModal({ title, desc = '', bodyContent = null, buttons, twoCols = false, gridMode = 'default' }) {
 			state.modalOpen = true;
 			modalTitleEl.textContent = title;
-			modalDescEl.textContent = desc;
+			if (desc && desc.trim()) {
+				modalDescEl.textContent = desc;
+				modalDescEl.style.display = 'block';
+			} else {
+				modalDescEl.textContent = '';
+				modalDescEl.style.display = 'none';
+			}
+
+			if (modalBodyEl) {
+				modalBodyEl.innerHTML = '';
+				if (bodyContent) {
+					if (typeof bodyContent === 'string') {
+						modalBodyEl.innerHTML = bodyContent;
+					} else if (bodyContent instanceof HTMLElement) {
+						modalBodyEl.appendChild(bodyContent);
+					}
+					modalBodyEl.style.display = 'block';
+				} else {
+					modalBodyEl.style.display = 'none';
+				}
+			}
+
 			modalActionsEl.innerHTML = '';
 			modalActionsEl.className = 'modal-actions';
 			if (twoCols) modalActionsEl.classList.add('two-cols-row');
@@ -3600,6 +3803,10 @@
 		function closeModal() {
 			state.modalOpen = false;
 			modalBackdropEl.classList.remove('active');
+			if (modalBodyEl) {
+				modalBodyEl.innerHTML = '';
+				modalBodyEl.style.display = 'none';
+			}
 			const modalCard = document.querySelector('.modal-card');
 			if (modalCard) modalCard.style.removeProperty('--modal-scale');
 		}
@@ -3750,48 +3957,156 @@
 				state.teams[0].games + state.teams[1].games
 			);
 			const maxTeamGames = Math.max(state.teams[0].games, state.teams[1].games);
+			const curMaxPoints = Math.max(state.teams[0].points, state.teams[1].points);
 
-			const options = [1, 3, 5, 7].map(num => {
+			// 一時選択保持（「決定」タップ時に反映）
+			let selectedBestOf = state.bestOf;
+			let selectedDeuceLimit = state.deuceLimit; // null または 11, 12, 13, 14, 15
+
+			const bodyContainer = document.createElement('div');
+			bodyContainer.className = 'format-modal-content';
+
+			// --- セクション1: ゲーム数 ---
+			const sectionGame = document.createElement('div');
+			sectionGame.className = 'format-setting-group';
+			const labelGame = document.createElement('div');
+			labelGame.className = 'format-setting-label';
+			labelGame.textContent = 'ゲーム数 (ゲームズマッチ)';
+			sectionGame.appendChild(labelGame);
+
+			const gridGame = document.createElement('div');
+			gridGame.className = 'format-btn-grid cols-4';
+
+			const gameButtons = [1, 3, 5, 7].map(num => {
 				const neededGames = Math.ceil(num / 2);
-				// 進行中は、既に終了しているゲーム数以下、または既にどちらかが先取数に達している形式へは変更不可
 				const isDisabled = inProgress && (num <= completedGames || maxTeamGames >= neededGames);
-				return {
-					label: `${num}G` + (state.bestOf === num ? ' ✓' : ''),
-					variant: state.bestOf === num ? 'primary' : 'secondary',
-					disabled: isDisabled,
-					onClick: () => {
-						if (state.bestOf === num) return;
-						state.bestOf = num;
-						if (inProgress) {
-							// 進行中の形式変更: スコアや推移データを維持したまま形式のみ変更
-							// 変更によって現在のゲームが最終ゲームになり、かつ既に5点以上に達している場合は5点チェンジエンド済扱いにする
-							if (isDecidingGame() && (state.teams[0].points >= 5 || state.teams[1].points >= 5)) {
-								state.decidingSwapped = true;
-							}
-							syncUIAndBoard({ animate: false });
-							showToast(`${num}ゲームズマッチに変更しました`);
-						} else {
-							cancelPendingAutoSwap();
-							hideInboardBar();
-							resetEntireMatch();
-							showToast(`${num}ゲームズマッチに設定しました`);
-						}
-					}
-				};
+				const btn = document.createElement('button');
+				btn.type = 'button';
+				btn.className = 'format-choice-btn';
+				btn.disabled = isDisabled;
+				if (isDisabled) {
+					btn.title = inProgress ? '進行中の試合状況より少ないゲーム数には変更できません' : '';
+				}
+				btn.addEventListener('click', () => {
+					if (isDisabled) return;
+					selectedBestOf = num;
+					updateGameButtonsUI();
+				});
+				gridGame.appendChild(btn);
+				return btn;
 			});
 
-			options.push({
-				label: 'キャンセル',
-				variant: 'cancel-full'
+			const updateGameButtonsUI = () => {
+				gameButtons.forEach((b, i) => {
+					const n = [1, 3, 5, 7][i];
+					const isSel = selectedBestOf === n;
+					b.classList.toggle('active', isSel);
+					b.textContent = isSel ? `✓ ${n}G` : `${n}G`;
+				});
+			};
+			updateGameButtonsUI();
+
+			sectionGame.appendChild(gridGame);
+			bodyContainer.appendChild(sectionGame);
+
+			// --- セクション2: デュース上限（打ち切り点数） ---
+			const sectionDeuce = document.createElement('div');
+			sectionDeuce.className = 'format-setting-group';
+			const labelDeuce = document.createElement('div');
+			labelDeuce.className = 'format-setting-label';
+			labelDeuce.textContent = 'デュース上限（打ち切り点数）';
+			sectionDeuce.appendChild(labelDeuce);
+
+			// 上限なし（公式ルール）ボタン
+			const noneBtn = document.createElement('button');
+			noneBtn.type = 'button';
+			noneBtn.className = 'format-choice-btn';
+			noneBtn.style.marginBottom = '6px';
+
+			// 11〜15のボタン
+			const gridDeuce = document.createElement('div');
+			gridDeuce.className = 'format-btn-grid cols-5';
+
+			const limitButtons = [];
+			const limits = [11, 12, 13, 14, 15];
+
+			const updateDeuceButtonsActive = () => {
+				const isNoneSel = selectedDeuceLimit === null;
+				noneBtn.classList.toggle('active', isNoneSel);
+				noneBtn.textContent = isNoneSel ? '✓ 上限なし（公式ルール）' : '上限なし（公式ルール）';
+
+				limitButtons.forEach((b, i) => {
+					const lim = limits[i];
+					const isLimSel = selectedDeuceLimit === lim;
+					b.classList.toggle('active', isLimSel);
+					b.textContent = isLimSel ? `✓ ${lim}本` : `${lim}本`;
+				});
+			};
+
+			noneBtn.addEventListener('click', () => {
+				selectedDeuceLimit = null;
+				updateDeuceButtonsActive();
 			});
+			sectionDeuce.appendChild(noneBtn);
+
+			limits.forEach(lim => {
+				const btn = document.createElement('button');
+				btn.type = 'button';
+				btn.className = 'format-choice-btn';
+				// 進行中の試合で、現在のゲームの最大得点がすでにその上限以上になっている場合は選択不可
+				const isDisabled = inProgress && curMaxPoints >= lim;
+				btn.disabled = isDisabled;
+				btn.addEventListener('click', () => {
+					if (isDisabled) return;
+					selectedDeuceLimit = lim;
+					updateDeuceButtonsActive();
+				});
+				gridDeuce.appendChild(btn);
+				limitButtons.push(btn);
+			});
+			updateDeuceButtonsActive();
+			sectionDeuce.appendChild(gridDeuce);
+
+			bodyContainer.appendChild(sectionDeuce);
 
 			openModal({
-				title: inProgress ? 'マッチ形式の変更' : 'マッチ形式の選択',
-				desc: inProgress
-					? '変更するゲーム数をタップして選択してください。'
-					: 'プレイするゲーム数をタップして選択してください。',
-				buttons: options,
-				gridMode: 'format'
+				title: inProgress ? 'マッチ形式の変更' : 'マッチ形式の設定',
+				desc: '',
+				bodyContent: bodyContainer,
+				twoCols: true,
+				buttons: [
+					{
+						label: '決定',
+						variant: 'primary',
+						onClick: () => {
+							const bestOfChanged = state.bestOf !== selectedBestOf;
+							const deuceChanged = state.deuceLimit !== selectedDeuceLimit;
+							if (!bestOfChanged && !deuceChanged) return;
+
+							state.bestOf = selectedBestOf;
+							state.deuceLimit = selectedDeuceLimit;
+
+							if (inProgress) {
+								if (isDecidingGame() && (state.teams[0].points >= 5 || state.teams[1].points >= 5)) {
+									state.decidingSwapped = true;
+								}
+								syncUIAndBoard({ animate: false });
+								const limitText = state.deuceLimit ? `上限${state.deuceLimit}本` : '上限なし';
+								showToast(`${state.bestOf}G (${limitText}) に変更しました`);
+							} else {
+								cancelPendingAutoSwap();
+								hideInboardBar();
+								resetEntireMatch();
+								const limitText = state.deuceLimit ? `上限${state.deuceLimit}本` : '上限なし';
+								showToast(`${state.bestOf}G (${limitText}) に設定しました`);
+							}
+						}
+					},
+					{
+						label: 'キャンセル',
+						variant: 'secondary'
+					}
+				]
 			});
 		}
 
