@@ -19,9 +19,9 @@
 	<style>
 		:root {
 			--bg-black: #050507;
-			--card-bg-top: #202228;
-			--card-bg-bottom: #181a1f;
-			--card-border: rgba(255, 255, 255, 0.11);
+			--card-bg-top: #272b36;
+			--card-bg-bottom: #191c24;
+			--card-border: rgba(255, 255, 255, 0.2);
 			--text-white: #ffffff;
 			--text-yellow: #facc15;
 			--serve-red: #dc2626;
@@ -332,11 +332,11 @@
 			min-width: 0;
 			container-type: size;
 			border-radius: clamp(12px, 2vw, 24px);
-			background: linear-gradient(180deg, #20232c 0%, #15171d 100%);
-			border: 1.5px solid rgba(255, 255, 255, 0.12);
+			background: linear-gradient(180deg, #272b36 0%, #191c24 100%);
+			border: 1.5px solid rgba(255, 255, 255, 0.2);
 			box-shadow:
 				0 14px 34px rgba(0, 0, 0, 0.8),
-				inset 0 1px 0 rgba(255, 255, 255, 0.14);
+				inset 0 1px 0 rgba(255, 255, 255, 0.2);
 			cursor: pointer;
 			overflow: hidden;
 			display: flex;
@@ -618,6 +618,7 @@
 			margin: 0 auto;
 			padding-top: 1px;
 			pointer-events: none;
+			transition: max-width 0.15s ease;
 		}
 
 		.left-controls,
@@ -1446,6 +1447,22 @@
 
 		.modal-backdrop.active .modal-card {
 			transform: scale(var(--modal-scale, 1));
+		}
+
+		/* ランドスケープ時: iPhone等のカメラ・ノッチ領域被りを完全防止し、モーダルが横長になりすぎないよう左右マージンと幅を最適化 */
+		@media (orientation: landscape) {
+			.modal-backdrop {
+				padding-left: max(36px, env(safe-area-inset-left, 36px));
+				padding-right: max(36px, env(safe-area-inset-right, 36px));
+				padding-top: max(10px, env(safe-area-inset-top, 10px));
+				padding-bottom: max(10px, env(safe-area-inset-bottom, 10px));
+			}
+
+			.modal-card {
+				max-width: 460px;
+				width: min(calc(100% - 72px), 460px);
+				max-height: min(calc(100% - 16px), 94%);
+			}
 		}
 
 		.modal-title {
@@ -3872,7 +3889,7 @@
 			openModal({
 				title: isDeleteAll ? '全ての試合結果を削除' : '試合結果の削除',
 				desc: isDeleteAll
-					? '保存されている全ての試合結果とスコア推移を削除しますか？\n（現在進行中のマッチは削除されません）'
+					? '全ての試合結果とスコア推移を削除しますか？\n（現在進行中のマッチは削除されません）'
 					: '選択した試合結果とスコア推移を削除しますか？',
 				twoCols: true,
 				buttons: [
@@ -4369,6 +4386,7 @@
 		function enforcePanelAspectRatio() {
 			const wrapperEl = document.querySelector('.scoreboard-wrapper');
 			const contentBoxEl = document.getElementById('scoreboard-content-box');
+			const bottomControlsEl = document.querySelector('.bottom-controls-layer');
 			if (!wrapperEl || !contentBoxEl) return;
 
 			contentBoxEl.style.maxWidth = '1400px';
@@ -4383,6 +4401,9 @@
 			if (isPortrait) {
 				// 1. ポートレート（縦持ち）: 画面の横幅を基準に縮小表示し、カードが縦長になりすぎないよう高さを制御
 				contentBoxEl.style.maxWidth = `${Math.floor(wrapperW)}px`;
+				if (bottomControlsEl) {
+					bottomControlsEl.style.maxWidth = '100%';
+				}
 
 				// カード幅から理想のカード高さ（縦横比 約1.36:1）を逆算
 				const gridGap = 8;
@@ -4418,6 +4439,10 @@
 				const maxStageW = (maxCardW * (96 / 34)) + totalGap;
 				const targetMaxW = Math.min(wrapperW, maxStageW, 1400);
 				contentBoxEl.style.maxWidth = `${Math.floor(targetMaxW)}px`;
+				// ランドスケープ時: 下部ボタン領域の幅をスコアパネル領域幅と完全に一致させ、ボタンのはみ出しを解消
+				if (bottomControlsEl) {
+					bottomControlsEl.style.maxWidth = `${Math.floor(targetMaxW)}px`;
+				}
 			}
 		}
 
