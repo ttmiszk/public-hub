@@ -7,7 +7,7 @@
 <title>Ultima Calc — Professional Calculator</title>
 
 <!-- PWA / Web App Manifest -->
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#0b0f17" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#e8edf5" media="(prefers-color-scheme: light)">
 
@@ -15,7 +15,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Ultima Calc">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<link rel="apple-touch-icon-precomposed" href="./icons/apple-touch-icon.png">
 
 <!-- OS側干渉防止（電話番号・住所自動検出防止等） -->
 <meta name="format-detection" content="telephone=no, address=no, email=no">
@@ -151,6 +153,7 @@ button {
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 24px;
+  flex-wrap: wrap;
 }
 
 .brand {
@@ -185,6 +188,8 @@ button {
   display: flex;
   gap: 10px;
   align-items: center;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
 }
 
 .icon-btn,.tab-btn,.soft-btn {
@@ -205,7 +210,9 @@ button {
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(0,1.5fr) minmax(300px,.8fr);
+  grid-template-columns: minmax(0,1fr);
+  max-width: 820px;
+  margin-inline: auto;
   gap: 22px;
   align-items: start;
 }
@@ -219,6 +226,7 @@ button {
 
 .calculator {
   padding: 22px;
+  transform-origin: top center;
 }
 
 
@@ -263,10 +271,31 @@ button {
   color: var(--muted);
   white-space: nowrap;
   font-size: 11px;
-  max-width: 120px;
+  max-width: 140px;
   overflow: hidden;
   text-overflow: ellipsis;
   flex-shrink: 1;
+  background: var(--panel);
+}
+
+.ans-pill {
+  cursor: pointer;
+  transition: background .12s, border-color .12s, color .12s, transform .1s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  font-family: inherit;
+}
+
+.ans-pill:hover {
+  background: var(--key-hi);
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.ans-pill:active {
+  transform: translateY(1px);
+  background: var(--key);
 }
 
 .expression {
@@ -406,31 +435,6 @@ button {
 
 .key.danger {
   color: var(--danger);
-}
-
-.key.wide {
-  grid-column: span 2;
-}
-
-.memory-strip {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  margin: 0 0 14px;
-  flex-wrap: wrap;
-}
-
-.memory-label {
-  font-size: 11px;
-  color: var(--muted);
-  margin-right: auto;
-}
-
-.memory-btn {
-  height: 33px;
-  padding: 0 11px;
-  font-size: 12px;
-  border-radius: 9px;
 }
 
 
@@ -766,52 +770,52 @@ body.simple .science-only,body.simple .scientific-keys {
 }
 
 .top-actions {
-  flex-wrap: wrap;
+  display: flex;
+  flex-wrap: nowrap !important;
   justify-content: flex-end;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
-.mode-switch {
+.nav-switch {
   display: flex;
   gap: 3px;
   padding: 3px;
   border: 1px solid var(--line);
-  border-radius: 11px;
+  border-radius: 12px;
   background: var(--panel2);
   box-shadow: var(--inset);
+  flex-shrink: 0;
 }
 
-.mode-switch button {
-  min-height: 32px;
-  padding: 0 12px;
+.nav-btn {
+  min-height: 36px;
+  padding: 0 14px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 9px;
   background: transparent;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s, color .15s, box-shadow .15s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
-.mode-switch button.active {
+.nav-btn:hover {
+  color: var(--ink);
+  background: var(--key-hi);
+}
+
+.nav-btn.active,
+.nav-btn[aria-selected="true"] {
   background: var(--accent);
   color: #fff;
   box-shadow: 0 3px 10px #0002;
-}
-
-.top-toggle {
-  min-height: 40px;
-  padding: 0 12px;
-  border: 1px solid var(--line);
-  border-radius: 11px;
-  background: var(--panel);
-  box-shadow: var(--shadow);
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-.top-toggle[aria-pressed="true"] {
-  color: var(--accent2);
-  border-color: var(--accent);
 }
 
 .expression-wrap {
@@ -903,14 +907,8 @@ body.simple .science-only,body.simple .scientific-keys {
   padding: 0;
 }
 
-.layout.single-column {
-  grid-template-columns: minmax(0,1fr);
-  max-width: 820px;
-  margin-inline: auto;
-}
-
-.side-column[hidden],.side-column section[hidden] {
-  display: none!important;
+.panel[hidden] {
+  display: none !important;
 }
 
 .copyright {
@@ -922,24 +920,13 @@ body.simple .science-only,body.simple .scientific-keys {
   opacity: .72;
 }
 
-@media(max-width:900px) {
-  .layout {
-    grid-template-columns: 1fr;
-  }
-
-  .side-column {
-    grid-template-columns: 1fr;
-  }
-
-}
-
-@media(max-width:520px) {
+@media(max-width:640px) {
   .app {
     padding-top: calc(10px + env(safe-area-inset-top, 0px));
     padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
-    /* スマホでビューポートを最大限有効利用するため左右余白を最小限に */
-    padding-left: calc(3px + env(safe-area-inset-left, 0px));
-    padding-right: calc(3px + env(safe-area-inset-right, 0px));
+    /* スマホ・狭画面でビューポートを最大限有効利用するため左右余白を最小限に */
+    padding-left: calc(4px + env(safe-area-inset-left, 0px));
+    padding-right: calc(4px + env(safe-area-inset-right, 0px));
   }
 
   .topbar {
@@ -979,8 +966,8 @@ body.simple .science-only,body.simple .scientific-keys {
   .top-actions {
     width: 100%;
     justify-content: space-between;
-    flex-wrap: nowrap;
-    gap: 5px;
+    flex-wrap: nowrap !important;
+    gap: 6px;
   }
 
   .mode-switch {
@@ -988,26 +975,26 @@ body.simple .science-only,body.simple .scientific-keys {
     display: flex;
   }
 
-  .mode-switch button {
-    min-height: 32px;
-    padding: 0 8px;
-    font-size: 11px;
+  .nav-switch {
+    flex: 1 1 auto;
+    display: flex;
+    width: auto;
   }
 
-  .top-toggle {
+  .nav-btn {
     flex: 1 1 auto;
     min-height: 32px;
     padding: 0 6px;
-    font-size: 11px;
+    font-size: clamp(11px, 2.8vw, 13px);
     text-align: center;
   }
 
   .top-actions .icon-btn {
-    flex: 0 0 36px;
-    width: 36px;
+    flex: 0 0 34px;
+    width: 34px;
     min-height: 32px;
     padding: 0;
-    font-size: 15px;
+    font-size: 14px;
   }
 
   /* 電卓本体・履歴・ツール画面は左右マージン・パディングを最小限にしてキー領域を最大化 */
@@ -1078,17 +1065,6 @@ body.simple .science-only,body.simple .scientific-keys {
     font-size: 12px;
   }
 
-  .memory-strip {
-    gap: 4px;
-    margin: 0 0 8px;
-  }
-
-  .memory-btn {
-    height: 30px;
-    padding: 0 8px;
-    font-size: 11px;
-  }
-
   .footer {
     margin-top: 10px;
     font-size: 10px;
@@ -1145,10 +1121,6 @@ body.simple .science-only,body.simple .scientific-keys {
     min-height: 32px;
   }
 
-  .memory-strip {
-    margin: 0 0 6px;
-  }
-
   .scientific-keys {
     margin: 0 0 6px;
     gap: 4px;
@@ -1180,32 +1152,34 @@ body.simple .science-only,body.simple .scientific-keys {
 <body class="simple">
 <main class="app">
   <div class="calc-stage" id="calcStage">
-    <header class="topbar"><div class="brand"><div class="logo"><svg viewBox="0 0 88 126" role="img" aria-label="Ultima Calc 電卓アイコン"><rect x="3" y="4" width="82" height="118" rx="18" fill="#101720" stroke="#52657b" stroke-width="2.5"/><rect x="11" y="12" width="66" height="28" rx="6" fill="#394452"/><circle cx="19" cy="57" r="8" fill="#d5dbe3"/><circle cx="44" cy="57" r="8" fill="#d5dbe3"/><circle cx="69" cy="57" r="8" fill="#f6a623"/><circle cx="19" cy="82" r="8" fill="#d5dbe3"/><circle cx="44" cy="82" r="8" fill="#d5dbe3"/><circle cx="69" cy="82" r="8" fill="#f6a623"/><rect x="11" y="99" width="41" height="16" rx="8" fill="#d5dbe3"/><circle cx="69" cy="107" r="8" fill="#f6a623"/></svg></div><div><h1>Ultima Calc</h1><p>Precision · Science · Conversion</p></div></div><div class="top-actions"><div class="mode-switch" role="group" aria-label="電卓モード"><button id="standardToggle" class="active" type="button" aria-pressed="true">標準</button><button id="advancedToggle" type="button" aria-pressed="false">拡張</button></div><button class="top-toggle" id="historyToggle" type="button" aria-pressed="false" title="計算履歴の表示・非表示を切り替え">履歴</button><button class="top-toggle" id="toolsToggle" type="button" aria-pressed="false" title="ツールペインの表示・非表示を切り替え">ツール</button><button class="icon-btn" id="themeBtn" type="button" aria-label="テーマを切り替え" title="テーマを切り替え">☼</button></div></header>
-    <div class="layout single-column" id="mainLayout">
+    <header class="topbar"><div class="brand"><div class="logo"><svg viewBox="0 0 88 126" role="img" aria-label="Ultima Calc 電卓アイコン"><rect x="3" y="4" width="82" height="118" rx="18" fill="#101720" stroke="#52657b" stroke-width="2.5"/><rect x="11" y="12" width="66" height="28" rx="6" fill="#394452"/><circle cx="19" cy="57" r="8" fill="#d5dbe3"/><circle cx="44" cy="57" r="8" fill="#d5dbe3"/><circle cx="69" cy="57" r="8" fill="#f6a623"/><circle cx="19" cy="82" r="8" fill="#d5dbe3"/><circle cx="44" cy="82" r="8" fill="#d5dbe3"/><circle cx="69" cy="82" r="8" fill="#f6a623"/><rect x="11" y="99" width="41" height="16" rx="8" fill="#d5dbe3"/><circle cx="69" cy="107" r="8" fill="#f6a623"/></svg></div><div><h1>Ultima Calc</h1><p>Precision · Science · Conversion</p></div></div><div class="top-actions"><nav class="nav-switch" role="tablist" aria-label="画面切り替え"><button id="navStandard" class="nav-btn active" type="button" role="tab" aria-selected="true">標準</button><button id="navAdvanced" class="nav-btn" type="button" role="tab" aria-selected="false">拡張</button><button id="navHistory" class="nav-btn" type="button" role="tab" aria-selected="false">履歴</button><button id="navTools" class="nav-btn" type="button" role="tab" aria-selected="false">ツール</button></nav><button class="icon-btn" id="themeBtn" type="button" aria-label="テーマを切り替え" title="テーマを切り替え">☼</button></div></header>
+    <div class="layout" id="mainLayout">
       <section class="panel calculator" id="calculatorSection" aria-label="電卓">
-      <div class="display"><div class="display-meta"><div class="status-group"><span class="pill">ANS <span id="ansDisplay">0</span></span><span class="pill">M <span id="memoryDisplay">0</span></span></div><div class="input-tools"><button class="input-tool" id="copyResult" type="button" aria-label="計算結果をコピー" title="計算結果をクリップボードにコピー"><svg class="copy-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-2"/><rect x="4" y="8" width="12" height="12" rx="2"/></svg></button><button class="input-tool" id="backBtn" type="button" title="カーソルの前の文字を削除" aria-label="カーソルの前の文字を削除"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 5H9l-7 7 7 7h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg></button><button class="input-tool" id="cursorEnd" type="button" title="カーソルを入力欄の末尾へ移動" aria-label="カーソルを入力欄の末尾へ移動"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h11"/><path d="m11 7 5 5-5 5"/><path d="M20 5v14"/></svg></button></div></div><label class="sr-only" for="expression">数式入力</label><div class="expression-wrap"><input id="expression" class="expression" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="例: 2 + 3 × 4" aria-label="数式入力欄"></div><div class="result-row"><div id="result" class="result" aria-live="polite">0</div></div></div>
-      <div class="memory-strip"><span class="memory-label">MEMORY</span><button class="soft-btn memory-btn" data-memory="MC" type="button" title="メモリーをクリア">MC</button><button class="soft-btn memory-btn" data-memory="MR" type="button" title="メモリーの値を入力">MR</button><button class="soft-btn memory-btn" data-memory="M+" type="button" title="計算結果をメモリーに加算">M+</button><button class="soft-btn memory-btn" data-memory="M-" type="button" title="計算結果をメモリーから減算">M−</button></div>
+      <div class="display"><div class="display-meta"><div class="status-group"><button class="pill ans-pill" id="ansBtn" type="button" title="ANS（直前の計算結果）を数式に入力" aria-label="ANSを数式に入力">ANS <span id="ansDisplay">0</span></button></div><div class="input-tools"><button class="input-tool" id="copyResult" type="button" aria-label="計算結果をコピー" title="計算結果をクリップボードにコピー"><svg class="copy-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-2"/><rect x="4" y="8" width="12" height="12" rx="2"/></svg></button><button class="input-tool" id="backBtn" type="button" title="カーソルの前の文字を削除" aria-label="カーソルの前の文字を削除"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 5H9l-7 7 7 7h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg></button><button class="input-tool" id="cursorEnd" type="button" title="カーソルを入力欄の末尾へ移動" aria-label="カーソルを入力欄の末尾へ移動"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h11"/><path d="m11 7 5 5-5 5"/><path d="M20 5v14"/></svg></button></div></div><label class="sr-only" for="expression">数式入力</label><div class="expression-wrap"><input id="expression" class="expression" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="例: 2 + 3 × 4" aria-label="数式入力欄"></div><div class="result-row"><div id="result" class="result" aria-live="polite">0</div></div></div>
       <div class="scientific-keys" id="scientificKeys" aria-label="科学計算キー">
         <button class="key subtle" data-function="sin" type="button" title="RADでサインを入力">sin</button><button class="key subtle" data-function="cos" type="button" title="RADでコサインを入力">cos</button><button class="key subtle" data-function="tan" type="button" title="RADでタンジェントを入力">tan</button><button class="key subtle" data-function="asin" type="button" title="逆サインをRADで入力">sin⁻¹</button><button class="key subtle" data-function="acos" type="button" title="逆コサインをRADで入力">cos⁻¹</button><button class="key subtle" data-function="atan" type="button" title="逆タンジェントをRADで入力">tan⁻¹</button>
         <button class="key subtle" data-function="log" type="button" title="常用対数を入力">log</button><button class="key subtle" data-function="ln" type="button" title="自然対数を入力">ln</button><button class="key subtle" data-function="sqrt" type="button" title="平方根を入力">√</button><button class="key subtle" data-function="cbrt" type="button" title="立方根を入力">∛</button><button class="key subtle" data-function="abs" type="button" title="絶対値を入力">abs</button><button class="key subtle" data-insert="!" type="button" title="階乗を入力（0〜170の整数）">n!</button>
-        <button class="key subtle" data-insert="pi" type="button" title="円周率πを入力">π</button><button class="key subtle" data-insert="e" type="button" title="ネイピア数eを入力">e</button><button class="key subtle" data-insert="^" type="button" title="べき乗演算子を入力">xʸ</button><button class="key subtle" data-insert="ANS" type="button" title="前回の計算結果を入力">ANS</button><button class="key subtle" data-function="10^" type="button" title="10のべき乗を入力">10ˣ</button><button class="key subtle" data-function="e^" type="button" title="eのべき乗を入力">eˣ</button>
+        <button class="key subtle" data-insert="pi" type="button" title="円周率πを入力">π</button><button class="key subtle" data-insert="e" type="button" title="ネイピア数eを入力">e</button><button class="key subtle" data-insert="^" type="button" title="べき乗演算子を入力">xʸ</button><button class="key subtle" data-insert="^2" type="button" title="2乗（平方）を入力">x²</button><button class="key subtle" data-function="10^" type="button" title="10のべき乗を入力">10ˣ</button><button class="key subtle" data-function="e^" type="button" title="eのべき乗を入力">eˣ</button>
       </div>
       <div class="keypad" id="keypad" aria-label="電卓キー">
-        <button class="key danger" data-action="clear" type="button" title="式と計算結果をすべてクリア">AC</button><button class="key danger" data-action="clear-entry" type="button" title="入力中の数値・項目をクリア">C</button><button class="key subtle" data-pair="()" type="button" title="括弧を挿入して中にカーソルを置く">( )</button><button class="key operator" data-insert="%" type="button" title="整数の剰余を計算">mod</button>
-        <button class="key" data-insert="7" type="button">7</button><button class="key" data-insert="8" type="button">8</button><button class="key" data-insert="9" type="button">9</button><button class="key operator" data-insert="÷" type="button">÷</button>
-        <button class="key" data-insert="4" type="button">4</button><button class="key" data-insert="5" type="button">5</button><button class="key" data-insert="6" type="button">6</button><button class="key operator" data-insert="×" type="button">×</button>
-        <button class="key" data-insert="1" type="button">1</button><button class="key" data-insert="2" type="button">2</button><button class="key" data-insert="3" type="button">3</button><button class="key operator" data-insert="−" type="button">−</button>
-        <button class="key" data-insert="0" type="button">0</button><button class="key" data-insert="00" type="button">00</button><button class="key" data-insert="." type="button">.</button><button class="key operator" data-insert="+" type="button">+</button>
-        <button class="key wide accent" data-action="evaluate" type="button" title="式を計算">計算 =</button>
+        <button class="key danger" data-action="clear" type="button" title="式と計算結果をすべてクリア">AC</button><button class="key subtle" data-pair="()" type="button" title="括弧を挿入して中にカーソルを置く">( )</button><button class="key operator" data-insert="%" type="button" title="整数の剰余を計算">mod</button><button class="key operator" data-insert="÷" type="button">÷</button>
+        <button class="key" data-insert="7" type="button">7</button><button class="key" data-insert="8" type="button">8</button><button class="key" data-insert="9" type="button">9</button><button class="key operator" data-insert="×" type="button">×</button>
+        <button class="key" data-insert="4" type="button">4</button><button class="key" data-insert="5" type="button">5</button><button class="key" data-insert="6" type="button">6</button><button class="key operator" data-insert="−" type="button">−</button>
+        <button class="key" data-insert="1" type="button">1</button><button class="key" data-insert="2" type="button">2</button><button class="key" data-insert="3" type="button">3</button><button class="key operator" data-insert="+" type="button">+</button>
+        <button class="key" data-insert="0" type="button">0</button><button class="key" data-insert="00" type="button">00</button><button class="key" data-insert="." type="button">.</button><button class="key accent" data-action="evaluate" type="button" title="式を計算">=</button>
       </div>
       <div class="footer">Enter 計算 · Esc クリア · 四則演算は10進精度を保持</div>
     </section>
-    <aside class="side-column" id="sideColumn" hidden><section class="panel history-panel" id="historyPanel" hidden><div class="panel-heading"><h2>計算履歴 <span id="historyCount" class="small-label">0 / 100</span></h2><div class="heading-actions"><button class="text-btn" id="copyAllHistory" type="button" title="すべての履歴をコピー">すべてコピー</button><button class="text-btn" id="clearHistory" type="button" title="計算履歴をすべて削除">全削除</button></div></div><div id="historyList" class="history-list"><div class="empty">計算履歴はまだありません</div></div></section>
-      <section class="panel tools-panel" id="toolsPanel" hidden><div class="panel-heading"><h2>ツール</h2></div><nav class="tool-tabs" role="tablist"><button class="tab-btn active" data-tab="unit" type="button" role="tab" aria-selected="true">単位換算</button><button class="tab-btn" data-tab="date" type="button" role="tab" aria-selected="false">日付計算</button><button class="tab-btn" data-tab="base" type="button" role="tab" aria-selected="false">進数変換</button></nav>
-        <section class="tool-pane" id="pane-unit"><h2>単位換算</h2><p>カテゴリ内の単位をすばやく変換します。</p><div class="field"><label for="unitCategory">カテゴリ</label><select id="unitCategory"><option value="length">長さ</option><option value="mass">重さ</option><option value="area">面積</option><option value="volume">体積</option><option value="data">データ容量</option><option value="angle">角度</option></select></div><div class="form-grid" style="margin-top:12px"><div class="field"><label for="unitValue">変換する値</label><input id="unitValue" type="number" step="any" value="1"></div><div class="field"><label for="unitFrom">変換元</label><select id="unitFrom"></select></div><div class="field"><label for="unitTo">変換先</label><select id="unitTo"></select></div></div><div class="tool-output" id="unitOutput" aria-live="polite">—</div><div class="tool-note">KB / MB は10進（1000基準）、KiB / MiB は2進（1024基準）です。角度はrad / degを相互変換できます。</div></section>
-        <section class="tool-pane" id="pane-date" hidden><h2>日付計算</h2><p>日付差または日数の加算・減算を計算します。</p><div class="field"><label for="dateMode">計算方法</label><select id="dateMode"><option value="diff">2つの日付の差</option><option value="add">日付に日数を加算・減算</option></select></div><div id="dateDiffFields"><div class="form-grid" style="margin-top:12px"><div class="field"><label for="dateStart">開始日</label><input id="dateStart" type="date"></div><div class="field"><label for="dateEnd">終了日</label><input id="dateEnd" type="date"></div></div><div class="date-options"><label><input id="inclusive" type="checkbox"> 両端を含める</label><span>前後を問わず日数差を表示</span></div></div><div id="dateAddFields" hidden><div class="form-grid" style="margin-top:12px"><div class="field"><label for="dateBase">基準日</label><input id="dateBase" type="date"></div><div class="field"><label for="dayOffset">加算 / 減算日数</label><input id="dayOffset" type="number" step="1" value="30"></div></div></div><div class="tool-output date-output" id="dateOutput" aria-live="polite">日付を選択してください。</div></section>
-        <section class="tool-pane" id="pane-base" hidden><h2>進数変換</h2><p>符号付きの任意精度整数を相互変換します。</p><div class="form-grid"><div class="field"><label for="baseInput">入力値</label><input id="baseInput" type="text" value="255" spellcheck="false"></div><div class="field"><label for="baseFrom">入力進数</label><select id="baseFrom"><option value="2">2進数</option><option value="8">8進数</option><option value="10" selected>10進数</option><option value="16">16進数</option></select></div></div><div id="baseOutput" class="base-grid" aria-live="polite"></div><div class="tool-note">負数と Number の安全な整数範囲を超える値に対応。小数は対象外です。</div></section>
-      </section></aside>
+    <section class="panel history-panel" id="historyPanel" aria-label="計算履歴" hidden>
+      <div class="panel-heading"><h2>計算履歴 <span id="historyCount" class="small-label">0 / 100</span></h2><div class="heading-actions"><button class="text-btn" id="copyAllHistory" type="button" title="すべての履歴をコピー">すべてコピー</button><button class="text-btn" id="clearHistory" type="button" title="計算履歴をすべて削除">全削除</button></div></div>
+      <div id="historyList" class="history-list"><div class="empty">計算履歴はまだありません</div></div>
+    </section>
+    <section class="panel tools-panel" id="toolsPanel" aria-label="各種ツール" hidden>
+      <div class="panel-heading"><h2>ツール</h2></div><nav class="tool-tabs" role="tablist"><button class="tab-btn active" data-tab="unit" type="button" role="tab" aria-selected="true">単位換算</button><button class="tab-btn" data-tab="date" type="button" role="tab" aria-selected="false">日付計算</button><button class="tab-btn" data-tab="base" type="button" role="tab" aria-selected="false">進数変換</button></nav>
+      <section class="tool-pane" id="pane-unit"><h2>単位換算</h2><p>カテゴリ内の単位をすばやく変換します。</p><div class="field"><label for="unitCategory">カテゴリ</label><select id="unitCategory"><option value="length">長さ</option><option value="mass">重さ</option><option value="area">面積</option><option value="volume">体積</option><option value="data">データ容量</option><option value="angle">角度</option></select></div><div class="form-grid" style="margin-top:12px"><div class="field"><label for="unitValue">変換する値</label><input id="unitValue" type="number" step="any" value="1"></div><div class="field"><label for="unitFrom">変換元</label><select id="unitFrom"></select></div><div class="field"><label for="unitTo">変換先</label><select id="unitTo"></select></div></div><div class="tool-output" id="unitOutput" aria-live="polite">—</div><div class="tool-note">KB / MB は10進（1000基準）、KiB / MiB は2進（1024基準）です。角度はrad / degを相互変換できます。</div></section>
+      <section class="tool-pane" id="pane-date" hidden><h2>日付計算</h2><p>日付差または日数の加算・減算を計算します。</p><div class="field"><label for="dateMode">計算方法</label><select id="dateMode"><option value="diff">2つの日付の差</option><option value="add">日付に日数を加算・減算</option></select></div><div id="dateDiffFields"><div class="form-grid" style="margin-top:12px"><div class="field"><label for="dateStart">開始日</label><input id="dateStart" type="date"></div><div class="field"><label for="dateEnd">終了日</label><input id="dateEnd" type="date"></div></div><div class="date-options"><label><input id="inclusive" type="checkbox"> 両端を含める</label><span>前後を問わず日数差を表示</span></div></div><div id="dateAddFields" hidden><div class="form-grid" style="margin-top:12px"><div class="field"><label for="dateBase">基準日</label><input id="dateBase" type="date"></div><div class="field"><label for="dayOffset">加算 / 減算日数</label><input id="dayOffset" type="number" step="1" value="30"></div></div></div><div class="tool-output date-output" id="dateOutput" aria-live="polite">日付を選択してください。</div></section>
+      <section class="tool-pane" id="pane-base" hidden><h2>進数変換</h2><p>符号付きの任意精度整数を相互変換します。</p><div class="form-grid"><div class="field"><label for="baseInput">入力値</label><input id="baseInput" type="text" value="255" spellcheck="false"></div><div class="field"><label for="baseFrom">入力進数</label><select id="baseFrom"><option value="2">2進数</option><option value="8">8進数</option><option value="10" selected>10進数</option><option value="16">16進数</option></select></div></div><div id="baseOutput" class="base-grid" aria-live="polite"></div><div class="tool-note">負数と Number の安全な整数範囲を超える値に対応。小数は対象外です。</div></section>
+    </section>
   </div>
   </div>
   <footer class="copyright">Copyright © 2026 Ultima Archtect Inc.</footer>
@@ -1231,7 +1205,6 @@ body.simple .science-only,body.simple .scientific-keys {
   /** アプリケーションのグローバル状態 */
   const state = {
     ans: null,      // 直前の計算結果（Decimal）
-    memory: null,   // メモリー保存値（Decimal）
     last: null,     // 最新の評価値
     history: [],    // 計算履歴（最大100件）
     angle: 'RAD'    // 角度単位（RAD固定・科学計算用）
@@ -1750,10 +1723,9 @@ body.simple .science-only,body.simple .scientific-keys {
     $('result').classList.remove('error');
   }
 
-  /** ANSおよびメモリー表示の更新 */
+  /** ANS表示の更新 */
   function renderState() {
     $('ansDisplay').textContent = format(state.ans);
-    $('memoryDisplay').textContent = format(state.memory);
   }
 
   /** コピー用SVGアイコンを動的生成してボタンに設定 */
@@ -1876,9 +1848,11 @@ body.simple .science-only,body.simple .scientific-keys {
   function reuseHistory(h) {
     $('expression').value = h.expression;
     $('expression').setSelectionRange(h.expression.length, h.expression.length);
+    fitExpressionFontSize();
     focusExpression();
     /* status */
     clearError();
+    setView(lastCalcMode);
   }
 
   /** トースト通知の表示 */
@@ -1963,6 +1937,7 @@ body.simple .science-only,body.simple .scientific-keys {
     const start = input.selectionStart ?? input.value.length;
     const end = input.selectionEnd ?? input.value.length;
     input.setRangeText(text, start, end, 'end');
+    fitExpressionFontSize();
     focusExpression();
     clearError();
     /* status */
@@ -1979,6 +1954,7 @@ body.simple .science-only,body.simple .scientific-keys {
     } else if (s > 0) {
       input.setRangeText('', s - 1, s, 'end');
     }
+    fitExpressionFontSize();
     focusExpression();
   }
 
@@ -2002,6 +1978,7 @@ body.simple .science-only,body.simple .scientific-keys {
     input.setRangeText(text, start, end, 'end');
     const cursor = start + name.length + 1;
     input.setSelectionRange(cursor, cursor);
+    fitExpressionFontSize();
     focusExpression();
     clearError();
     /* status */
@@ -2016,30 +1993,7 @@ body.simple .science-only,body.simple .scientific-keys {
     input.setRangeText(pair, start, end, 'end');
     const cursor = start + 1;
     input.setSelectionRange(cursor, cursor);
-    focusExpression();
-    clearError();
-    /* status */
-  }
-
-  /** 直前のトークン／数値を消去（クリア・エントリ） */
-  function clearEntry() {
-    const input = $('expression');
-    const start = input.selectionStart ?? input.value.length;
-    const end = input.selectionEnd ?? input.value.length;
-
-    if (start !== end) {
-      input.setRangeText('', start, end, 'end');
-    } else {
-      let left = start;
-      let right = end;
-      while (left > 0 && /[A-Za-z0-9.π√]/.test(input.value[left - 1])) left--;
-      while (right < input.value.length && /[A-Za-z0-9.π√]/.test(input.value[right])) right++;
-      if (left === right) {
-        if (left > 0) left--;
-        else if (right < input.value.length) right++;
-      }
-      input.setRangeText('', left, right, 'end');
-    }
+    fitExpressionFontSize();
     focusExpression();
     clearError();
     /* status */
@@ -2048,6 +2002,7 @@ body.simple .science-only,body.simple .scientific-keys {
   /** 電卓の入力と表示を全消去（オールクリア） */
   function clearCalculator() {
     $('expression').value = '';
+    fitExpressionFontSize();
     state.last = null;
     $('result').textContent = '0';
     $('result').classList.remove('error');
@@ -2076,8 +2031,10 @@ body.simple .science-only,body.simple .scientific-keys {
     if (!b) return;
     if (b.dataset.action === 'evaluate') evaluate();
     if (b.dataset.action === 'clear') clearCalculator();
-    if (b.dataset.action === 'clear-entry') clearEntry();
   });
+
+  // ANSバッジのタップで式にANSを挿入
+  $('ansBtn').addEventListener('click', () => insertAtCursor('ANS'));
 
   // バックスペースとカーソル末尾移動ボタン
   $('backBtn').addEventListener('click', backspace);
@@ -2088,105 +2045,167 @@ body.simple .science-only,body.simple .scientific-keys {
     focusExpression();
   });
 
-  // 電卓本体（トップバー〜計算ボタン）をビューポートに完全収容するための動的スケーリング
-  function fitCalculatorToViewport() {
-    const stage = $('calcStage');
-    const calc = $('calculatorSection');
-    if (!stage || !calc) return;
+  // 式入力欄のフォントサイズ動的スケーリング（長い式でも文字切れせず横幅に合わせて全体を表示）
+  let measureCtx = null;
 
-    // 数式入力欄にフォーカスがある場合（OS仮想キーボード表示中）は、
-    // キーボード出現による一時的なviewport縮小によるアプリ全体の極小化を防止する
-    if (document.activeElement === $('expression')) {
+  function fitExpressionFontSize() {
+    const input = $('expression');
+    if (!input) return;
+    const text = input.value || '';
+
+    // 入力欄が非表示（履歴やツール画面表示中など）または空の場合はリセット
+    if (!text || input.offsetParent === null) {
+      input.style.fontSize = '';
       return;
     }
 
-    // 一旦トランスフォームを解除して強制リフロー
-    stage.style.transform = 'none';
-    stage.style.marginBottom = '0px';
-    void stage.offsetHeight;
+    // 利用可能な横幅（入力欄の内寸からマージンを確保）
+    const availableWidth = input.clientWidth - 12;
+    if (availableWidth <= 0) return;
+
+    // CSSで指定されているデフォルトの基準フォントサイズとフォントファミリーを取得
+    input.style.fontSize = '';
+    const style = window.getComputedStyle(input);
+    const baseFontSize = parseFloat(style.fontSize) || 26;
+    const fontFamily = style.fontFamily || 'monospace';
+
+    if (!measureCtx) {
+      const canvas = document.createElement('canvas');
+      measureCtx = canvas.getContext('2d');
+    }
+    measureCtx.font = `${baseFontSize}px ${fontFamily}`;
+    const textWidth = measureCtx.measureText(text).width;
+
+    if (textWidth > availableWidth) {
+      const scale = availableWidth / textWidth;
+      // 最小フォントサイズは 12px
+      const newSize = Math.max(12, Math.floor(baseFontSize * scale));
+      input.style.fontSize = `${newSize}px`;
+    } else {
+      input.style.fontSize = '';
+    }
+
+    // 最小サイズでも収まらない長大な入力時、常に右端（最新入力位置）が見えるようにスクロール
+    if (document.activeElement === input) {
+      input.scrollLeft = input.scrollWidth;
+    }
+  }
+
+  // 電卓本体（ディスプレイ〜計算ボタン）を画面内に完全収容・有効活用するための動的スケーリング
+  // 小画面では縮小し、大画面（PC・タブレット）ではアスペクト比を維持して縦幅または横幅いっぱいまで拡大表示する
+  function fitCalculatorToViewport() {
+    const calc = $('calculatorSection');
+    if (!calc || calc.hidden) return;
+
+    // スマホ等のタッチ環境で入力欄にフォーカスがある場合（OS仮想キーボード表示中）のみ、
+    // キーボード出現による一時的なviewport縮小によるアプリ全体の極小化を防止する
+    if (isTouchDevice() && document.activeElement === $('expression')) {
+      return;
+    }
+
+    // 一旦トランスフォームとマージンを解除して強制リフロー（自然サイズを正確に測定）
+    calc.style.transform = 'none';
+    calc.style.marginBottom = '0px';
+    void calc.offsetHeight;
 
     const vpW = window.visualViewport ? window.visualViewport.width : window.innerWidth;
     const vpH = window.visualViewport ? window.visualViewport.height : window.innerHeight;
 
     const isWide = vpW > 900;
-    const sideOpen = !$('sideColumn').hidden;
 
-    // トップバー上端から「計算 =」ボタン（またはパネル最下部）までの高さを高精度測定
-    const stageRect = stage.getBoundingClientRect();
-    const evalBtn = $('keypad')?.querySelector('[data-action="evaluate"]');
-    const evalBottom = evalBtn ? evalBtn.getBoundingClientRect().bottom + 12 : calc.getBoundingClientRect().bottom;
+    // 電卓の上端（topbarやセーフエリアが反映された正確な位置）
+    const calcRect = calc.getBoundingClientRect();
+    const calcTop = calcRect.top;
 
-    let targetBottom = evalBottom;
-    if (isWide && sideOpen) {
-      const sideRect = $('sideColumn').getBoundingClientRect();
-      targetBottom = Math.max(targetBottom, sideRect.bottom + 12);
-    }
+    // 電卓本体の自然な寸法
+    const naturalHeight = calc.offsetHeight;
+    const naturalWidth = calc.offsetWidth;
 
-    const naturalHeight = targetBottom - stageRect.top;
-    const naturalWidth = stageRect.width;
-
-    // 上下の余白（Safe Areaやマージンを考慮）
-    const allowanceY = isWide ? 24 : 16;
-    const allowanceX = isWide ? 16 : 6;
-    const maxH = vpH - allowanceY;
+    // 画面下端までの利用可能スペース（下部セーフエリアや著作権表示等の余白を考慮）
+    const allowanceBottom = isWide ? 32 : 18;
+    const maxH = vpH - calcTop - allowanceBottom;
+    const allowanceX = isWide ? 32 : 8;
     const maxW = vpW - allowanceX;
 
     let scale = 1;
-    if (naturalHeight > maxH || naturalWidth > maxW) {
+    if (naturalHeight > 0 && naturalWidth > 0 && maxH > 0 && maxW > 0) {
       const scaleY = maxH / naturalHeight;
       const scaleX = maxW / naturalWidth;
+      // アスペクト比を保ったまま、縦または横の限界まで拡大／縮小
       scale = Math.min(scaleX, scaleY);
-      // 過度な縮小を防ぐ（最小0.40）
-      scale = Math.min(1, Math.max(scale, 0.40));
+      // セーフティガード: 最小0.45（極小画面用）、最大2.0（巨大4Kモニタ等での過大化防止）
+      scale = Math.max(0.45, Math.min(scale, 2.0));
     }
 
-    if (scale < 0.99) {
-      stage.style.transform = `scale(${scale})`;
-      const diffH = stage.offsetHeight * (1 - scale);
-      stage.style.marginBottom = `-${diffH}px`;
+    if (Math.abs(scale - 1) > 0.01) {
+      calc.style.transformOrigin = 'top center';
+      calc.style.transform = `scale(${scale})`;
+      // scale > 1（拡大）なら正の margin-bottom で下部領域を確保、scale < 1（縮小）なら負の margin-bottom で余白を詰める
+      const diffH = calc.offsetHeight * (scale - 1);
+      calc.style.marginBottom = `${diffH}px`;
     } else {
-      stage.style.transform = '';
-      stage.style.marginBottom = '';
+      calc.style.transform = '';
+      calc.style.marginBottom = '';
     }
   }
 
-  // 標準モード／拡張モード切り替え
-  function setAdvancedMode(enabled) {
-    document.body.classList.toggle('simple', !enabled);
-    $('advancedToggle').classList.toggle('active', enabled);
-    $('advancedToggle').setAttribute('aria-pressed', String(enabled));
-    $('standardToggle').classList.toggle('active', !enabled);
-    $('standardToggle').setAttribute('aria-pressed', String(!enabled));
-    void document.body.offsetHeight;
-    fitCalculatorToViewport();
+  // 直前の電卓モード（標準 or 拡張）を記憶
+  let lastCalcMode = 'standard';
+
+  /**
+   * 画面表示の排他切り替え（標準／拡張／履歴／ツール）
+   * @param {'standard'|'advanced'|'history'|'tools'} target
+   */
+  function setView(target) {
+    if (target === 'standard' || target === 'advanced') {
+      lastCalcMode = target;
+    }
+
+    const isStd = target === 'standard';
+    const isAdv = target === 'advanced';
+    const isHist = target === 'history';
+    const isTools = target === 'tools';
+    const isCalc = isStd || isAdv;
+
+    // ナビゲーションボタンのアクティブ状態更新
+    $('navStandard').classList.toggle('active', isStd);
+    $('navStandard').setAttribute('aria-selected', String(isStd));
+    $('navAdvanced').classList.toggle('active', isAdv);
+    $('navAdvanced').setAttribute('aria-selected', String(isAdv));
+    $('navHistory').classList.toggle('active', isHist);
+    $('navHistory').setAttribute('aria-selected', String(isHist));
+    $('navTools').classList.toggle('active', isTools);
+    $('navTools').setAttribute('aria-selected', String(isTools));
+
+    // 電卓の標準／拡張モード
+    document.body.classList.toggle('simple', isStd);
+
+    // 各画面の排他表示制御
+    $('calculatorSection').hidden = !isCalc;
+    $('historyPanel').hidden = !isHist;
+    $('toolsPanel').hidden = !isTools;
+
+    if (isCalc) {
+      fitCalculatorToViewport();
+      fitExpressionFontSize();
+      if (!isTouchDevice()) {
+        focusExpression();
+      }
+    } else {
+      // 履歴・ツール画面は自然なスクロールを可能にするため電卓のスケールをリセット
+      const calc = $('calculatorSection');
+      if (calc) {
+        calc.style.transform = '';
+        calc.style.marginBottom = '';
+      }
+    }
   }
 
-  $('standardToggle').addEventListener('click', () => setAdvancedMode(false));
-  $('advancedToggle').addEventListener('click', () => setAdvancedMode(true));
-
-  // サイドパネル（履歴・ツール）の開閉レイアウト制御
-  function updateSidePanels() {
-    const historyOn = !$('historyPanel').hidden;
-    const toolsOn = !$('toolsPanel').hidden;
-    $('sideColumn').hidden = !(historyOn || toolsOn);
-    $('mainLayout').classList.toggle('single-column', !historyOn && !toolsOn);
-    void document.body.offsetHeight;
-    fitCalculatorToViewport();
-  }
-
-  $('historyToggle').addEventListener('click', () => {
-    const panel = $('historyPanel');
-    panel.hidden = !panel.hidden;
-    $('historyToggle').setAttribute('aria-pressed', String(!panel.hidden));
-    updateSidePanels();
-  });
-
-  $('toolsToggle').addEventListener('click', () => {
-    const panel = $('toolsPanel');
-    panel.hidden = !panel.hidden;
-    $('toolsToggle').setAttribute('aria-pressed', String(!panel.hidden));
-    updateSidePanels();
-  });
+  // ナビゲーションボタンのイベントリスナー
+  $('navStandard').addEventListener('click', () => setView('standard'));
+  $('navAdvanced').addEventListener('click', () => setView('advanced'));
+  $('navHistory').addEventListener('click', () => setView('history'));
+  $('navTools').addEventListener('click', () => setView('tools'));
 
   // 数式入力欄のキーボードショートカット
   $('expression').addEventListener('keydown', (e) => {
@@ -2203,6 +2222,7 @@ body.simple .science-only,body.simple .scientific-keys {
   });
 
   $('expression').addEventListener('input', () => {
+    fitExpressionFontSize();
     if (!$('result').classList.contains('error')) {
       /* status */
     }
@@ -2212,31 +2232,6 @@ body.simple .science-only,body.simple .scientific-keys {
   $('expression').addEventListener('blur', () => {
     setTimeout(fitCalculatorToViewport, 150);
   });
-
-  // メモリー機能（MC, MR, M+, M-）
-  document.querySelectorAll('[data-memory]').forEach((b) =>
-    b.addEventListener('click', () => {
-      const op = b.dataset.memory;
-      if (op === 'MC') {
-        state.memory = Decimal.parse('0');
-        renderState();
-        toast('メモリーをクリアしました');
-        return;
-      }
-      if (op === 'MR') {
-        insertAtCursor(`(${state.memory.toString()})`);
-        return;
-      }
-      const v = currentValue();
-      if (!v) {
-        toast('計算結果がありません');
-        return;
-      }
-      state.memory = op === 'M+' ? state.memory.add(v) : state.memory.sub(v);
-      renderState();
-      toast('メモリーを更新しました');
-    })
-  );
 
   // コピー・クリア操作
   $('copyResult').addEventListener('click', () => {
@@ -2514,7 +2509,6 @@ body.simple .science-only,body.simple .scientific-keys {
      初期化処理
      ========================================================================== */
   state.ans = Decimal.parse('0');
-  state.memory = Decimal.parse('0');
   renderState();
   renderHistory();
   fillUnits();
@@ -2523,12 +2517,22 @@ body.simple .science-only,body.simple .scientific-keys {
 
   // ビューポートへの電卓フィッティング初期化とリスナー
   fitCalculatorToViewport();
-  window.addEventListener('resize', fitCalculatorToViewport);
+  fitExpressionFontSize();
+  window.addEventListener('resize', () => {
+    fitCalculatorToViewport();
+    fitExpressionFontSize();
+  });
   window.addEventListener('orientationchange', () => {
-    setTimeout(fitCalculatorToViewport, 100);
+    setTimeout(() => {
+      fitCalculatorToViewport();
+      fitExpressionFontSize();
+    }, 100);
   });
   if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', fitCalculatorToViewport);
+    window.visualViewport.addEventListener('resize', () => {
+      fitCalculatorToViewport();
+      fitExpressionFontSize();
+    });
   }
 
   // アプリ起動時の初期状態として式入力欄にフォーカス（PC環境でキーボード入力を即座に受け付ける）

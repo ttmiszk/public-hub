@@ -3,7 +3,7 @@
    オフライン完全対応・Network First (HTML) & Cache First (Assets)
    ========================================================================== */
 
-const CACHE_NAME = 'ultima-calc-20261029-001100';
+const CACHE_NAME = 'ultima-calc-20261029-014700';
 
 const STATIC_ASSETS = [
   './',
