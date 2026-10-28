@@ -240,23 +240,33 @@ button {
   justify-content: space-between;
   color: var(--muted);
   font-size: 12px;
-  gap: 10px;
+  gap: 8px;
   margin-bottom: 12px;
+  flex-wrap: nowrap;
+  min-width: 0;
 }
 
 .status-group {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
+  flex-wrap: nowrap;
+  flex-shrink: 1;
+  overflow: hidden;
 }
 
 .pill {
   border: 1px solid var(--line);
   border-radius: 999px;
-  padding: 4px 9px;
+  padding: 3px 8px;
   color: var(--muted);
   white-space: nowrap;
+  font-size: 11px;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
 }
 
 .expression {
@@ -816,15 +826,17 @@ body.simple .science-only,body.simple .scientific-keys {
 }
 
 .display-meta {
-  min-height: 30px;
-  flex-wrap: wrap;
+  min-height: 28px;
+  flex-wrap: nowrap;
 }
 
 .input-tools {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   margin-left: auto;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
 }
 
 .input-tools span {
@@ -835,13 +847,14 @@ body.simple .science-only,body.simple .scientific-keys {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
+  width: 28px;
   height: 28px;
   padding: 0;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--panel);
   color: var(--muted);
+  flex-shrink: 0;
   transition: color .12s,border-color .12s,background .12s;
 }
 
@@ -922,34 +935,25 @@ body.simple .science-only,body.simple .scientific-keys {
 
 @media(max-width:520px) {
   .app {
-    padding-top: calc(12px + env(safe-area-inset-top, 0px));
-    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-    padding-left: calc(10px + env(safe-area-inset-left, 0px));
-    padding-right: calc(10px + env(safe-area-inset-right, 0px));
+    padding-top: calc(10px + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    /* スマホでビューポートを最大限有効利用するため左右余白を最小限に */
+    padding-left: calc(3px + env(safe-area-inset-left, 0px));
+    padding-right: calc(3px + env(safe-area-inset-right, 0px));
   }
 
   .topbar {
-    margin-bottom: 12px;
+    flex-direction: column;
+    align-items: stretch;
     gap: 8px;
-  }
-
-  .top-actions {
-    gap: 6px;
-  }
-
-  .mode-switch button {
-    min-height: 30px;
-    padding: 0 8px;
-    font-size: 11px;
-  }
-
-  .top-toggle {
-    min-height: 34px;
-    padding: 0 8px;
-    font-size: 11px;
+    margin-bottom: 8px;
+    /* タイトル部・上部ボタンバーの左右マージンは少し確保 */
+    padding-left: 8px;
+    padding-right: 8px;
   }
 
   .brand {
+    justify-content: flex-start;
     gap: 8px;
   }
 
@@ -972,43 +976,101 @@ body.simple .science-only,body.simple .scientific-keys {
     height: 36px;
   }
 
+  .top-actions {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    gap: 5px;
+  }
+
+  .mode-switch {
+    flex: 0 0 auto;
+    display: flex;
+  }
+
+  .mode-switch button {
+    min-height: 32px;
+    padding: 0 8px;
+    font-size: 11px;
+  }
+
+  .top-toggle {
+    flex: 1 1 auto;
+    min-height: 32px;
+    padding: 0 6px;
+    font-size: 11px;
+    text-align: center;
+  }
+
+  .top-actions .icon-btn {
+    flex: 0 0 36px;
+    width: 36px;
+    min-height: 32px;
+    padding: 0;
+    font-size: 15px;
+  }
+
+  /* 電卓本体・履歴・ツール画面は左右マージン・パディングを最小限にしてキー領域を最大化 */
   .calculator {
-    padding: 12px;
+    padding: 8px 6px;
+    border-radius: 14px;
   }
 
   .display {
-    padding: 10px 12px;
-    margin-bottom: 10px;
+    padding: 8px 8px;
+    margin-bottom: 8px;
+    border-radius: 12px;
+  }
+
+  .display-meta {
+    margin-bottom: 6px;
+    min-height: 26px;
+    gap: 6px;
+  }
+
+  .pill {
+    font-size: 10px;
+    padding: 2px 6px;
+    max-width: 90px;
+  }
+
+  .input-tools {
+    gap: 4px;
+  }
+
+  .input-tool {
+    width: 26px;
+    height: 26px;
   }
 
   .expression {
-    min-height: 38px;
+    min-height: 36px;
     font-size: clamp(18px, 5.5vw, 24px);
   }
 
   .result {
     font-size: clamp(22px, 6.5vw, 32px);
-    min-height: 36px;
+    min-height: 34px;
   }
 
   .scientific-keys {
-    gap: 5px;
-    margin: 0 0 10px;
+    gap: 4px;
+    margin: 0 0 8px;
   }
 
   .scientific-keys .key {
-    height: clamp(38px, 5.5vh, 44px);
+    height: clamp(36px, 5.5vh, 42px);
     font-size: 12px;
-    border-radius: 9px;
+    border-radius: 8px;
   }
 
   .keypad {
-    gap: 6px;
+    gap: 5px;
   }
 
   .key {
     height: clamp(44px, 6.5vh, 52px);
-    border-radius: 11px;
+    border-radius: 10px;
     font-size: 15px;
   }
 
@@ -1018,7 +1080,7 @@ body.simple .science-only,body.simple .scientific-keys {
 
   .memory-strip {
     gap: 4px;
-    margin: 0 0 10px;
+    margin: 0 0 8px;
   }
 
   .memory-btn {
@@ -1028,7 +1090,7 @@ body.simple .science-only,body.simple .scientific-keys {
   }
 
   .footer {
-    margin-top: 12px;
+    margin-top: 10px;
     font-size: 10px;
   }
 
@@ -1037,7 +1099,8 @@ body.simple .science-only,body.simple .scientific-keys {
   }
 
   .tools-panel {
-    padding: 14px;
+    padding: 12px 8px;
+    border-radius: 14px;
   }
 
   .tool-tabs {
@@ -1049,7 +1112,8 @@ body.simple .science-only,body.simple .scientific-keys {
   }
 
   .history-panel {
-    padding: 14px;
+    padding: 12px 8px;
+    border-radius: 14px;
   }
 
 }
@@ -1119,7 +1183,7 @@ body.simple .science-only,body.simple .scientific-keys {
     <header class="topbar"><div class="brand"><div class="logo"><svg viewBox="0 0 88 126" role="img" aria-label="Ultima Calc 電卓アイコン"><rect x="3" y="4" width="82" height="118" rx="18" fill="#101720" stroke="#52657b" stroke-width="2.5"/><rect x="11" y="12" width="66" height="28" rx="6" fill="#394452"/><circle cx="19" cy="57" r="8" fill="#d5dbe3"/><circle cx="44" cy="57" r="8" fill="#d5dbe3"/><circle cx="69" cy="57" r="8" fill="#f6a623"/><circle cx="19" cy="82" r="8" fill="#d5dbe3"/><circle cx="44" cy="82" r="8" fill="#d5dbe3"/><circle cx="69" cy="82" r="8" fill="#f6a623"/><rect x="11" y="99" width="41" height="16" rx="8" fill="#d5dbe3"/><circle cx="69" cy="107" r="8" fill="#f6a623"/></svg></div><div><h1>Ultima Calc</h1><p>Precision · Science · Conversion</p></div></div><div class="top-actions"><div class="mode-switch" role="group" aria-label="電卓モード"><button id="standardToggle" class="active" type="button" aria-pressed="true">標準</button><button id="advancedToggle" type="button" aria-pressed="false">拡張</button></div><button class="top-toggle" id="historyToggle" type="button" aria-pressed="false" title="計算履歴の表示・非表示を切り替え">履歴</button><button class="top-toggle" id="toolsToggle" type="button" aria-pressed="false" title="ツールペインの表示・非表示を切り替え">ツール</button><button class="icon-btn" id="themeBtn" type="button" aria-label="テーマを切り替え" title="テーマを切り替え">☼</button></div></header>
     <div class="layout single-column" id="mainLayout">
       <section class="panel calculator" id="calculatorSection" aria-label="電卓">
-      <div class="display"><div class="display-meta"><div class="status-group"><span class="pill">ANS <span id="ansDisplay">0</span></span><span class="pill">M <span id="memoryDisplay">0</span></span><span id="statusText">式を入力してください</span></div><div class="input-tools"><button class="input-tool" id="copyResult" type="button" aria-label="計算結果をコピー" title="計算結果をクリップボードにコピー"><svg class="copy-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-2"/><rect x="4" y="8" width="12" height="12" rx="2"/></svg></button><button class="input-tool" id="backBtn" type="button" title="カーソルの前の文字を削除" aria-label="カーソルの前の文字を削除"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 5H9l-7 7 7 7h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg></button><button class="input-tool" id="cursorEnd" type="button" title="カーソルを入力欄の末尾へ移動" aria-label="カーソルを入力欄の末尾へ移動"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h11"/><path d="m11 7 5 5-5 5"/><path d="M20 5v14"/></svg></button></div></div><label class="sr-only" for="expression">数式入力</label><div class="expression-wrap"><input id="expression" class="expression" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="例: 2 + 3 × 4" aria-label="数式入力欄"></div><div class="result-row"><div id="result" class="result" aria-live="polite">0</div></div></div>
+      <div class="display"><div class="display-meta"><div class="status-group"><span class="pill">ANS <span id="ansDisplay">0</span></span><span class="pill">M <span id="memoryDisplay">0</span></span></div><div class="input-tools"><button class="input-tool" id="copyResult" type="button" aria-label="計算結果をコピー" title="計算結果をクリップボードにコピー"><svg class="copy-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-2"/><rect x="4" y="8" width="12" height="12" rx="2"/></svg></button><button class="input-tool" id="backBtn" type="button" title="カーソルの前の文字を削除" aria-label="カーソルの前の文字を削除"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 5H9l-7 7 7 7h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg></button><button class="input-tool" id="cursorEnd" type="button" title="カーソルを入力欄の末尾へ移動" aria-label="カーソルを入力欄の末尾へ移動"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h11"/><path d="m11 7 5 5-5 5"/><path d="M20 5v14"/></svg></button></div></div><label class="sr-only" for="expression">数式入力</label><div class="expression-wrap"><input id="expression" class="expression" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="例: 2 + 3 × 4" aria-label="数式入力欄"></div><div class="result-row"><div id="result" class="result" aria-live="polite">0</div></div></div>
       <div class="memory-strip"><span class="memory-label">MEMORY</span><button class="soft-btn memory-btn" data-memory="MC" type="button" title="メモリーをクリア">MC</button><button class="soft-btn memory-btn" data-memory="MR" type="button" title="メモリーの値を入力">MR</button><button class="soft-btn memory-btn" data-memory="M+" type="button" title="計算結果をメモリーに加算">M+</button><button class="soft-btn memory-btn" data-memory="M-" type="button" title="計算結果をメモリーから減算">M−</button></div>
       <div class="scientific-keys" id="scientificKeys" aria-label="科学計算キー">
         <button class="key subtle" data-function="sin" type="button" title="RADでサインを入力">sin</button><button class="key subtle" data-function="cos" type="button" title="RADでコサインを入力">cos</button><button class="key subtle" data-function="tan" type="button" title="RADでタンジェントを入力">tan</button><button class="key subtle" data-function="asin" type="button" title="逆サインをRADで入力">sin⁻¹</button><button class="key subtle" data-function="acos" type="button" title="逆コサインをRADで入力">cos⁻¹</button><button class="key subtle" data-function="atan" type="button" title="逆タンジェントをRADで入力">tan⁻¹</button>
@@ -1678,7 +1742,7 @@ body.simple .science-only,body.simple .scientific-keys {
   function showError(message) {
     $('result').textContent = message;
     $('result').classList.add('error');
-    $('statusText').textContent = '計算できません';
+    /* status */
   }
 
   /** エラー状態の解除 */
@@ -1813,7 +1877,7 @@ body.simple .science-only,body.simple .scientific-keys {
     $('expression').value = h.expression;
     $('expression').setSelectionRange(h.expression.length, h.expression.length);
     focusExpression();
-    $('statusText').textContent = '履歴の式を再利用中';
+    /* status */
     clearError();
   }
 
@@ -1873,7 +1937,7 @@ body.simple .science-only,body.simple .scientific-keys {
 
       $('result').textContent = out;
       clearError();
-      $('statusText').textContent = '計算完了';
+      /* status */
 
       state.history.unshift({
         id: Date.now() + Math.random(),
@@ -1901,7 +1965,7 @@ body.simple .science-only,body.simple .scientific-keys {
     input.setRangeText(text, start, end, 'end');
     focusExpression();
     clearError();
-    $('statusText').textContent = '入力中';
+    /* status */
   }
 
   /** カーソル前の文字を1文字削除 */
@@ -1940,7 +2004,7 @@ body.simple .science-only,body.simple .scientific-keys {
     input.setSelectionRange(cursor, cursor);
     focusExpression();
     clearError();
-    $('statusText').textContent = '入力中';
+    /* status */
   }
 
   /** 括弧ペアを挿入し、カーソルを括弧内に移動 */
@@ -1954,7 +2018,7 @@ body.simple .science-only,body.simple .scientific-keys {
     input.setSelectionRange(cursor, cursor);
     focusExpression();
     clearError();
-    $('statusText').textContent = '入力中';
+    /* status */
   }
 
   /** 直前のトークン／数値を消去（クリア・エントリ） */
@@ -1978,7 +2042,7 @@ body.simple .science-only,body.simple .scientific-keys {
     }
     focusExpression();
     clearError();
-    $('statusText').textContent = input.value ? '入力中' : '式を入力してください';
+    /* status */
   }
 
   /** 電卓の入力と表示を全消去（オールクリア） */
@@ -1987,7 +2051,7 @@ body.simple .science-only,body.simple .scientific-keys {
     state.last = null;
     $('result').textContent = '0';
     $('result').classList.remove('error');
-    $('statusText').textContent = '式を入力してください';
+    /* status */
     focusExpression();
   }
 
@@ -2030,6 +2094,12 @@ body.simple .science-only,body.simple .scientific-keys {
     const calc = $('calculatorSection');
     if (!stage || !calc) return;
 
+    // 数式入力欄にフォーカスがある場合（OS仮想キーボード表示中）は、
+    // キーボード出現による一時的なviewport縮小によるアプリ全体の極小化を防止する
+    if (document.activeElement === $('expression')) {
+      return;
+    }
+
     // 一旦トランスフォームを解除して強制リフロー
     stage.style.transform = 'none';
     stage.style.marginBottom = '0px';
@@ -2056,8 +2126,8 @@ body.simple .science-only,body.simple .scientific-keys {
     const naturalWidth = stageRect.width;
 
     // 上下の余白（Safe Areaやマージンを考慮）
-    const allowanceY = 24;
-    const allowanceX = 16;
+    const allowanceY = isWide ? 24 : 16;
+    const allowanceX = isWide ? 16 : 6;
     const maxH = vpH - allowanceY;
     const maxW = vpW - allowanceX;
 
@@ -2134,8 +2204,13 @@ body.simple .science-only,body.simple .scientific-keys {
 
   $('expression').addEventListener('input', () => {
     if (!$('result').classList.contains('error')) {
-      $('statusText').textContent = '入力中';
+      /* status */
     }
+  });
+
+  // OS仮想キーボードが閉じた後に元のビューポートに合わせて再計算
+  $('expression').addEventListener('blur', () => {
+    setTimeout(fitCalculatorToViewport, 150);
   });
 
   // メモリー機能（MC, MR, M+, M-）

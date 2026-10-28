@@ -3,14 +3,13 @@
    オフライン完全対応・Network First (HTML) & Cache First (Assets)
    ========================================================================== */
 
-const CACHE_NAME = 'ultima-calc-v2';
+const CACHE_NAME = 'ultima-calc-v5';
 
 const STATIC_ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './favicon.ico',
-  './app.ico',
   './icons/icon.svg',
   './icons/icon-maskable.svg',
   './icons/icon-192.png',
