@@ -8,6 +8,7 @@
 	<!-- PWA & Mobile Web App Meta Tags -->
 	<link rel="manifest" href="manifest.json">
 	<meta name="theme-color" content="#050507">
+	<meta name="format-detection" content="telephone=no, address=no, email=no">
 	<meta name="mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -121,14 +122,22 @@
 			padding: 1px 3px;
 			border-radius: 8px;
 			outline: none;
+			cursor: pointer;
 			transition: border-color 0.2s, background-color 0.2s;
-			user-select: text;
-			-webkit-user-select: text;
+			user-select: none;
+			-webkit-user-select: none;
 			touch-action: manipulation;
 		}
 
-		.player-name-input:focus {
-			background: rgba(255, 255, 255, 0.12);
+		@media (hover: hover) {
+			.player-name-input:hover {
+				background: rgba(255, 255, 255, 0.08);
+				border-color: rgba(255, 255, 255, 0.2);
+			}
+		}
+
+		.player-name-input:active {
+			background: rgba(255, 255, 255, 0.14);
 			border-color: var(--accent-blue);
 		}
 
@@ -1151,15 +1160,24 @@
 			outline: none;
 			resize: none;
 			overflow: hidden;
-			white-space: nowrap;
-			text-overflow: ellipsis;
+			white-space: pre-wrap;
+			overflow-wrap: anywhere;
+			word-break: break-word;
+			cursor: pointer;
 			transition: border-color 0.2s, background-color 0.2s;
-			user-select: text;
-			-webkit-user-select: text;
+			user-select: none;
+			-webkit-user-select: none;
 			touch-action: manipulation;
 		}
 
-		.result-player-name-input:focus {
+		@media (hover: hover) {
+			.result-player-name-input:hover {
+				background: rgba(255, 255, 255, 0.45);
+				border-color: rgba(37, 99, 235, 0.35);
+			}
+		}
+
+		.result-player-name-input:active {
 			background: rgba(255, 255, 255, 0.7);
 			border-color: #2563eb;
 		}
@@ -1646,6 +1664,260 @@
 			justify-content: center;
 			white-space: nowrap;
 		}
+
+		/* =========================================================
+		   8. プレイヤー選択・登録モーダル専用スタイル
+		========================================================= */
+		.player-modal-content {
+			width: 100%;
+			display: flex;
+			flex-direction: column;
+			gap: 8px;
+			margin-bottom: 10px;
+			text-align: left;
+		}
+
+		.player-add-row {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			width: 100%;
+		}
+
+		.player-add-input {
+			flex: 1;
+			min-width: 0;
+			min-height: 33px;
+			padding: 4px 10px;
+			border-radius: 8px;
+			border: 1.5px solid rgba(255, 255, 255, 0.22);
+			background: rgba(255, 255, 255, 0.07);
+			color: #ffffff;
+			font-family: inherit;
+			font-size: clamp(0.78rem, 1.8vw, 0.88rem);
+			font-weight: 700;
+			outline: none;
+			transition: border-color 0.15s, background 0.15s;
+			user-select: text;
+			-webkit-user-select: text;
+			touch-action: manipulation;
+		}
+
+		.player-add-input::placeholder {
+			color: #64748b;
+			font-weight: 600;
+		}
+
+		.player-add-input:focus {
+			border-color: #38bdf8;
+			background: rgba(255, 255, 255, 0.12);
+		}
+
+		.player-add-btn {
+			flex-shrink: 0;
+			min-height: 33px;
+			padding: 4px 12px;
+			border-radius: 8px;
+			border: 1.5px solid #38bdf8;
+			background: rgba(56, 189, 248, 0.18);
+			color: #e0f2fe;
+			font-size: clamp(0.76rem, 1.7vw, 0.86rem);
+			font-weight: 900;
+			cursor: pointer;
+			white-space: nowrap;
+			transition: transform 0.1s, background 0.15s;
+		}
+
+		.player-add-btn:active {
+			transform: scale(0.96);
+			background: rgba(56, 189, 248, 0.3);
+		}
+
+		.player-select-list {
+			display: flex;
+			flex-direction: column;
+			gap: 4px;
+			width: 100%;
+			max-height: clamp(160px, 44dvh, 280px);
+			overflow-y: auto;
+			-webkit-overflow-scrolling: touch;
+			overscroll-behavior: contain;
+			padding-right: 2px;
+		}
+
+		@media (orientation: landscape) {
+			.player-select-list {
+				max-height: clamp(140px, 46dvh, 240px);
+			}
+		}
+
+		.player-select-item {
+			display: flex;
+			align-items: center;
+			gap: 2px;
+			width: 100%;
+			border-radius: 8px;
+			transition: background 0.12s, box-shadow 0.12s;
+		}
+
+		.player-select-item.dragging {
+			background: rgba(56, 189, 248, 0.18);
+			box-shadow: 0 6px 16px rgba(0, 0, 0, 0.55);
+			z-index: 5;
+			position: relative;
+		}
+
+		.player-select-item.dragging .player-select-item-btn {
+			border-color: #38bdf8;
+			background: rgba(15, 23, 42, 0.9);
+		}
+
+		.player-select-item-btn {
+			flex: 1;
+			min-width: 0;
+			min-height: 31px;
+			padding: 4px 9px;
+			border-radius: 8px;
+			border: 1.5px solid rgba(255, 255, 255, 0.11);
+			background: rgba(255, 255, 255, 0.04);
+			color: #cbd5e1;
+			font-size: clamp(0.76rem, 1.75vw, 0.86rem);
+			font-weight: 700;
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			gap: 7px;
+			text-align: left;
+			transition: all 0.15s ease;
+			user-select: none;
+			-webkit-user-select: none;
+			touch-action: pan-y;
+		}
+
+		.player-select-item-btn:active {
+			transform: scale(0.99);
+		}
+
+		.player-select-item-btn.active {
+			background: rgba(56, 189, 248, 0.16);
+			border: 1.5px solid #38bdf8;
+			box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.25);
+			color: #ffffff;
+			font-weight: 900;
+		}
+
+		.player-select-badge {
+			width: 18px;
+			height: 18px;
+			border-radius: 5px;
+			border: 1.5px solid rgba(255, 255, 255, 0.25);
+			background: rgba(255, 255, 255, 0.04);
+			color: transparent;
+			font-size: 0.7rem;
+			font-weight: 900;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			flex-shrink: 0;
+			transition: all 0.15s ease;
+		}
+
+		.player-select-item-btn.active .player-select-badge {
+			background: #0284c7;
+			border-color: #7dd3fc;
+			color: #ffffff;
+		}
+
+		.player-select-item-name {
+			flex: 1;
+			min-width: 0;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+			line-height: 1.2;
+		}
+
+		.player-drag-handle {
+			flex-shrink: 0;
+			width: 28px;
+			height: 31px;
+			padding: 0;
+			border-radius: 7px;
+			border: none;
+			background: transparent;
+			color: #64748b;
+			cursor: grab;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			touch-action: none;
+			user-select: none;
+			-webkit-user-select: none;
+			transition: color 0.15s, background 0.15s;
+		}
+
+		.player-drag-handle svg {
+			width: 15px;
+			height: 15px;
+			fill: currentColor;
+			pointer-events: none;
+		}
+
+		@media (hover: hover) {
+			.player-drag-handle:hover {
+				color: #cbd5e1;
+				background: rgba(255, 255, 255, 0.08);
+			}
+		}
+
+		.player-drag-handle:active,
+		.player-select-item.dragging .player-drag-handle {
+			cursor: grabbing;
+			color: #38bdf8;
+			background: rgba(56, 189, 248, 0.15);
+		}
+
+		.player-delete-btn {
+			flex-shrink: 0;
+			width: 28px;
+			height: 31px;
+			padding: 0;
+			border-radius: 7px;
+			border: none;
+			background: transparent;
+			color: #94a3b8;
+			font-size: 1.05rem;
+			font-weight: 700;
+			line-height: 1;
+			cursor: pointer;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			transition: color 0.15s, background 0.15s, transform 0.1s;
+		}
+
+		@media (hover: hover) {
+			.player-delete-btn:hover {
+				color: #f87171;
+				background: rgba(239, 68, 68, 0.15);
+			}
+		}
+
+		.player-delete-btn:active {
+			transform: scale(0.92);
+			color: #fca5a5;
+			background: rgba(239, 68, 68, 0.25);
+		}
+
+		.player-empty-msg {
+			padding: 14px 10px;
+			text-align: center;
+			font-size: clamp(0.76rem, 1.7vw, 0.86rem);
+			font-weight: 700;
+			color: #64748b;
+			border: 1px dashed rgba(255, 255, 255, 0.14);
+			border-radius: 8px;
+		}
 	</style>
 </head>
 <body>
@@ -1657,7 +1929,7 @@
 			<div id="scoreboard-content-box" class="scoreboard-content-box">
 				<header class="top-header-bar">
 					<div class="player-header-col left">
-						<input id="left-name-input" class="player-name-input" type="text" value="Player1" maxlength="16" aria-label="Left Player Name">
+						<input id="left-name-input" class="player-name-input" type="text" value="Player1" maxlength="33" readonly inputmode="none" title="タッチしてプレイヤーを選択" aria-label="Left Player Name">
 					</div>
 
 					<button id="btn-swap-top" class="swap-top-btn" title="チェンジコート (左右入れ替え)">
@@ -1665,7 +1937,7 @@
 					</button>
 
 					<div class="player-header-col right">
-						<input id="right-name-input" class="player-name-input" type="text" value="Player2" maxlength="16" aria-label="Right Player Name">
+						<input id="right-name-input" class="player-name-input" type="text" value="Player2" maxlength="33" readonly inputmode="none" title="タッチしてプレイヤーを選択" aria-label="Right Player Name">
 					</div>
 				</header>
 
@@ -1857,6 +2129,7 @@
 		// ============================================================================
 		const STORAGE_KEY = 'tt_scoreboard_match_records_v1';
 		const ACTIVE_STATE_STORAGE_KEY = 'tt_scoreboard_active_state_v1';
+		const PLAYERS_STORAGE_KEY = 'tt_scoreboard_registered_players_v1';
 
 		const state = {
 			bestOf: 5, // 1, 3, 5, 7
@@ -1885,11 +2158,45 @@
 			completedGamesHistory: [],
 			// 過去の全マッチ結果リスト (新しい順)
 			matchRecords: [],
+			// プレイヤー選択画面用の登録済みプレイヤー名リスト
+			registeredPlayers: ['Player1', 'Player2'],
 			// 試合結果画面の日付グループ開閉状態マップ ({ 'YYYY/MM/DD': boolean })
 			resultDateOpenMap: {},
 			// スコア推移画面の遷移元 ('scoreboard' | 'results')
 			historyReturnTarget: 'scoreboard'
 		};
+
+		// 登録済みプレイヤー名リストを localStorage から読み込み
+		function loadRegisteredPlayersFromStorage() {
+			try {
+				const raw = window.localStorage.getItem(PLAYERS_STORAGE_KEY);
+				if (raw === null) return;
+				const parsed = JSON.parse(raw);
+				if (Array.isArray(parsed)) {
+					const seen = new Set();
+					const list = [];
+					parsed.forEach(item => {
+						const name = String(item || '').replace(/[\r\n]+/g, '').trim().slice(0, 16);
+						if (name && !seen.has(name)) {
+							seen.add(name);
+							list.push(name);
+						}
+					});
+					state.registeredPlayers = list;
+				}
+			} catch (e) {
+				// Ignore storage errors gracefully
+			}
+		}
+
+		// 登録済みプレイヤー名リストを localStorage に保存
+		function saveRegisteredPlayersToStorage() {
+			try {
+				window.localStorage.setItem(PLAYERS_STORAGE_KEY, JSON.stringify(state.registeredPlayers));
+			} catch (e) {
+				// Ignore storage errors gracefully
+			}
+		}
 
 		// localStorage 読み込み (アクセス不可環境でもエラーにしない)
 		function loadMatchRecordsFromStorage() {
@@ -2010,6 +2317,7 @@
 			}
 		}
 
+		loadRegisteredPlayersFromStorage();
 		loadMatchRecordsFromStorage();
 		loadActiveMatchFromStorage();
 
@@ -3087,37 +3395,37 @@
 			cellName0.className = 'result-cell';
 			const name0Input = document.createElement('textarea');
 			name0Input.rows = 1;
-			name0Input.maxLength = 16;
+			name0Input.maxLength = 33;
+			name0Input.readOnly = true;
+			name0Input.setAttribute('inputmode', 'none');
 			name0Input.className = 'result-player-name-input';
 			name0Input.value = rec.player0Name;
-			name0Input.title = 'タップしてプレイヤー名を変更';
+			name0Input.title = 'タッチしてプレイヤーを選択';
 			name0Input.setAttribute('aria-label', '左プレイヤー名');
-			name0Input.addEventListener('keydown', (e) => {
-				if (e.key === 'Enter') {
-					e.preventDefault();
-					name0Input.blur();
-				}
+			name0Input.addEventListener('focus', () => {
+				name0Input.blur();
 			});
-			name0Input.addEventListener('input', () => {
-				const cleanVal = name0Input.value.replace(/[\r\n]+/g, '');
-				if (name0Input.value !== cleanVal) {
-					name0Input.value = cleanVal;
-				}
-				autoResizeResultNameTextarea(name0Input);
-				const newName = cleanVal.trim() || 'Player1';
-				rec.player0Name = newName;
-				saveMatchRecordsToStorage();
-				if (state.currentSavedMatchId === rec.id) {
-					state.teams[0].name = newName;
-					if (state.pendingPhase === 'match_end' && state.pendingWinnerIdx === 0) {
-						inboardTitleEl.textContent = `試合終了！ 勝者: ${newName}`;
+			name0Input.addEventListener('click', (e) => {
+				e.preventDefault();
+				name0Input.blur();
+				if (state.modalOpen) return;
+				showPlayerSelectModal({
+					currentName: rec.player0Name,
+					onConfirm: (selectedCombinedName) => {
+						const newName = selectedCombinedName || 'Player1';
+						rec.player0Name = newName;
+						name0Input.value = newName;
+						autoResizeResultNameTextarea(name0Input);
+						saveMatchRecordsToStorage();
+						if (state.currentSavedMatchId === rec.id) {
+							state.teams[0].name = newName;
+							if (state.pendingPhase === 'match_end' && state.pendingWinnerIdx === 0) {
+								inboardTitleEl.textContent = `試合終了！ 勝者: ${newName}`;
+							}
+							syncUIAndBoard({ animate: false });
+						}
 					}
-					syncUIAndBoard({ animate: false });
-				}
-			});
-			name0Input.addEventListener('blur', () => {
-				name0Input.value = rec.player0Name;
-				autoResizeResultNameTextarea(name0Input);
+				});
 			});
 			cellName0.appendChild(name0Input);
 
@@ -3161,37 +3469,37 @@
 			cellName1.className = 'result-cell';
 			const name1Input = document.createElement('textarea');
 			name1Input.rows = 1;
-			name1Input.maxLength = 16;
+			name1Input.maxLength = 33;
+			name1Input.readOnly = true;
+			name1Input.setAttribute('inputmode', 'none');
 			name1Input.className = 'result-player-name-input';
 			name1Input.value = rec.player1Name;
-			name1Input.title = 'タップしてプレイヤー名を変更';
+			name1Input.title = 'タッチしてプレイヤーを選択';
 			name1Input.setAttribute('aria-label', '右プレイヤー名');
-			name1Input.addEventListener('keydown', (e) => {
-				if (e.key === 'Enter') {
-					e.preventDefault();
-					name1Input.blur();
-				}
+			name1Input.addEventListener('focus', () => {
+				name1Input.blur();
 			});
-			name1Input.addEventListener('input', () => {
-				const cleanVal = name1Input.value.replace(/[\r\n]+/g, '');
-				if (name1Input.value !== cleanVal) {
-					name1Input.value = cleanVal;
-				}
-				autoResizeResultNameTextarea(name1Input);
-				const newName = cleanVal.trim() || 'Player2';
-				rec.player1Name = newName;
-				saveMatchRecordsToStorage();
-				if (state.currentSavedMatchId === rec.id) {
-					state.teams[1].name = newName;
-					if (state.pendingPhase === 'match_end' && state.pendingWinnerIdx === 1) {
-						inboardTitleEl.textContent = `試合終了！ 勝者: ${newName}`;
+			name1Input.addEventListener('click', (e) => {
+				e.preventDefault();
+				name1Input.blur();
+				if (state.modalOpen) return;
+				showPlayerSelectModal({
+					currentName: rec.player1Name,
+					onConfirm: (selectedCombinedName) => {
+						const newName = selectedCombinedName || 'Player2';
+						rec.player1Name = newName;
+						name1Input.value = newName;
+						autoResizeResultNameTextarea(name1Input);
+						saveMatchRecordsToStorage();
+						if (state.currentSavedMatchId === rec.id) {
+							state.teams[1].name = newName;
+							if (state.pendingPhase === 'match_end' && state.pendingWinnerIdx === 1) {
+								inboardTitleEl.textContent = `試合終了！ 勝者: ${newName}`;
+							}
+							syncUIAndBoard({ animate: false });
+						}
 					}
-					syncUIAndBoard({ animate: false });
-				}
-			});
-			name1Input.addEventListener('blur', () => {
-				name1Input.value = rec.player1Name;
-				autoResizeResultNameTextarea(name1Input);
+				});
 			});
 			cellName1.appendChild(name1Input);
 
@@ -3781,6 +4089,7 @@
 
 			buttons.forEach(btnDef => {
 				const btn = document.createElement('button');
+				btn.type = 'button';
 				btn.className = `modal-btn ${btnDef.variant || 'secondary'}`;
 				if (btnDef.variant === 'cancel-full') {
 					btn.style.gridColumn = '1 / -1';
@@ -3794,6 +4103,9 @@
 					closeModal();
 					if (btnDef.onClick) btnDef.onClick();
 				});
+				if (typeof btnDef.onCreate === 'function') {
+					btnDef.onCreate(btn);
+				}
 				modalActionsEl.appendChild(btn);
 			});
 
@@ -4127,6 +4439,281 @@
 			});
 		}
 
+		// プレイヤー選択・登録・削除モーダル（最大2名同時選択、2名時は「・」連結）
+		function showPlayerSelectModal({ currentName = '', onConfirm }) {
+			// 初期選択状態: 現在のプレイヤー名（「・」区切りの場合は分割した各名前）が登録リストにあれば選択状態にする
+			const initialParts = String(currentName || '')
+				.split('・')
+				.map(s => s.trim())
+				.filter(Boolean);
+			const selectedNames = [];
+			initialParts.forEach(part => {
+				if (
+					state.registeredPlayers.includes(part) &&
+					!selectedNames.includes(part) &&
+					selectedNames.length < 2
+				) {
+					selectedNames.push(part);
+				}
+			});
+
+			let confirmBtnEl = null;
+
+			const bodyContainer = document.createElement('div');
+			bodyContainer.className = 'player-modal-content';
+
+			// 1. 新規プレイヤー登録入力欄 + 追加ボタン
+			const addRow = document.createElement('div');
+			addRow.className = 'player-add-row';
+
+			const addInput = document.createElement('input');
+			addInput.type = 'text';
+			addInput.className = 'player-add-input';
+			addInput.maxLength = 16;
+			addInput.placeholder = '新しいプレイヤー名 (最大16文字)';
+			addInput.setAttribute('aria-label', '新しいプレイヤー名');
+
+			const addBtn = document.createElement('button');
+			addBtn.type = 'button';
+			addBtn.className = 'player-add-btn';
+			addBtn.textContent = '追加';
+
+			addRow.appendChild(addInput);
+			addRow.appendChild(addBtn);
+			bodyContainer.appendChild(addRow);
+
+			// 2. 登録済みプレイヤー一覧リスト
+			const listEl = document.createElement('div');
+			listEl.className = 'player-select-list';
+			bodyContainer.appendChild(listEl);
+
+			// ドラッグ並び替え状態管理:
+			// DOM要素(row)の insertBefore 移動時に子要素の PointerCapture が解除されるブラウザ仕様を回避するため、
+			// 親コンテナ(listEl)側で PointerCapture と移動イベントを一元管理する
+			let draggingRowEl = null;
+			let activeDragPointerId = null;
+
+			listEl.addEventListener('pointermove', (e) => {
+				if (!draggingRowEl || activeDragPointerId === null || e.pointerId !== activeDragPointerId) return;
+				e.preventDefault();
+
+				// リスト上下端付近での自動スクロール
+				const listRect = listEl.getBoundingClientRect();
+				const edgeZone = 24;
+				if (e.clientY < listRect.top + edgeZone) {
+					listEl.scrollTop -= 6;
+				} else if (e.clientY > listRect.bottom - edgeZone) {
+					listEl.scrollTop += 6;
+				}
+
+				// ポインタ位置に応じてDOM要素の順序を連続的に入れ替え
+				const siblings = Array.from(listEl.querySelectorAll('.player-select-item:not(.dragging)'));
+				const nextSibling = siblings.find(sib => {
+					const rect = sib.getBoundingClientRect();
+					return e.clientY < rect.top + rect.height / 2;
+				});
+				if (nextSibling) {
+					if (draggingRowEl.nextElementSibling !== nextSibling) {
+						listEl.insertBefore(draggingRowEl, nextSibling);
+					}
+				} else if (listEl.lastElementChild !== draggingRowEl) {
+					listEl.appendChild(draggingRowEl);
+				}
+			});
+
+			const finishListDrag = (e) => {
+				if (!draggingRowEl || activeDragPointerId === null || e.pointerId !== activeDragPointerId) return;
+				try {
+					if (listEl.hasPointerCapture(e.pointerId)) {
+						listEl.releasePointerCapture(e.pointerId);
+					}
+				} catch (err) {}
+				draggingRowEl.classList.remove('dragging');
+				draggingRowEl = null;
+				activeDragPointerId = null;
+
+				const newOrder = Array.from(listEl.querySelectorAll('.player-select-item'))
+					.map(el => el.dataset.playerName)
+					.filter(Boolean);
+				if (newOrder.length === state.registeredPlayers.length) {
+					state.registeredPlayers = newOrder;
+					saveRegisteredPlayersToStorage();
+				}
+			};
+
+			listEl.addEventListener('pointerup', finishListDrag);
+			listEl.addEventListener('pointercancel', finishListDrag);
+
+			const updateSelectionUI = () => {
+				if (confirmBtnEl) {
+					confirmBtnEl.disabled = selectedNames.length === 0;
+				}
+
+				const itemBtns = listEl.querySelectorAll('.player-select-item-btn');
+				itemBtns.forEach(btn => {
+					const pName = btn.dataset.playerName || '';
+					const selIdx = selectedNames.indexOf(pName);
+					const isSelected = selIdx !== -1;
+					btn.classList.toggle('active', isSelected);
+					btn.setAttribute('aria-pressed', String(isSelected));
+					const badge = btn.querySelector('.player-select-badge');
+					if (badge) {
+						badge.textContent = isSelected ? String(selIdx + 1) : '';
+					}
+				});
+			};
+
+			const renderPlayerList = (scrollToBottom = false) => {
+				listEl.innerHTML = '';
+				if (state.registeredPlayers.length === 0) {
+					const emptyMsg = document.createElement('div');
+					emptyMsg.className = 'player-empty-msg';
+					emptyMsg.textContent = '登録されたプレイヤーがいません。上の入力欄から追加してください。';
+					listEl.appendChild(emptyMsg);
+					updateSelectionUI();
+					return;
+				}
+
+				state.registeredPlayers.forEach(name => {
+					const row = document.createElement('div');
+					row.className = 'player-select-item';
+					row.dataset.playerName = name;
+
+					const itemBtn = document.createElement('button');
+					itemBtn.type = 'button';
+					itemBtn.className = 'player-select-item-btn';
+					itemBtn.dataset.playerName = name;
+
+					const badge = document.createElement('span');
+					badge.className = 'player-select-badge';
+
+					const nameSpan = document.createElement('span');
+					nameSpan.className = 'player-select-item-name';
+					nameSpan.textContent = name;
+
+					itemBtn.appendChild(badge);
+					itemBtn.appendChild(nameSpan);
+
+					itemBtn.addEventListener('click', () => {
+						const idx = selectedNames.indexOf(name);
+						if (idx !== -1) {
+							selectedNames.splice(idx, 1);
+						} else {
+							if (selectedNames.length >= 2) {
+								showToast('最大2名まで選択できます');
+								return;
+							}
+							selectedNames.push(name);
+						}
+						updateSelectionUI();
+					});
+
+					// ソート用ドラッグつまみ（縦スクロール領域と干渉しない専用ハンドル）
+					const dragHandle = document.createElement('button');
+					dragHandle.type = 'button';
+					dragHandle.className = 'player-drag-handle';
+					dragHandle.title = 'ドラッグして並び替え';
+					dragHandle.setAttribute('aria-label', `${name} の並び順を変更`);
+					dragHandle.innerHTML = '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="5.5" cy="3.5" r="1.3"/><circle cx="10.5" cy="3.5" r="1.3"/><circle cx="5.5" cy="8" r="1.3"/><circle cx="10.5" cy="8" r="1.3"/><circle cx="5.5" cy="12.5" r="1.3"/><circle cx="10.5" cy="12.5" r="1.3"/></svg>';
+
+					dragHandle.addEventListener('pointerdown', (e) => {
+						if (e.button === 2 || state.registeredPlayers.length <= 1) return;
+						e.preventDefault();
+						e.stopPropagation();
+						draggingRowEl = row;
+						activeDragPointerId = e.pointerId;
+						row.classList.add('dragging');
+						try {
+							listEl.setPointerCapture(e.pointerId);
+						} catch (err) {}
+					});
+
+					const delBtn = document.createElement('button');
+					delBtn.type = 'button';
+					delBtn.className = 'player-delete-btn';
+					delBtn.textContent = '×';
+					delBtn.title = `${name} を削除`;
+					delBtn.setAttribute('aria-label', `${name} を削除`);
+					delBtn.addEventListener('click', (e) => {
+						e.stopPropagation();
+						state.registeredPlayers = state.registeredPlayers.filter(p => p !== name);
+						saveRegisteredPlayersToStorage();
+						const selIdx = selectedNames.indexOf(name);
+						if (selIdx !== -1) {
+							selectedNames.splice(selIdx, 1);
+						}
+						renderPlayerList(false);
+						requestAnimationFrame(() => fitModalScale());
+					});
+
+					row.appendChild(itemBtn);
+					row.appendChild(dragHandle);
+					row.appendChild(delBtn);
+					listEl.appendChild(row);
+				});
+
+				updateSelectionUI();
+				if (scrollToBottom) {
+					listEl.scrollTop = listEl.scrollHeight;
+				}
+			};
+
+			const handleAddPlayer = () => {
+				const cleanVal = addInput.value.replace(/[\r\n]+/g, '').trim().slice(0, 16);
+				if (!cleanVal) {
+					showToast('プレイヤー名を入力してください');
+					return;
+				}
+				if (state.registeredPlayers.includes(cleanVal)) {
+					showToast('同じ名前が既に登録されています');
+					return;
+				}
+				state.registeredPlayers.push(cleanVal);
+				saveRegisteredPlayersToStorage();
+				addInput.value = '';
+				renderPlayerList(true);
+				requestAnimationFrame(() => fitModalScale());
+			};
+
+			addBtn.addEventListener('click', handleAddPlayer);
+			addInput.addEventListener('keydown', (e) => {
+				if (e.key === 'Enter') {
+					e.preventDefault();
+					handleAddPlayer();
+				}
+			});
+
+			renderPlayerList(false);
+
+			openModal({
+				title: 'プレイヤー選択',
+				desc: '',
+				bodyContent: bodyContainer,
+				twoCols: true,
+				buttons: [
+					{
+						label: '確定',
+						variant: 'primary',
+						disabled: selectedNames.length === 0,
+						onCreate: (btn) => {
+							confirmBtnEl = btn;
+						},
+						onClick: () => {
+							if (selectedNames.length === 0) return;
+							const combinedName = selectedNames.join('・');
+							if (typeof onConfirm === 'function') {
+								onConfirm(combinedName);
+							}
+						}
+					},
+					{
+						label: 'キャンセル',
+						variant: 'secondary'
+					}
+				]
+			});
+		}
+
 		function resetEntireMatch() {
 			cancelPendingAutoSwap();
 			hideInboardBar();
@@ -4335,27 +4922,46 @@
 			}
 		}
 
-		leftNameInputEl.addEventListener('input', () => {
-			const defaultName = state.leftTeamIdx === 0 ? 'Player1' : 'Player2';
-			state.teams[state.leftTeamIdx].name = leftNameInputEl.value.trim() || defaultName;
-			fitScoreboardNameInput(leftNameInputEl);
-			syncCurrentSavedRecordPlayerNames();
-			saveActiveMatchToStorage();
+		leftNameInputEl.addEventListener('focus', () => {
+			leftNameInputEl.blur();
 		});
-		leftNameInputEl.addEventListener('blur', () => {
-			leftNameInputEl.value = state.teams[state.leftTeamIdx].name;
-			fitScoreboardNameInput(leftNameInputEl);
+		leftNameInputEl.addEventListener('click', (e) => {
+			e.preventDefault();
+			leftNameInputEl.blur();
+			if (isInteractionLocked()) return;
+			const targetTeamIdx = state.leftTeamIdx;
+			const defaultName = targetTeamIdx === 0 ? 'Player1' : 'Player2';
+			showPlayerSelectModal({
+				currentName: state.teams[targetTeamIdx].name,
+				onConfirm: (selectedCombinedName) => {
+					state.teams[targetTeamIdx].name = selectedCombinedName || defaultName;
+					leftNameInputEl.value = state.teams[state.leftTeamIdx].name;
+					fitScoreboardNameInput(leftNameInputEl);
+					syncCurrentSavedRecordPlayerNames();
+					saveActiveMatchToStorage();
+				}
+			});
 		});
-		rightNameInputEl.addEventListener('input', () => {
-			const defaultName = state.rightTeamIdx === 0 ? 'Player1' : 'Player2';
-			state.teams[state.rightTeamIdx].name = rightNameInputEl.value.trim() || defaultName;
-			fitScoreboardNameInput(rightNameInputEl);
-			syncCurrentSavedRecordPlayerNames();
-			saveActiveMatchToStorage();
+
+		rightNameInputEl.addEventListener('focus', () => {
+			rightNameInputEl.blur();
 		});
-		rightNameInputEl.addEventListener('blur', () => {
-			rightNameInputEl.value = state.teams[state.rightTeamIdx].name;
-			fitScoreboardNameInput(rightNameInputEl);
+		rightNameInputEl.addEventListener('click', (e) => {
+			e.preventDefault();
+			rightNameInputEl.blur();
+			if (isInteractionLocked()) return;
+			const targetTeamIdx = state.rightTeamIdx;
+			const defaultName = targetTeamIdx === 0 ? 'Player1' : 'Player2';
+			showPlayerSelectModal({
+				currentName: state.teams[targetTeamIdx].name,
+				onConfirm: (selectedCombinedName) => {
+					state.teams[targetTeamIdx].name = selectedCombinedName || defaultName;
+					rightNameInputEl.value = state.teams[state.rightTeamIdx].name;
+					fitScoreboardNameInput(rightNameInputEl);
+					syncCurrentSavedRecordPlayerNames();
+					saveActiveMatchToStorage();
+				}
+			});
 		});
 
 		window.addEventListener('resize', () => {

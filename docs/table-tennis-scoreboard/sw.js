@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tt-scoreboard-20261028-010500';
+const CACHE_NAME = 'tt-scoreboard-20261030-020700';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
