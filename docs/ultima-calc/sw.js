@@ -1,21 +1,18 @@
 /* ==========================================================================
    Ultima Calc - Service Worker
-   オフライン完全対応・Network First (HTML) & Cache First (Assets)
+   オフライン完全対応・Network First（オンライン時は最新取得＆キャッシュ更新、オフライン時はキャッシュ返却）
    ========================================================================== */
 
-const CACHE_NAME = 'ultima-calc-20261029-022700';
+const CACHE_NAME = 'ultima-calc-20261030-202800';
 
 const STATIC_ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './favicon.ico',
-  './icons/icon.svg',
-  './icons/icon-maskable.svg',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  './icons/icon-maskable.png',
-  './icons/apple-touch-icon.png'
+  './icon-192.png',
+  './icon-512.png',
+  './icon.svg'
 ];
 
 // インストール処理：静的アセットをプリキャッシュし即時アクティブ化可能に
@@ -44,7 +41,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// リソース取得（fetch）処理
+// リソース取得（fetch）処理：Network First
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') {
     return;
@@ -55,53 +52,31 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  const isNavigation = event.request.mode === 'navigate' || url.pathname.endsWith('index.html') || url.pathname.endsWith('/');
-
-  if (isNavigation) {
-    // HTMLナビゲーション: Network First（オンライン時は常に最新、オフライン時はキャッシュ）
-    event.respondWith(
-      fetch(event.request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const copy = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          }
-          return networkResponse;
-        })
-        .catch(() => {
-          return caches.match('./index.html').then((cached) => cached || caches.match('./'));
-        })
-    );
-  } else {
-    // 静的アセット: Cache First（キャッシュにあれば即座に返し、なければフェッチ）
-    event.respondWith(
-      caches.match(event.request).then((cachedResponse) => {
-        if (cachedResponse) {
-          return cachedResponse;
+  event.respondWith(
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const copy = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
         }
-
-        return fetch(event.request)
-          .then((networkResponse) => {
-            if (
-              networkResponse &&
-              networkResponse.status === 200 &&
-              networkResponse.type === 'basic'
-            ) {
-              const copy = networkResponse.clone();
-              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-            }
-            return networkResponse;
-          })
-          .catch(() => {
-            return new Response('オフラインです', {
-              status: 503,
-              statusText: 'Service Unavailable',
-              headers: new Headers({ 'Content-Type': 'text/plain; charset=utf-8' })
-            });
-          });
+        return networkResponse;
       })
-    );
-  }
+      .catch(() => {
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          if (event.request.mode === 'navigate') {
+            return caches.match('./index.html').then((cached) => cached || caches.match('./'));
+          }
+          return new Response('オフラインです', {
+            status: 503,
+            statusText: 'Service Unavailable',
+            headers: new Headers({ 'Content-Type': 'text/plain; charset=utf-8' })
+          });
+        });
+      })
+  );
 });
 
 // メッセージハンドラー（即時更新命令等）

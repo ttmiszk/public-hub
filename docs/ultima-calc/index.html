@@ -7,24 +7,20 @@
 <title>Ultima Calc — Professional Calculator</title>
 
 <!-- PWA / Web App Manifest -->
-<link rel="manifest" href="./manifest.json">
+<link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0b0f17" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#e8edf5" media="(prefers-color-scheme: light)">
 
-<!-- iOS Safari PWA対応 -->
+<!-- iOS Safari PWA対応・OS側干渉防止 -->
+<meta name="format-detection" content="telephone=no, address=no, email=no">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Ultima Calc">
-<link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
-<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
-<link rel="apple-touch-icon-precomposed" href="./icons/apple-touch-icon.png">
-
-<!-- OS側干渉防止（電話番号・住所自動検出防止等） -->
-<meta name="format-detection" content="telephone=no, address=no, email=no">
-<meta name="mobile-web-app-capable" content="yes">
-
-<link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="alternate icon" href="favicon.ico">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
 /* ==========================================================================
    CSS変数（カラー・シャドウ・テーマ設定）

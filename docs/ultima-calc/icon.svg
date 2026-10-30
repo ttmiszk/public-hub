@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="bgGrad" cx="30%" cy="20%" r="90%">
+      <stop offset="0%" stop-color="#1d2c44"/>
+      <stop offset="50%" stop-color="#111825"/>
+      <stop offset="100%" stop-color="#0b0f17"/>
+    </radialGradient>
+    <linearGradient id="bodyGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#182333"/>
+      <stop offset="100%" stop-color="#0d141e"/>
+    </linearGradient>
+    <linearGradient id="screenGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2a384c"/>
+      <stop offset="100%" stop-color="#1b2535"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)"/>
+
+  <!-- 電卓本体 -->
+  <g filter="url(#shadow)" transform="translate(133, 76) scale(2.8)">
+    <!-- 外装 -->
+    <rect x="3" y="4" width="82" height="118" rx="18" fill="url(#bodyGrad)" stroke="#52657b" stroke-width="2.5"/>
+    <!-- 液晶ディスプレイ部 -->
+    <rect x="11" y="12" width="66" height="28" rx="6" fill="url(#screenGrad)" stroke="#3f4e63" stroke-width="1"/>
+    <!-- 液晶内のアクセントライン -->
+    <rect x="17" y="24" width="30" height="4" rx="2" fill="#78a9ff" opacity="0.8"/>
+    <rect x="53" y="22" width="18" height="8" rx="3" fill="#81dfb2" opacity="0.9"/>
+    <!-- キー群 -->
+    <circle cx="19" cy="57" r="8" fill="#d5dbe3"/>
+    <circle cx="44" cy="57" r="8" fill="#d5dbe3"/>
+    <circle cx="69" cy="57" r="8" fill="#f6a623"/>
+    <circle cx="19" cy="82" r="8" fill="#d5dbe3"/>
+    <circle cx="44" cy="82" r="8" fill="#d5dbe3"/>
+    <circle cx="69" cy="82" r="8" fill="#f6a623"/>
+    <!-- 下段キー -->
+    <rect x="11" y="99" width="41" height="16" rx="8" fill="#d5dbe3"/>
+    <circle cx="69" cy="107" r="8" fill="#78a9ff"/>
+  </g>
+</svg>
