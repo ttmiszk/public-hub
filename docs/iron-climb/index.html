@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>IRON CLIMB</title>
+	<link rel="stylesheet" href="./css/style.css">
+	<script defer src="./dist/game.bundle.js"></script>
+</head>
+<body>
+	<div id="app">
+		<canvas id="game-canvas" aria-label="IRON CLIMB ゲーム画面"></canvas>
+
+		<div id="ui-root">
+			<!-- シネマティック・レターボックス（STAGE_INTRO 用上下黒帯） -->
+			<div id="cinematic-bars" class="cinematic-bars" aria-hidden="true">
+				<div class="cinema-bar cinema-bar-top"></div>
+				<div class="cinema-bar cinema-bar-bottom"></div>
+			</div>
+
+			<!-- ゲームプレイ中 HUD -->
+			<header id="hud" class="hud is-hidden" aria-label="ゲーム情報">
+				<div class="hud-left">
+					<div id="hud-score-card" class="hud-card hud-card-chamfer">
+						<div class="hud-card-head">
+							<span class="hud-label">SCORE</span>
+							<span id="hud-new-best-dot" class="hud-best-pill is-hidden">NEW BEST</span>
+						</div>
+						<span id="hud-score" class="hud-value">000000</span>
+					</div>
+					<div class="hud-card hud-card-sub hud-card-chamfer">
+						<span class="hud-label">HIGH SCORE</span>
+						<span id="hud-highscore" class="hud-value-sub">000000</span>
+					</div>
+				</div>
+
+				<div class="hud-center">
+					<div class="hud-stage-badge">
+						<span id="hud-loop-pill" class="hud-loop-pill is-hidden">LOOP 1</span>
+						<div class="hud-stage-text">
+							<span id="hud-stage-name" class="hud-stage-title">STAGE 1</span>
+							<span id="hud-stage-sub" class="hud-stage-sub">CONSTRUCTION SITE</span>
+						</div>
+					</div>
+					<div id="hud-hammer-wrap" class="hud-hammer-wrap is-hidden">
+						<div class="hud-hammer-head">
+							<span class="hud-hammer-label">POWER HAMMER</span>
+							<span id="hud-hammer-time" class="hud-hammer-time">6.5s</span>
+						</div>
+						<div class="hud-hammer-track">
+							<div id="hud-hammer-fill" class="hud-hammer-fill"></div>
+						</div>
+					</div>
+					<div id="hud-boss-bar-wrap" class="hud-boss-wrap is-hidden">
+						<div class="hud-boss-head">
+							<span class="hud-boss-label">OVERLORD MK-III</span>
+							<span id="hud-boss-hp-text" class="hud-boss-hp-text">3 / 3</span>
+						</div>
+						<div class="hud-boss-track">
+							<div id="hud-boss-trail" class="hud-boss-trail"></div>
+							<div id="hud-boss-fill" class="hud-boss-fill"></div>
+							<div class="hud-boss-segments" aria-hidden="true">
+								<span></span><span></span><span></span>
+							</div>
+						</div>
+					</div>
+					<div id="hud-toast-layer" class="hud-toast-layer" aria-live="polite"></div>
+				</div>
+
+				<div class="hud-right">
+					<div class="hud-card hud-card-right hud-card-chamfer">
+						<div class="hud-lives-row">
+							<svg class="hud-helmet-icon" viewBox="0 0 28 24" aria-hidden="true">
+								<path d="M4 15 C4 8, 9 4, 14 4 C19 4, 24 8, 24 15 Z" fill="#ff7b00" />
+								<rect x="11.5" y="3" width="5" height="9" rx="1.5" fill="#ffd166" />
+								<rect x="2" y="14.5" width="24" height="3.2" rx="1.5" fill="#ffb703" />
+								<rect x="6" y="17.7" width="16" height="3.2" rx="1.2" fill="#94a3b8" />
+							</svg>
+							<div class="hud-lives-meta">
+								<span class="hud-label">LIVES</span>
+								<span id="hud-lives" class="hud-lives">× 3</span>
+							</div>
+						</div>
+						<div class="hud-bonus-row">
+							<div id="hud-bonus-pips" class="hud-bonus-pips" aria-hidden="true">
+								<span class="bonus-pip"></span>
+								<span class="bonus-pip"></span>
+								<span class="bonus-pip"></span>
+								<span class="bonus-pip"></span>
+								<span class="bonus-pip"></span>
+							</div>
+							<span id="hud-bonus-progress" class="hud-bonus-progress">BONUS 0/5</span>
+						</div>
+					</div>
+					<div class="hud-hints">
+						<span id="hud-invincible-badge" class="invincible-badge is-hidden">DEV: INVINCIBLE</span>
+						<button id="btn-hud-camera" type="button" class="camera-badge" title="カメラ視点切替 (Cキー)">CAM: BEHIND [C]</button>
+						<button id="btn-hud-mute" type="button" class="camera-badge" title="サウンド ON/OFF (Mキー)">SOUND: ON [M]</button>
+						<span id="hud-gamepad-badge" class="gamepad-badge is-disconnected">PAD: OFF</span>
+						<span class="pause-hint">ESC / START: PAUSE</span>
+					</div>
+				</div>
+			</header>
+
+			<!-- タイトル画面（中央3Dライブデモを主役として見せる上下アーケード構成） -->
+			<section id="screen-title" class="screen-overlay screen-title" aria-label="タイトル画面">
+				<div class="title-layout">
+					<div class="title-hero-zone">
+						<div class="title-highscore-bar">
+							<span class="title-hs-kicker">ARCADE RECORD</span>
+							<strong id="title-highscore" class="title-hs-value">000000</strong>
+						</div>
+
+						<div id="title-secret-trigger" class="title-secret-trigger">
+							<div class="title-emblem" aria-hidden="true">
+								<svg viewBox="0 0 180 46" class="emblem-svg">
+									<defs>
+										<linearGradient id="girderGrad" x1="0" y1="0" x2="1" y2="0">
+											<stop offset="0%" stop-color="#b93818" />
+											<stop offset="50%" stop-color="#f97316" />
+											<stop offset="100%" stop-color="#b93818" />
+										</linearGradient>
+									</defs>
+									<polygon points="8,18 172,18 166,28 14,28" fill="url(#girderGrad)" />
+									<rect x="22" y="6" width="10" height="34" rx="1.5" fill="#ffb703" />
+									<rect x="148" y="6" width="10" height="34" rx="1.5" fill="#ffb703" />
+									<line x1="32" y1="12" x2="148" y2="12" stroke="#ffd166" stroke-width="2.6" stroke-dasharray="10 5" />
+									<line x1="32" y1="34" x2="148" y2="34" stroke="#ffd166" stroke-width="2.6" stroke-dasharray="10 5" />
+									<line x1="32" y1="12" x2="62" y2="34" stroke="#fb923c" stroke-width="2" />
+									<line x1="62" y1="12" x2="92" y2="34" stroke="#fb923c" stroke-width="2" />
+									<line x1="92" y1="12" x2="122" y2="34" stroke="#fb923c" stroke-width="2" />
+									<line x1="122" y1="12" x2="148" y2="34" stroke="#fb923c" stroke-width="2" />
+									<circle cx="27" cy="23" r="2.4" fill="#0f172a" />
+									<circle cx="153" cy="23" r="2.4" fill="#0f172a" />
+								</svg>
+							</div>
+							<h1 class="game-logo" data-text="IRON CLIMB">IRON CLIMB</h1>
+						</div>
+
+						<div class="title-tagline-row">
+							<span class="tagline-line"></span>
+							<p class="game-tagline">CLIMB THE STEEL · CONQUER THE SUMMIT</p>
+							<span class="tagline-line"></span>
+						</div>
+						<button id="title-test-badge" type="button" class="title-test-badge is-hidden"></button>
+					</div>
+
+					<div class="title-dock-zone">
+						<div class="title-action-stack">
+							<button id="btn-start" type="button" class="arcade-btn arcade-btn-hero title-menu-item is-selected" data-action="start">
+								<span class="btn-arrow menu-arrow" aria-hidden="true">▶</span>
+								<span>START GAME</span>
+								<span class="btn-key menu-key">ENTER / A</span>
+							</button>
+							<button id="btn-controls" type="button" class="arcade-btn arcade-btn-secondary title-menu-item" data-action="controls">
+								<span class="btn-arrow menu-arrow" aria-hidden="true">▶</span>
+								<span>HOW TO PLAY</span>
+								<span class="btn-key menu-key">ENTER / H</span>
+							</button>
+						</div>
+
+						<div id="title-gamepad-status" class="title-pad-status">
+							ゲームパッド未接続（キーボードでプレイ可能）
+						</div>
+					</div>
+				</div>
+
+				<!-- 操作説明モーダル（HOW TO PLAY で開閉） -->
+				<div id="screen-controls-modal" class="controls-modal-backdrop is-hidden" role="dialog" aria-modal="true" aria-label="操作説明">
+					<div class="modal-panel modal-panel-controls">
+						<div class="modal-header-line">
+							<span class="modal-kicker">CLIMBER FIELD MANUAL</span>
+							<h2 class="modal-title">HOW TO PLAY</h2>
+						</div>
+
+						<div class="controls-panel">
+							<div class="control-group">
+								<h3 class="control-heading">KEYBOARD</h3>
+								<ul class="control-list">
+									<li><kbd>←</kbd><kbd>→</kbd> 移動</li>
+									<li><kbd>↑</kbd><kbd>↓</kbd> 梯子の昇降</li>
+									<li><kbd>SPACE</kbd> ジャンプ</li>
+									<li><kbd>C</kbd> カメラ視点切替</li>
+									<li><kbd>M</kbd> サウンド ON / OFF</li>
+									<li><kbd>ESC</kbd> ポーズ</li>
+								</ul>
+							</div>
+							<div class="control-group">
+								<h3 class="control-heading">GAMEPAD</h3>
+								<ul class="control-list">
+									<li><kbd>L-STICK</kbd> / <kbd>十字</kbd> 移動・昇降</li>
+									<li><kbd>A</kbd> ジャンプ / 決定</li>
+									<li><kbd>Y</kbd> / <kbd>RB</kbd> 視点切替</li>
+									<li><kbd>START</kbd> ポーズ</li>
+								</ul>
+							</div>
+						</div>
+
+						<p class="controls-tips">
+							障害物をジャンプでかわして最上階を目指せ！ ボーナス 5 個で 1UP、パワーハンマーで障害物を破壊可能。
+						</p>
+
+						<button id="btn-controls-close" type="button" class="arcade-btn menu-item is-selected">
+							<span>CLOSE</span>
+							<span class="btn-key">ESC / ENTER / A</span>
+						</button>
+					</div>
+				</div>
+
+				<!-- 開発・テスト用隠しメニュー（初期非表示 / F9・Shift+D・ロゴ3回クリックで開閉） -->
+				<div id="title-dev-panel" class="dev-panel is-hidden" role="dialog" aria-label="テスト設定メニュー">
+					<div class="dev-panel-header">
+						<span class="dev-panel-kicker">DEVELOPER TEST MENU</span>
+						<span class="dev-panel-hint">F9 / Shift+D</span>
+					</div>
+
+					<div class="dev-section">
+						<span class="dev-label">START STAGE</span>
+						<div class="dev-btn-row" id="dev-stage-buttons">
+							<button type="button" class="dev-chip is-active" data-stage-index="0">STAGE 1</button>
+							<button type="button" class="dev-chip" data-stage-index="1">STAGE 2</button>
+							<button type="button" class="dev-chip" data-stage-index="2">STAGE 3</button>
+						</div>
+						<p id="dev-stage-desc" class="dev-subtext">STAGE 1 - CONSTRUCTION SITE</p>
+					</div>
+
+					<div class="dev-section">
+						<span class="dev-label">INITIAL LIVES</span>
+						<div class="dev-lives-row">
+							<button id="dev-lives-minus" type="button" class="dev-step-btn" aria-label="残機を減らす">-</button>
+							<strong id="dev-lives-value" class="dev-lives-val">3</strong>
+							<button id="dev-lives-plus" type="button" class="dev-step-btn" aria-label="残機を増やす">+</button>
+							<div class="dev-btn-row" id="dev-lives-presets">
+								<button type="button" class="dev-chip dev-chip-sm" data-lives="1">1</button>
+								<button type="button" class="dev-chip dev-chip-sm is-active" data-lives="3">3</button>
+								<button type="button" class="dev-chip dev-chip-sm" data-lives="5">5</button>
+								<button type="button" class="dev-chip dev-chip-sm" data-lives="10">10</button>
+								<button type="button" class="dev-chip dev-chip-sm" data-lives="99">99</button>
+							</div>
+						</div>
+					</div>
+
+					<div class="dev-section">
+						<span class="dev-label">START LOOP</span>
+						<div class="dev-btn-row" id="dev-loop-buttons">
+							<button type="button" class="dev-chip dev-chip-sm is-active" data-loop="1">LOOP 1</button>
+							<button type="button" class="dev-chip dev-chip-sm" data-loop="2">LOOP 2</button>
+							<button type="button" class="dev-chip dev-chip-sm" data-loop="3">LOOP 3</button>
+							<button type="button" class="dev-chip dev-chip-sm" data-loop="4">LOOP 4</button>
+						</div>
+					</div>
+
+					<div class="dev-section">
+						<span class="dev-label">INVINCIBLE MODE</span>
+						<div class="dev-btn-row" id="dev-invincible-buttons">
+							<button type="button" class="dev-chip dev-chip-sm is-active" data-invincible="false">OFF</button>
+							<button type="button" class="dev-chip dev-chip-sm" data-invincible="true">ON</button>
+						</div>
+						<p class="dev-subtext">ON時: 樽・タイヤ・炎・電撃・プレス等の接触ミスを無効化（揺れによる振り落とし演出は有効）</p>
+					</div>
+
+					<div class="dev-actions">
+						<button id="dev-btn-play" type="button" class="arcade-btn arcade-btn-primary dev-action-btn">START TEST</button>
+						<button id="dev-btn-reset" type="button" class="arcade-btn dev-action-btn">RESET</button>
+						<button id="dev-btn-close" type="button" class="arcade-btn dev-action-btn">CLOSE</button>
+					</div>
+				</div>
+			</section>
+
+			<!-- ステージ開始バナー（遠景カメラを遮らない下部スライスリボン） -->
+			<section id="screen-intro" class="screen-banner is-intro-banner is-hidden" aria-label="ステージ開始">
+				<div class="banner-box banner-box-intro">
+					<p id="intro-stage-num" class="banner-kicker">STAGE 1</p>
+					<h2 id="intro-stage-title" class="banner-title">CONSTRUCTION SITE</h2>
+					<p id="intro-stage-desc" class="banner-sub">巨大な建設現場</p>
+					<p class="banner-ready">READY!</p>
+				</div>
+			</section>
+
+			<!-- ミス / ステージクリア共通バナー -->
+			<section id="screen-notice" class="screen-banner is-hidden" aria-label="ステージ通知">
+				<div class="banner-box">
+					<p id="notice-kicker" class="banner-kicker">STAGE 1</p>
+					<h2 id="notice-title" class="banner-title">STAGE CLEAR!</h2>
+					<p id="notice-sub" class="banner-sub"></p>
+					<p id="notice-bonus-pill" class="notice-bonus-pill is-hidden">STAGE BONUS +1000</p>
+					<button id="btn-notice-next-loop" type="button" class="arcade-btn arcade-btn-primary banner-action-btn is-hidden">
+						<span id="btn-notice-next-loop-label">START LOOP 2</span>
+						<span class="btn-key">ENTER / SPACE / A</span>
+					</button>
+				</div>
+			</section>
+
+			<!-- ポーズ画面 -->
+			<section id="screen-pause" class="screen-overlay is-hidden" aria-label="ポーズメニュー">
+				<div class="modal-panel modal-panel-pause">
+					<div class="modal-header-line">
+						<span class="modal-kicker">SYSTEM PAUSED</span>
+						<h2 class="modal-title">PAUSED</h2>
+					</div>
+					<div class="modal-menu" role="menu">
+						<button type="button" class="arcade-btn menu-item is-selected" data-action="resume">RESUME</button>
+						<button type="button" class="arcade-btn menu-item" data-action="restart">RESTART STAGE</button>
+						<button type="button" class="arcade-btn menu-item menu-item-setting" data-action="camera" id="btn-pause-camera">CAM: BEHIND</button>
+						<button type="button" class="arcade-btn menu-item menu-item-setting" data-action="mute" id="btn-pause-mute">SOUND: ON</button>
+						<div class="arcade-btn menu-item menu-item-slider" data-action="bgmVolume" role="menuitem" tabindex="0" aria-label="BGM 音量">
+							<span class="slider-label">BGM VOL</span>
+							<input id="pause-bgm-slider" type="range" min="0" max="100" step="5" value="100" class="arcade-range" aria-label="BGM音量スライダー">
+							<span id="pause-bgm-val" class="slider-val">100%</span>
+						</div>
+						<div class="arcade-btn menu-item menu-item-slider" data-action="seVolume" role="menuitem" tabindex="0" aria-label="SE 音量">
+							<span class="slider-label">SE VOL</span>
+							<input id="pause-se-slider" type="range" min="0" max="100" step="5" value="100" class="arcade-range" aria-label="SE音量スライダー">
+							<span id="pause-se-val" class="slider-val">100%</span>
+						</div>
+						<button type="button" class="arcade-btn menu-item menu-item-setting" data-action="quality" id="btn-pause-quality">GFX: AUTO (HIGH)</button>
+						<button type="button" class="arcade-btn menu-item menu-item-danger" data-action="title">RETURN TO TITLE</button>
+					</div>
+					<p class="modal-foot">↑↓ 選択 · ←→ 音量/設定調整 · ENTER・A 決定 · ESC・START 再開</p>
+				</div>
+			</section>
+
+			<!-- ゲームオーバー画面 -->
+			<section id="screen-gameover" class="screen-overlay is-hidden" aria-label="ゲームオーバー">
+				<div class="modal-panel modal-panel-danger">
+					<span class="modal-kicker modal-kicker-danger">MISSION FAILED</span>
+					<h2 class="modal-title modal-title-danger">GAME OVER</h2>
+					<div id="gameover-new-record" class="new-record-badge is-hidden">NEW HIGH SCORE!</div>
+					<div class="result-stats">
+						<div class="stat-row">
+							<span>REACHED</span>
+							<strong id="gameover-reached" class="stat-val-sub">STAGE 1</strong>
+						</div>
+						<div class="stat-row">
+							<span>FINAL SCORE</span>
+							<strong id="gameover-score">000000</strong>
+						</div>
+						<div class="stat-row">
+							<span>HIGH SCORE</span>
+							<strong id="gameover-highscore">000000</strong>
+						</div>
+					</div>
+					<div class="result-actions">
+						<button id="btn-gameover-retry" type="button" class="arcade-btn gameover-item is-selected" data-action="retry">
+							<span class="btn-arrow menu-arrow" aria-hidden="true">▶</span>
+							<span>RETRY GAME</span>
+							<span class="btn-key menu-key">ENTER / A</span>
+						</button>
+						<button id="btn-gameover-title" type="button" class="arcade-btn gameover-item" data-action="title">
+							<span class="btn-arrow menu-arrow" aria-hidden="true">▶</span>
+							<span>RETURN TO TITLE</span>
+							<span class="btn-key menu-key">ENTER / A</span>
+						</button>
+					</div>
+					<p class="modal-foot">↑↓ 選択 / ENTER・A 決定</p>
+				</div>
+			</section>
+
+			<!-- エンディング画面 -->
+			<section id="screen-ending" class="screen-overlay is-hidden" aria-label="エンディング">
+				<div class="modal-panel modal-panel-clear">
+					<p class="banner-kicker">MISSION COMPLETE</p>
+					<h2 class="modal-title modal-title-clear">CONGRATULATIONS!</h2>
+					<p class="ending-message">
+						鉄骨の建設現場、巨大工場、そして機械塔の頂上を制覇しました！
+					</p>
+					<div class="result-stats">
+						<div class="stat-row">
+							<span>FINAL SCORE</span>
+							<strong id="ending-score">000000</strong>
+						</div>
+						<div class="stat-row">
+							<span>HIGH SCORE</span>
+							<strong id="ending-highscore">000000</strong>
+						</div>
+					</div>
+					<button id="btn-ending-title" type="button" class="arcade-btn arcade-btn-primary is-selected">
+						<span>RETURN TO TITLE</span>
+						<span class="btn-key">ENTER / A</span>
+					</button>
+				</div>
+			</section>
+
+			<!-- フェード遷移用幕 -->
+			<div id="screen-fade" class="screen-fade" aria-hidden="true"></div>
+		</div>
+	</div>
+</body>
+</html>
