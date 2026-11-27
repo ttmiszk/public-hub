@@ -1378,6 +1378,10 @@ html, body {
 }
 
 /* タブレット・スマートフォン縦/狭幅画面向けスケール調整 */
+.game-hud {
+	transform-origin: top left;
+}
+
 @media (max-width: 768px) {
 	.game-hud {
 		top: calc(10px + env(safe-area-inset-top, 0px));
@@ -1385,6 +1389,7 @@ html, body {
 		padding: 10px 14px;
 		gap: 6px;
 		font-size: 0.92rem;
+		transform: scale(0.84);
 	}
 
 	.hud-item,
@@ -1615,34 +1620,39 @@ html, body {
 	box-shadow: 0 0 28px rgba(255, 60, 100, 0.85);
 }
 
-.touch-autofire-btn {
-	min-width: 72px;
-	padding: 7px 14px;
-	border-radius: 999px;
-	border: 1.5px solid rgba(0, 240, 255, 0.6);
-	background: rgba(10, 20, 38, 0.72);
-	color: #a5d8ff;
-	font-family: 'Outfit', sans-serif;
-	font-size: 0.8rem;
-	font-weight: 900;
-	letter-spacing: 0.1rem;
-	pointer-events: auto;
-	touch-action: none;
-	outline: none;
-	transition: all 0.15s ease;
-}
-
-.touch-autofire-btn.active {
-	border-color: #00ff88;
-	background: rgba(0, 255, 136, 0.25);
-	color: #00ff88;
-	box-shadow: 0 0 14px rgba(0, 255, 136, 0.5);
-}
-
-.touch-pause-btn {
+.touch-top-right-group {
 	position: absolute;
 	top: calc(14px + env(safe-area-inset-top, 0px));
 	right: calc(14px + env(safe-area-inset-right, 0px));
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	pointer-events: none;
+}
+
+.touch-camera-btn {
+	height: 46px;
+	padding: 0 13px;
+	border-radius: 10px;
+	border: 1.5px solid rgba(0, 255, 136, 0.65);
+	background: rgba(10, 22, 34, 0.72);
+	color: #00ff88;
+	font-family: 'Outfit', sans-serif;
+	font-size: 0.85rem;
+	font-weight: 900;
+	letter-spacing: 0.08rem;
+	box-shadow: 0 0 12px rgba(0, 255, 136, 0.25);
+	pointer-events: auto;
+	touch-action: none;
+	outline: none;
+}
+
+.touch-camera-btn:active {
+	transform: scale(0.92);
+	background: rgba(0, 255, 136, 0.25);
+}
+
+.touch-pause-btn {
 	width: 46px;
 	height: 46px;
 	border-radius: 10px;
@@ -1662,6 +1672,664 @@ html, body {
 .touch-pause-btn:active {
 	transform: scale(0.92);
 	background: rgba(0, 240, 255, 0.25);
+}
+
+/* スマートフォン向け HUD さらなる縮小スケール */
+@media (max-width: 540px) {
+	.game-hud {
+		top: calc(8px + env(safe-area-inset-top, 0px));
+		left: calc(8px + env(safe-area-inset-left, 0px));
+		transform: scale(0.70);
+	}
+}
+
+@media (max-width: 400px) {
+	.game-hud {
+		transform: scale(0.60);
+	}
+}
+
+@media (max-height: 550px) {
+	.game-hud {
+		transform: scale(0.76);
+	}
+}
+
+@media (max-height: 430px) {
+	.game-hud {
+		transform: scale(0.62);
+	}
+}
+
+/* =========================================================================
+   一人称コックピット視点（本物の戦闘機バブルキャノピー＋反射ガラス＋3画面MFD計器盤）
+   ========================================================================= */
+
+/* コックピット視点中は左上の通常HUDを非表示にし、コックピット内計器へ完全統合 */
+body.cockpit-active .game-hud {
+	display: none !important;
+}
+
+.cockpit-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 8;
+	pointer-events: none;
+	overflow: hidden;
+}
+
+.cockpit-overlay.hidden {
+	display: none !important;
+}
+
+/* 1. 中央HUDコンバイナー（照準中心を画面厳密中央(50%, 50%)に固定しつつ、パネル＆左右ショルダーを計器ベースまで延長） */
+.cockpit-hud-combiner {
+	--hud-half-h: clamp(82px, 17vh, 145px);
+	position: absolute;
+	left: 50%;
+	top: calc(50% - var(--hud-half-h));
+	bottom: 0;
+	transform: translateX(-50%);
+	width: clamp(230px, 34vw, 430px);
+	z-index: 1;
+}
+
+.combiner-glass {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	border-radius: 46% 46% 0 0 / clamp(26px, 5vh, 52px) clamp(26px, 5vh, 52px) 0 0;
+	background: linear-gradient(
+		180deg,
+		rgba(110, 255, 220, 0.08) 0%,
+		rgba(30, 175, 145, 0.03) 26%,
+		rgba(15, 110, 95, 0.04) 68%,
+		rgba(10, 48, 52, 0.14) 100%
+	);
+	border: 1.5px solid rgba(145, 255, 220, 0.24);
+	border-bottom: none;
+	box-shadow:
+		inset 0 1px 0 rgba(235, 255, 248, 0.38),
+		inset 0 0 22px rgba(0, 255, 180, 0.05);
+	overflow: hidden;
+	box-sizing: border-box;
+}
+
+.combiner-glass-glare {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: calc(var(--hud-half-h) * 2);
+	background: radial-gradient(
+		ellipse 90% 45% at 50% 0%,
+		rgba(215, 255, 245, 0.10) 0%,
+		transparent 65%
+	);
+}
+
+/* 照準パネルを左右から挟み込み、計器ベース（グレアシールド）まで真っ直ぐ支える金属ショルダー支柱 */
+.combiner-bracket {
+	position: absolute;
+	top: calc(var(--hud-half-h) * 0.94);
+	bottom: 0;
+	width: 14px;
+	background: linear-gradient(90deg, #0b1017 0%, #3d4f64 46%, #24303e 72%, #090d14 100%);
+	border: 1px solid rgba(135, 172, 205, 0.36);
+	border-bottom: none;
+	border-radius: 4px 4px 0 0;
+	box-shadow:
+		0 4px 14px rgba(0, 0, 0, 0.85),
+		inset 0 1px 0 rgba(200, 230, 255, 0.35);
+}
+
+.combiner-bracket::before {
+	content: '';
+	position: absolute;
+	top: 10px;
+	left: 2px;
+	right: 2px;
+	height: 18px;
+	border-radius: 2px;
+	background: linear-gradient(180deg, rgba(160, 205, 235, 0.28) 0%, rgba(20, 30, 42, 0.45) 100%);
+	border-top: 1px solid rgba(200, 235, 255, 0.35);
+}
+
+.combiner-bracket.left {
+	left: -7px;
+}
+
+.combiner-bracket.right {
+	right: -7px;
+}
+
+.combiner-heading-bar {
+	position: absolute;
+	top: clamp(14px, 2.6vh, 22px);
+	left: 0;
+	right: 0;
+	padding: 0 16px;
+	box-sizing: border-box;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: clamp(4px, 1vw, 8px);
+	white-space: nowrap;
+	font-family: 'Consolas', 'Outfit', monospace;
+	font-size: clamp(0.56rem, 1.1vw, 0.78rem);
+	font-weight: 700;
+	letter-spacing: clamp(0.04rem, 0.14vw, 0.12rem);
+	color: rgba(120, 255, 195, 0.92);
+	text-shadow: 0 0 8px rgba(0, 255, 160, 0.75);
+}
+
+.combiner-heading-sep {
+	opacity: 0.45;
+}
+
+.combiner-svg {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: calc(var(--hud-half-h) * 2);
+}
+
+.hud-horizon {
+	stroke: rgba(95, 255, 185, 0.72);
+	stroke-width: 1.5;
+	filter: drop-shadow(0 0 4px rgba(0, 255, 160, 0.75));
+}
+
+.hud-pitch-up {
+	fill: none;
+	stroke: rgba(95, 255, 185, 0.55);
+	stroke-width: 1.25;
+}
+
+.hud-pitch-down {
+	fill: none;
+	stroke: rgba(95, 255, 185, 0.48);
+	stroke-width: 1.25;
+	stroke-dasharray: 5 4;
+}
+
+.hud-pipper-ring {
+	fill: none;
+	stroke: rgba(110, 255, 200, 0.78);
+	stroke-width: 1.6;
+	stroke-dasharray: 12 8;
+	filter: drop-shadow(0 0 5px rgba(0, 255, 170, 0.8));
+}
+
+.hud-pipper-dot {
+	fill: #aaffdd;
+	filter: drop-shadow(0 0 6px #00ffaa);
+}
+
+.hud-gun-cross {
+	stroke: rgba(120, 255, 205, 0.85);
+	stroke-width: 1.5;
+}
+
+.hud-bracket {
+	fill: none;
+	stroke: rgba(95, 255, 185, 0.55);
+	stroke-width: 1.6;
+}
+
+.combiner-bottom-readout {
+	position: absolute;
+	top: calc(var(--hud-half-h) * 2 - 22px);
+	left: 0;
+	right: 0;
+	display: flex;
+	justify-content: center;
+	gap: 10px;
+	font-family: 'Consolas', 'Outfit', monospace;
+	font-size: clamp(0.62rem, 1.05vw, 0.76rem);
+	font-weight: 900;
+	letter-spacing: 0.12rem;
+}
+
+.cp-hud-shield {
+	color: #55f0ff;
+	text-shadow: 0 0 10px rgba(0, 230, 255, 0.9);
+}
+
+.cp-hud-warn {
+	color: #ff4444;
+	text-shadow: 0 0 10px rgba(255, 50, 50, 0.9);
+	animation: blink 0.6s infinite;
+}
+
+.cp-hud-shield.hidden,
+.cp-hud-warn.hidden {
+	display: none !important;
+}
+
+/* 2. 重厚なグレアシールド＆3画面 MFD 計器盤ダッシュボード（HUDコンバイナー下端を前面から受け止める） */
+.cockpit-dashboard {
+	position: absolute;
+	left: 50%;
+	bottom: -6px;
+	z-index: 2;
+	width: min(860px, 94vw);
+	margin-left: calc(min(860px, 94vw) / -2);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	will-change: transform;
+	transition: transform 0.08s linear;
+}
+
+.glareshield-lip {
+	width: 92%;
+	height: 26px;
+	background: linear-gradient(180deg, #313d4c 0%, #171e28 38%, #0a0e14 100%);
+	border-top: 2px solid rgba(145, 180, 215, 0.35);
+	border-left: 2px solid rgba(60, 80, 100, 0.45);
+	border-right: 2px solid rgba(60, 80, 100, 0.45);
+	border-radius: 16px 16px 0 0;
+	box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.75);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 28px;
+	box-sizing: border-box;
+}
+
+.glareshield-center-notch {
+	width: 140px;
+	height: 10px;
+	border-radius: 6px;
+	background: linear-gradient(180deg, #06090e 0%, #1d2632 100%);
+	border: 1px solid rgba(110, 145, 175, 0.25);
+}
+
+.caution-lamp {
+	font-family: 'Consolas', 'Outfit', monospace;
+	font-size: 0.62rem;
+	font-weight: 900;
+	letter-spacing: 0.08rem;
+	padding: 2px 9px;
+	border-radius: 3px;
+	background: rgba(30, 15, 15, 0.85);
+	border: 1px solid rgba(120, 60, 50, 0.45);
+	color: rgba(160, 85, 70, 0.45);
+	transition: all 0.2s ease;
+}
+
+.caution-lamp.lit {
+	background: rgba(255, 60, 20, 0.28);
+	border-color: #ff6633;
+	color: #ffbb44;
+	text-shadow: 0 0 8px #ff5522;
+	box-shadow: 0 0 12px rgba(255, 80, 30, 0.65);
+	animation: blink 0.55s infinite;
+}
+
+.caution-lamp.shield-lamp {
+	background: rgba(12, 24, 34, 0.85);
+	border-color: rgba(50, 105, 130, 0.45);
+	color: rgba(70, 150, 175, 0.42);
+}
+
+.caution-lamp.shield-lamp.lit {
+	background: rgba(0, 220, 255, 0.24);
+	border-color: #00eeff;
+	color: #99ffff;
+	text-shadow: 0 0 8px #00eeff;
+	box-shadow: 0 0 12px rgba(0, 220, 255, 0.65);
+	animation: none;
+}
+
+.cockpit-console-body {
+	width: 100%;
+	background: linear-gradient(180deg, #161d27 0%, #0b0f16 55%, #05070b 100%);
+	border-top: 1px solid rgba(120, 155, 190, 0.25);
+	border-left: 2px solid rgba(70, 90, 115, 0.35);
+	border-right: 2px solid rgba(70, 90, 115, 0.35);
+	border-radius: 10px 10px 0 0;
+	padding: 10px 18px calc(14px + env(safe-area-inset-bottom, 0px));
+	box-sizing: border-box;
+	display: grid;
+	grid-template-columns: 1fr 1.15fr 1fr;
+	gap: 12px;
+	box-shadow: inset 0 6px 18px rgba(0, 0, 0, 0.85), 0 -4px 26px rgba(0, 0, 0, 0.85);
+}
+
+.mfd-bezel {
+	background: linear-gradient(145deg, #252f3d 0%, #10151d 55%, #1d2633 100%);
+	border: 1.5px solid rgba(110, 140, 170, 0.32);
+	border-radius: 8px;
+	padding: 6px;
+	display: flex;
+	align-items: stretch;
+	gap: 5px;
+	box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.85), 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.mfd-osb-col {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-around;
+	padding: 4px 0;
+}
+
+.mfd-osb-col span {
+	display: block;
+	width: 6px;
+	height: 11px;
+	border-radius: 2px;
+	background: linear-gradient(180deg, #394758 0%, #18202a 100%);
+	border: 1px solid rgba(140, 170, 200, 0.25);
+}
+
+.mfd-screen {
+	position: relative;
+	flex: 1;
+	background: radial-gradient(ellipse at 50% 20%, rgba(8, 38, 46, 0.96) 0%, rgba(4, 14, 20, 0.98) 100%);
+	border: 1.5px solid rgba(0, 220, 180, 0.38);
+	border-radius: 5px;
+	padding: 7px 10px;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	overflow: hidden;
+	box-shadow: inset 0 0 18px rgba(0, 220, 180, 0.14);
+	font-family: 'Consolas', 'Outfit', monospace;
+}
+
+.mfd-scanlines {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background: repeating-linear-gradient(
+		0deg,
+		rgba(0, 0, 0, 0.16) 0px,
+		rgba(0, 0, 0, 0.16) 1px,
+		transparent 1px,
+		transparent 3px
+	);
+}
+
+.mfd-glass-sheen {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background: linear-gradient(135deg, rgba(200, 245, 255, 0.10) 0%, transparent 38%, transparent 100%);
+}
+
+.mfd-title {
+	font-size: 0.64rem;
+	font-weight: 900;
+	letter-spacing: 0.1rem;
+	color: rgba(0, 240, 195, 0.72);
+	border-bottom: 1px solid rgba(0, 240, 195, 0.22);
+	padding-bottom: 2px;
+	margin-bottom: 2px;
+}
+
+.mfd-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	font-size: 0.84rem;
+	font-weight: 700;
+}
+
+.mfd-label {
+	color: rgba(160, 215, 215, 0.78);
+	font-size: 0.72rem;
+	letter-spacing: 0.06rem;
+}
+
+.mfd-label.red {
+	color: #ff5566;
+}
+
+.mfd-val {
+	font-weight: 900;
+	font-variant-numeric: tabular-nums;
+	transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.mfd-val.cyan { color: #00f0ff; text-shadow: 0 0 8px rgba(0, 240, 255, 0.55); }
+.mfd-val.gold { color: #ffd700; text-shadow: 0 0 8px rgba(255, 215, 0, 0.55); }
+.mfd-val.green { color: #00ff88; text-shadow: 0 0 8px rgba(0, 255, 136, 0.55); }
+.mfd-val.magenta { color: #ff44ff; text-shadow: 0 0 8px rgba(255, 68, 255, 0.55); }
+.mfd-val.white { color: #ffffff; text-shadow: 0 0 6px rgba(255, 255, 255, 0.45); }
+.mfd-val.red { color: #ff3355; text-shadow: 0 0 8px rgba(255, 51, 85, 0.75); }
+
+.mfd-bar-track {
+	width: 100%;
+	height: 6px;
+	background: rgba(0, 255, 200, 0.12);
+	border: 1px solid rgba(0, 230, 200, 0.28);
+	border-radius: 3px;
+	overflow: hidden;
+	margin-bottom: 2px;
+}
+
+.mfd-bar-track.mfd-bar-lg {
+	height: 9px;
+}
+
+.mfd-bar-track.boss-track {
+	border-color: rgba(255, 60, 80, 0.55);
+	background: rgba(255, 40, 60, 0.15);
+}
+
+.mfd-bar-fill {
+	height: 100%;
+	transition: width 0.14s ease-out;
+}
+
+.mfd-bar-fill.gold { background: linear-gradient(90deg, #ffaa00, #ffe655); box-shadow: 0 0 8px rgba(255, 200, 0, 0.65); }
+.mfd-bar-fill.life { background: linear-gradient(90deg, #00e676, #33ffbb); box-shadow: 0 0 8px rgba(0, 255, 136, 0.65); }
+.mfd-bar-fill.ammo { background: linear-gradient(90deg, #00b8d4, #00f0ff); box-shadow: 0 0 8px rgba(0, 230, 255, 0.65); }
+.mfd-bar-fill.boss { background: linear-gradient(90deg, #ff0044, #ff7700); box-shadow: 0 0 10px rgba(255, 40, 60, 0.8); }
+.mfd-bar-fill.danger { background: linear-gradient(90deg, #ff1744, #ff6d00); box-shadow: 0 0 10px rgba(255, 40, 40, 0.85); }
+
+.mfd-power-cells {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 5px;
+	margin-top: 2px;
+}
+
+.power-cell {
+	height: 7px;
+	border-radius: 2px;
+	background: rgba(255, 0, 255, 0.14);
+	border: 1px solid rgba(255, 80, 255, 0.3);
+}
+
+.power-cell.active {
+	background: linear-gradient(90deg, #ff00cc, #ff66ff);
+	box-shadow: 0 0 9px rgba(255, 50, 255, 0.8);
+}
+
+.cp-boss-panel.hidden,
+.cp-sys-status.hidden {
+	display: none !important;
+}
+
+.cp-sys-status {
+	margin-top: auto;
+	padding-top: 4px;
+	text-align: center;
+	font-size: 0.68rem;
+	font-weight: 700;
+	letter-spacing: 0.08rem;
+	color: rgba(0, 255, 170, 0.82);
+}
+
+.cp-sys-status.warn {
+	color: #ff4444;
+	text-shadow: 0 0 8px rgba(255, 40, 40, 0.85);
+	animation: blink 0.6s infinite;
+}
+
+/* 狭幅・モバイル向けコックピット計器盤コンパクト化 */
+@media (max-width: 768px) {
+	.cockpit-dashboard {
+		width: 98vw;
+		margin-left: -49vw;
+	}
+
+	.glareshield-lip {
+		height: 20px;
+		padding: 0 14px;
+	}
+
+	.glareshield-center-notch {
+		width: 70px;
+	}
+
+	.caution-lamp {
+		font-size: 0.52rem;
+		padding: 1px 6px;
+	}
+
+	.cockpit-console-body {
+		padding: 6px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+		gap: 6px;
+	}
+
+	.mfd-osb-col {
+		display: none;
+	}
+
+	.mfd-bezel {
+		padding: 3px;
+	}
+
+	.mfd-screen {
+		padding: 5px 6px;
+		gap: 2px;
+	}
+
+	.mfd-title {
+		font-size: 0.52rem;
+	}
+
+	.mfd-row {
+		font-size: 0.68rem;
+	}
+
+	.mfd-label {
+		font-size: 0.58rem;
+	}
+
+	.cp-sys-status {
+		font-size: 0.55rem;
+	}
+}
+
+/* 低解像度スマホ縦向き向け: 照準パネル幅と文字の切れ防止 */
+@media (max-width: 540px) {
+	.cockpit-hud-combiner {
+		--hud-half-h: clamp(74px, 15.5vh, 130px);
+		width: clamp(248px, 72vw, 330px);
+	}
+
+	.combiner-glass {
+		border-radius: 44% 44% 0 0 / 26px 26px 0 0;
+	}
+
+	.combiner-heading-bar {
+		top: 15px;
+		padding: 0 14px;
+		gap: 4px;
+		font-size: clamp(0.52rem, 2.5vw, 0.66rem);
+		letter-spacing: 0.04rem;
+	}
+}
+
+/* コックピット視点＋タッチUI併用時: 縦向きは計器盤のすぐ上にタッチUIを退避して重なりを完全解消 */
+@media (max-width: 640px) {
+	body.cockpit-active.touch-ui-active .touch-joystick-zone {
+		left: calc(10px + env(safe-area-inset-left, 0px));
+		bottom: calc(128px + env(safe-area-inset-bottom, 0px));
+		width: 112px;
+		height: 112px;
+	}
+
+	body.cockpit-active.touch-ui-active .touch-joystick-base {
+		width: 94px;
+		height: 94px;
+	}
+
+	body.cockpit-active.touch-ui-active .touch-joystick-knob {
+		width: 40px;
+		height: 40px;
+	}
+
+	body.cockpit-active.touch-ui-active .touch-action-group {
+		right: calc(14px + env(safe-area-inset-right, 0px));
+		bottom: calc(142px + env(safe-area-inset-bottom, 0px));
+	}
+
+	body.cockpit-active.touch-ui-active .touch-fire-btn {
+		width: 76px;
+		height: 76px;
+		font-size: 0.9rem;
+	}
+}
+
+/* コックピット視点＋タッチUI併用時: 横向き・広幅は左右タッチ操作の間に計器盤を収めて重なりを解消 */
+@media (min-width: 641px) {
+	body.cockpit-active.touch-ui-active .cockpit-dashboard {
+		width: min(560px, calc(100vw - 300px));
+		margin-left: calc(min(560px, calc(100vw - 300px)) / -2);
+	}
+
+	body.cockpit-active.touch-ui-active .mfd-osb-col {
+		display: none;
+	}
+}
+
+@media (max-height: 550px) {
+	.cockpit-hud-combiner {
+		--hud-half-h: clamp(60px, 16vh, 100px);
+	}
+
+	.cockpit-console-body {
+		padding: 5px 10px 6px;
+		gap: 8px;
+	}
+
+	.mfd-screen {
+		padding: 4px 7px;
+		gap: 2px;
+	}
+}
+
+.camera-mode-toast {
+	position: fixed;
+	top: calc(18px + env(safe-area-inset-top, 0px));
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 40;
+	pointer-events: none;
+	padding: 7px 18px;
+	border-radius: 999px;
+	background: rgba(8, 18, 34, 0.82);
+	border: 1px solid rgba(0, 240, 255, 0.6);
+	color: #00f0ff;
+	font-family: 'Outfit', sans-serif;
+	font-size: clamp(0.78rem, 2.2vw, 0.95rem);
+	font-weight: 900;
+	letter-spacing: 0.14rem;
+	text-shadow: 0 0 10px rgba(0, 240, 255, 0.7);
+	box-shadow: 0 0 18px rgba(0, 240, 255, 0.3);
+	white-space: nowrap;
+}
+
+.camera-mode-toast.hidden {
+	display: none !important;
 }
 
 @media (max-height: 450px) {

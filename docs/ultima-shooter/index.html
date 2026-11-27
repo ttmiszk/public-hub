@@ -32,6 +32,156 @@
     <div id="ui-container"></div>
 
     
+	<!-- 一人称コックピット視点オーバーレイ: 中央HUDコンバイナー（左右ショルダー支柱含む）＋3画面MFD計器盤 -->
+	<div id="cockpit-overlay" class="cockpit-overlay hidden" aria-hidden="true">
+		<!-- 1. 中央HUDコンバイナー（計器ベースまで延長された反射ガラスパネル＋左右ショルダー支柱＋画面厳密中央の照準レティクル） -->
+		<div id="cockpit-hud-combiner" class="cockpit-hud-combiner">
+			<div class="combiner-glass">
+				<div class="combiner-glass-glare"></div>
+				<div class="combiner-heading-bar">
+					<span id="cp-hud-stage">STG 01</span>
+					<span class="combiner-heading-sep">|</span>
+					<span id="cp-hud-loop">LOOP 1</span>
+					<span class="combiner-heading-sep">|</span>
+					<span id="cp-hud-weapon">WPN LV.1</span>
+				</div>
+				<svg class="combiner-svg" viewBox="0 0 360 240">
+					<!-- 姿勢連動グループ（自機のロール・ピッチに合わせてリアルタイム傾斜・上下） -->
+					<g id="cp-attitude-group" transform="translate(180, 120)">
+						<!-- 水平線バー -->
+						<line class="hud-horizon" x1="-110" y1="0" x2="-36" y2="0" />
+						<line class="hud-horizon" x1="36" y1="0" x2="110" y2="0" />
+						<!-- ピッチラダー（+10 / -10 / +20 / -20 度） -->
+						<polyline class="hud-pitch-up" points="-62,-36 -28,-36 -28,-30" />
+						<polyline class="hud-pitch-up" points="62,-36 28,-36 28,-30" />
+						<polyline class="hud-pitch-up" points="-46,-72 -24,-72 -24,-66" />
+						<polyline class="hud-pitch-up" points="46,-72 24,-72 24,-66" />
+						<polyline class="hud-pitch-down" points="-62,36 -28,36 -28,30" />
+						<polyline class="hud-pitch-down" points="62,36 28,36 28,30" />
+						<polyline class="hud-pitch-down" points="-46,72 -24,72 -24,66" />
+						<polyline class="hud-pitch-down" points="46,72 24,72 24,66" />
+					</g>
+					<!-- 固定ボアサイト照準レティクル -->
+					<circle class="hud-pipper-ring" cx="180" cy="120" r="24" />
+					<circle class="hud-pipper-dot" cx="180" cy="120" r="2.6" />
+					<line class="hud-gun-cross" x1="180" y1="86" x2="180" y2="104" />
+					<line class="hud-gun-cross" x1="180" y1="136" x2="180" y2="154" />
+					<line class="hud-gun-cross" x1="146" y1="120" x2="164" y2="120" />
+					<line class="hud-gun-cross" x1="196" y1="120" x2="214" y2="120" />
+					<!-- 左右バンクブラケット -->
+					<polyline class="hud-bracket" points="32,76 22,76 22,164 32,164" />
+					<polyline class="hud-bracket" points="328,76 338,76 338,164 328,164" />
+				</svg>
+				<div class="combiner-bottom-readout">
+					<span id="cp-hud-shield" class="cp-hud-shield hidden">SHIELD ACTIVE</span>
+					<span id="cp-hud-low-ammo" class="cp-hud-warn hidden">LOW AMMO</span>
+				</div>
+			</div>
+			<div class="combiner-bracket left"></div>
+			<div class="combiner-bracket right"></div>
+		</div>
+
+		<!-- 4. 重厚なグレアシールド＆3画面 MFD 計器盤ダッシュボード -->
+		<div id="cockpit-dashboard" class="cockpit-dashboard">
+			<div class="glareshield-lip">
+				<div class="caution-lamp" id="cp-master-caution">MASTER CAUTION</div>
+				<div class="glareshield-center-notch"></div>
+				<div class="caution-lamp shield-lamp" id="cp-barrier-lamp">A-SHIELD</div>
+			</div>
+
+			<div class="cockpit-console-body">
+				<!-- 左 MFD: 戦術・ミッション・スコア -->
+				<div class="mfd-unit mfd-left">
+					<div class="mfd-bezel">
+						<div class="mfd-osb-col"><span></span><span></span><span></span></div>
+						<div class="mfd-screen">
+							<div class="mfd-scanlines"></div>
+							<div class="mfd-glass-sheen"></div>
+							<div class="mfd-title">NAV / TACTICAL</div>
+							<div class="mfd-row">
+								<span class="mfd-label" id="cp-stage-label">STAGE</span>
+								<span class="mfd-val cyan" id="cp-stage-val">01</span>
+							</div>
+							<div class="mfd-row">
+								<span class="mfd-label">POINT</span>
+								<span class="mfd-val gold" id="cp-point-val">0 / 150</span>
+							</div>
+							<div class="mfd-bar-track">
+								<div class="mfd-bar-fill gold" id="cp-point-bar" style="width: 0%;"></div>
+							</div>
+							<div class="mfd-row mfd-score-row">
+								<span class="mfd-label">SCORE</span>
+								<span class="mfd-val white" id="cp-score-val">000000</span>
+							</div>
+						</div>
+						<div class="mfd-osb-col"><span></span><span></span><span></span></div>
+					</div>
+				</div>
+
+				<!-- 中央 MFD: 機体インテグリティ (LIFE) & ボスロックオン計器 -->
+				<div class="mfd-unit mfd-center">
+					<div class="mfd-bezel">
+						<div class="mfd-screen mfd-screen-center">
+							<div class="mfd-scanlines"></div>
+							<div class="mfd-glass-sheen"></div>
+							<div class="mfd-title">AIRFRAME / INTEGRITY</div>
+							<div class="mfd-row">
+								<span class="mfd-label">HULL LIFE</span>
+								<span class="mfd-val green" id="cp-life-val">100</span>
+							</div>
+							<div class="mfd-bar-track mfd-bar-lg">
+								<div class="mfd-bar-fill life" id="cp-life-bar" style="width: 100%;"></div>
+							</div>
+							<!-- ボス戦時のみ表示されるロックオンHP計器 -->
+							<div id="cp-boss-panel" class="cp-boss-panel hidden">
+								<div class="mfd-row">
+									<span class="mfd-label red">TGT LOCK</span>
+									<span class="mfd-val red" id="cp-boss-name">BOSS</span>
+								</div>
+								<div class="mfd-bar-track boss-track">
+									<div class="mfd-bar-fill boss" id="cp-boss-bar" style="width: 100%;"></div>
+								</div>
+							</div>
+							<div id="cp-sys-status" class="cp-sys-status">ALL SYSTEMS NOMINAL</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- 右 MFD: 武装・残弾 (AMMO) & 出力レベル (POWER) -->
+				<div class="mfd-unit mfd-right">
+					<div class="mfd-bezel">
+						<div class="mfd-osb-col"><span></span><span></span><span></span></div>
+						<div class="mfd-screen">
+							<div class="mfd-scanlines"></div>
+							<div class="mfd-glass-sheen"></div>
+							<div class="mfd-title">ARMAMENT / WPN</div>
+							<div class="mfd-row">
+								<span class="mfd-label">AMMO</span>
+								<span class="mfd-val cyan" id="cp-ammo-val">300</span>
+							</div>
+							<div class="mfd-bar-track">
+								<div class="mfd-bar-fill ammo" id="cp-ammo-bar" style="width: 30%;"></div>
+							</div>
+							<div class="mfd-row">
+								<span class="mfd-label">POWER</span>
+								<span class="mfd-val magenta" id="cp-power-val">Lv.1</span>
+							</div>
+							<div class="mfd-power-cells" id="cp-power-cells">
+								<span class="power-cell active"></span>
+								<span class="power-cell"></span>
+								<span class="power-cell"></span>
+							</div>
+						</div>
+						<div class="mfd-osb-col"><span></span><span></span><span></span></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- カメラ視点切替トースト通知 -->
+	<div id="camera-mode-toast" class="camera-mode-toast hidden">CAMERA: CHASE VIEW</div>
+
 	<!-- モバイル向けタッチコントローラー: ui-container の書き換えに巻き込まれないよう独立配置 -->
 	<div id="touch-controls" class="touch-controls hidden" aria-hidden="true">
 		<div id="touch-joystick-zone" class="touch-joystick-zone">
@@ -39,9 +189,11 @@
 				<div id="touch-joystick-knob" class="touch-joystick-knob"></div>
 			</div>
 		</div>
-		<button id="touch-pause-btn" type="button" class="touch-pause-btn" aria-label="Pause">II</button>
+		<div class="touch-top-right-group">
+			<button id="touch-camera-btn" type="button" class="touch-camera-btn" aria-label="Change Camera">CAM</button>
+			<button id="touch-pause-btn" type="button" class="touch-pause-btn" aria-label="Pause">II</button>
+		</div>
 		<div class="touch-action-group">
-			<button id="touch-autofire-btn" type="button" class="touch-autofire-btn" aria-pressed="false">AUTO</button>
 			<button id="touch-fire-btn" type="button" class="touch-fire-btn">FIRE</button>
 		</div>
 	</div>

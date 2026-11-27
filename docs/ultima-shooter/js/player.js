@@ -92,10 +92,13 @@ class Player {
         /** @type {boolean} パーツがバラバラに砕け散る物理シミュレーション中か */
         this.partsDisintegrated = false;
         
-        /** @type {THREE.Vector3} 現在のフレームでの自機の移動速度ベクトル（ワールド座標系） */
-        this.velocity = new THREE.Vector3();
+		/** @type {THREE.Vector3} 現在のフレームでの自機の移動速度ベクトル（ワールド座標系） */
+		this.velocity = new THREE.Vector3();
 
-        this.init();
+		/** @type {boolean} 一人称コックピット視点中か */
+		this.isCockpitMode = false;
+
+		this.init();
     }
 
 	/**
@@ -290,6 +293,30 @@ class Player {
 		this.game.renderer.scene.add(this.mesh);
 	}
 
+	/**
+	 * 一人称コックピット視点モードを切り替える。
+	 * コックピット視点中は外装メッシュを非表示にし、バリアシェーダーを内面描画（BackSide）へ切り替える。
+	 * @param {boolean} enabled
+	 */
+	setCockpitMode(enabled) {
+		const next = !!enabled;
+		if (this.isCockpitMode === next) return;
+		this.isCockpitMode = next;
+
+		if (this.mesh) {
+			this.mesh.traverse((child) => {
+				if (child.isMesh && !child.userData.isBarrierPart) {
+					child.visible = !next;
+				}
+			});
+		}
+
+		if (this.barrierShieldMat) {
+			this.barrierShieldMat.side = next ? THREE.BackSide : THREE.FrontSide;
+			this.barrierShieldMat.needsUpdate = true;
+		}
+	}
+
     /**
      * バリアアイテム取得時の無敵時間付与
      * @param {number} duration - 無敵状態になる秒数
@@ -301,10 +328,10 @@ class Player {
         this.invincibleTimer = Math.max(this.invincibleTimer, duration);
         this.barrierMaxTimer = this.invincibleTimer; // 縮小演出のために最大時間を保持
         
-		// バリア取得時に、もし点滅中で消えている機体パーツがあればすべて表示状態に戻す
+		// バリア取得時に、もし点滅中で消えている機体パーツがあればすべて表示状態に戻す（コックピット視点時は非表示維持）
 		this.mesh.traverse((child) => {
 			if (child.isMesh && !child.userData.isBarrierPart) {
-				child.visible = true;
+				child.visible = !this.isCockpitMode;
 			}
 		});
 
@@ -637,10 +664,12 @@ class Player {
             audioManager.play('playerShoot');
         }
 
-        const playerRot = this.mesh.quaternion;
+		// 当フレームの移動・回転をワールド行列へ即時反映し、発射口座標の1フレーム遅延を防止
+		this.mesh.updateMatrixWorld();
+		const playerRot = this.mesh.quaternion;
 
-        // 発射口のローカル座標から世界座標へ変換
-        const centerPos = _playerTempVec1.set(0.0, 0.0, -1.9).applyMatrix4(this.mesh.matrixWorld);
+		// 発射口のローカル座標から世界座標へ変換
+		const centerPos = _playerTempVec1.set(0.0, 0.0, -1.9).applyMatrix4(this.mesh.matrixWorld);
         const leftPos = _playerTempVec2.set(-0.35, 0.0, -1.8).applyMatrix4(this.mesh.matrixWorld);
         const rightPos = _playerTempVec3.set(0.35, 0.0, -1.8).applyMatrix4(this.mesh.matrixWorld);
 
@@ -788,10 +817,15 @@ class Player {
             if (this.bodyMats) {
                 this.bodyMats.forEach(mat => mat.emissive.setHex(0xff0000)); // 墜落中は赤く発光
             }
-            if (this.game.cameraController) {
-                this.game.cameraController.isDyingMode = true;
-            }
-            this.disintegrate();
+			if (this.game.cameraController) {
+				this.game.cameraController.isDyingMode = true;
+			}
+			// 墜落見送りカメラへ切り替わるため自機モデルを再表示する
+			this.setCockpitMode(false);
+			if (this.game.uiManager) {
+				this.game.uiManager.setCockpitOverlayVisible(false);
+			}
+			this.disintegrate();
         } else {
             // 被弾または衝突効果音
             if (window.audioManager) {
@@ -917,11 +951,11 @@ class Player {
 			this.hasBarrier = false;
 			this.mesh.traverse((child) => {
 				if (child.isMesh && !child.userData.isBarrierPart) {
-					child.visible = true;
+					child.visible = !this.isCockpitMode;
 				}
 			});
-		} else if (!this.hasBarrier) {
-			// 被弾直後の無敵時間中は機体のみ点滅させる
+		} else if (!this.hasBarrier && !this.isCockpitMode) {
+			// 被弾直後の無敵時間中は機体のみ点滅させる（コックピット視点時は非表示維持）
 			const blinkInterval = 0.05;
 			const step = Math.floor(this.invincibleTimer / blinkInterval);
 			const isVis = (step % 2 === 0);

@@ -1,7 +1,7 @@
 /**
  * @fileoverview touchController.js
  * モバイルブラウザ向けタッチ操作コントローラー。
- * 仮想アナログジョイスティック、FIREボタン、AUTOショットトグル、PAUSEボタンの
+ * 仮想アナログジョイスティック、FIREボタン、CAM（視点切替）ボタン、PAUSEボタンの
  * マルチタッチ入力を処理し、InputManager へ抽象化された入力値を渡す。
  */
 
@@ -27,8 +27,6 @@ class TouchController {
 		/** @type {number|null} */
 		this.fireTouchId = null;
 
-		/** @type {boolean} オート連射トグル状態 */
-		this.autoFireEnabled = false;
 		/** @type {number} ジョイスティックのデッドゾーン (0.0〜1.0) */
 		this.deadzone = 0.1;
 
@@ -38,8 +36,8 @@ class TouchController {
 		this.joystickBaseEl = document.getElementById('touch-joystick-base');
 		this.joystickKnobEl = document.getElementById('touch-joystick-knob');
 		this.fireBtnEl = document.getElementById('touch-fire-btn');
-		this.autoFireBtnEl = document.getElementById('touch-autofire-btn');
 		this.pauseBtnEl = document.getElementById('touch-pause-btn');
+		this.cameraBtnEl = document.getElementById('touch-camera-btn');
 
 		this._bindEvents();
 	}
@@ -63,11 +61,17 @@ class TouchController {
 		this.visible = !!visible;
 		if (!this.rootEl) return;
 
+		const wasShown = !this.rootEl.classList.contains('hidden');
 		const shouldShow = this.enabled && this.visible;
 		this.rootEl.classList.toggle('hidden', !shouldShow);
 		this.rootEl.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
+		if (document.body) {
+			document.body.classList.toggle('touch-ui-active', shouldShow);
+		}
 
-		if (!shouldShow) {
+		// 非表示へ遷移した瞬間、またはアクティブなタッチが残っている場合のみリセットする
+		// （PCなど非タッチ環境で updateUI() ごとにキーボード入力が初期化されるのを防止）
+		if (!shouldShow && (wasShown || this.joystickTouchId !== null || this.fireTouchId !== null)) {
 			this._resetActiveTouches();
 		}
 	}
@@ -173,22 +177,19 @@ class TouchController {
 			this.fireBtnEl.addEventListener('touchcancel', endFire, { passive: false });
 		}
 
-		// AUTOショットトグルボタン
-		if (this.autoFireBtnEl) {
-			this.autoFireBtnEl.addEventListener('touchstart', (e) => {
-				e.preventDefault();
-				this.autoFireEnabled = !this.autoFireEnabled;
-				this.autoFireBtnEl.classList.toggle('active', this.autoFireEnabled);
-				this.autoFireBtnEl.setAttribute('aria-pressed', this.autoFireEnabled ? 'true' : 'false');
-				if (this.input) this.input.setTouchAutoFire(this.autoFireEnabled);
-			}, { passive: false });
-		}
-
 		// PAUSEボタン
 		if (this.pauseBtnEl) {
 			this.pauseBtnEl.addEventListener('touchstart', (e) => {
 				e.preventDefault();
 				if (this.input) this.input.triggerTouchPause();
+			}, { passive: false });
+		}
+
+		// CAM（視点切替）ボタン
+		if (this.cameraBtnEl) {
+			this.cameraBtnEl.addEventListener('touchstart', (e) => {
+				e.preventDefault();
+				if (this.input) this.input.triggerTouchCameraToggle();
 			}, { passive: false });
 		}
 	}

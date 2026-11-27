@@ -102,6 +102,15 @@ class UIManager {
 			game.touchController.setVisible(game.state === GameState.PLAYING);
 		}
 
+		// コックピット視点オーバーレイの表示同期（プレイ中コックピット時は左上HUDを隠してMFD計器へ統合）
+		const showCockpit = game.state === GameState.PLAYING &&
+			game.cameraController &&
+			game.cameraController.isCockpitViewActive();
+		this.setCockpitOverlayVisible(!!showCockpit);
+		if (showCockpit) {
+			this.updateCockpitInstruments();
+		}
+
 		const uiContainer = document.getElementById('ui-container');
 		if (!uiContainer) return;
 
@@ -562,21 +571,34 @@ class UIManager {
 	}
 
 	/**
-	 * アイテム獲得時・被弾時のHUDフラッシュ演出
+	 * アイテム獲得時・被弾時のHUDフラッシュ演出（コックピット計器にも対応）
 	 * @param {string} elementId
 	 * @param {string} className
 	 */
 	triggerHUDFlash(elementId, className) {
-		const el = document.getElementById(elementId);
-		if (!el) return;
+		const cockpitMap = {
+			'point-val': 'cp-point-val',
+			'score-val': 'cp-score-val',
+			'life-val': 'cp-life-val',
+			'ammo-val': 'cp-ammo-val',
+			'power-val': 'cp-power-val'
+		};
 
-		el.classList.remove(className);
-		void el.offsetWidth; // リフローでアニメーション再起動
-		el.classList.add(className);
+		const targetIds = [elementId];
+		if (cockpitMap[elementId]) {
+			targetIds.push(cockpitMap[elementId]);
+		}
 
-		setTimeout(() => {
-			if (el) el.classList.remove(className);
-		}, 200);
+		for (const id of targetIds) {
+			const el = document.getElementById(id);
+			if (!el) continue;
+			el.classList.remove(className);
+			void el.offsetWidth;
+			el.classList.add(className);
+			setTimeout(() => {
+				if (el) el.classList.remove(className);
+			}, 200);
+		}
 	}
 
 	/**
@@ -602,6 +624,176 @@ class UIManager {
 	}
 
 	/**
+	 * 一人称コックピット視点用フレーム＆MFD計器オーバーレイの表示切替
+	 * コックピット視点中は body に cockpit-active クラスを付与し、左上通常HUDを自動非表示にする。
+	 * @param {boolean} visible
+	 */
+	setCockpitOverlayVisible(visible) {
+		const el = document.getElementById('cockpit-overlay');
+		if (el) {
+			el.classList.toggle('hidden', !visible);
+		}
+		if (document.body) {
+			document.body.classList.toggle('cockpit-active', !!visible);
+		}
+	}
+
+	/**
+	 * コックピット内 3画面 MFD 計器および HUD コンバイナーの数値を同期更新する
+	 */
+	updateCockpitInstruments() {
+		const game = this.game;
+		const scoreManager = game.scoreManager;
+		const player = game.player;
+
+		const life = player ? player.life : 0;
+		const maxLife = player ? (player.maxLife || 100) : 100;
+		const lifePct = Math.max(0, Math.min(100, (life / maxLife) * 100));
+
+		const ammo = player ? player.ammo : 0;
+		const maxAmmo = GameConfig.player.maxAmmo || 999;
+		const ammoPct = Math.max(0, Math.min(100, (ammo / maxAmmo) * 100));
+
+		const power = player ? player.powerLevel : 1;
+		const hasBarrier = !!(player && player.hasBarrier);
+		const stageNum = game.stageManager ? game.stageManager.getCurrentStage().number : 1;
+		const killPoints = game.stageManager ? game.stageManager.stageKillPoints : 0;
+		const reqPoints = game.stageManager ? game.stageManager.getScaledRequiredKillPoints() : 150;
+		const pointPct = Math.max(0, Math.min(100, (killPoints / Math.max(1, reqPoints)) * 100));
+		const loopCount = game.stageManager ? game.stageManager.loopCount : 1;
+
+		const setText = (id, text) => {
+			const el = document.getElementById(id);
+			if (el && el.textContent !== text) el.textContent = text;
+		};
+
+		// HUD コンバイナー上部ステータス
+		setText('cp-hud-stage', `STG 0${stageNum}`);
+		setText('cp-hud-loop', `LOOP ${loopCount}`);
+		setText('cp-hud-weapon', `WPN LV.${power}`);
+
+		// 左 MFD: STAGE / POINT / SCORE
+		setText('cp-stage-label', loopCount > 1 ? `STAGE (L${loopCount})` : 'STAGE');
+		setText('cp-stage-val', `0${stageNum}`);
+		setText('cp-point-val', `${killPoints} / ${reqPoints}`);
+		setText('cp-score-val', scoreManager.padZero(game.score, 6));
+		const pointBar = document.getElementById('cp-point-bar');
+		if (pointBar) pointBar.style.width = `${pointPct}%`;
+
+		// 中央 MFD: LIFE & BOSS HP
+		setText('cp-life-val', `${life}`);
+		const lifeBar = document.getElementById('cp-life-bar');
+		if (lifeBar) {
+			lifeBar.style.width = `${lifePct}%`;
+			lifeBar.classList.toggle('danger', lifePct <= 30);
+		}
+
+		// 右 MFD: AMMO & POWER
+		setText('cp-ammo-val', `${ammo}`);
+		const ammoBar = document.getElementById('cp-ammo-bar');
+		if (ammoBar) {
+			ammoBar.style.width = `${ammoPct}%`;
+			ammoBar.classList.toggle('danger', ammo <= 30);
+		}
+		setText('cp-power-val', `Lv.${power}`);
+		const powerCells = document.getElementById('cp-power-cells');
+		if (powerCells) {
+			const children = powerCells.children;
+			for (let i = 0; i < children.length; i++) {
+				children[i].classList.toggle('active', i < power);
+			}
+		}
+
+		// 警告ランプ＆シールドインジケーター
+		const lowLife = lifePct <= 30;
+		const lowAmmo = ammo <= 30;
+		const cautionLamp = document.getElementById('cp-master-caution');
+		if (cautionLamp) cautionLamp.classList.toggle('lit', lowLife || lowAmmo);
+
+		const barrierLamp = document.getElementById('cp-barrier-lamp');
+		if (barrierLamp) barrierLamp.classList.toggle('lit', hasBarrier);
+
+		const hudShield = document.getElementById('cp-hud-shield');
+		if (hudShield) hudShield.classList.toggle('hidden', !hasBarrier);
+
+		const hudLowAmmo = document.getElementById('cp-hud-low-ammo');
+		if (hudLowAmmo) hudLowAmmo.classList.toggle('hidden', !lowAmmo);
+
+		// ボスロックオンパネル
+		const bossPanel = document.getElementById('cp-boss-panel');
+		const sysStatus = document.getElementById('cp-sys-status');
+		const showBoss = !!(game.boss && this.bossHUDVisible);
+		if (bossPanel) bossPanel.classList.toggle('hidden', !showBoss);
+		if (sysStatus) {
+			sysStatus.classList.toggle('hidden', showBoss);
+			if (!showBoss) {
+				if (lowLife) sysStatus.textContent = 'WARNING: HULL CRITICAL';
+				else if (hasBarrier) sysStatus.textContent = 'A-SHIELD ENGAGED';
+				else sysStatus.textContent = 'ALL SYSTEMS NOMINAL';
+				sysStatus.classList.toggle('warn', lowLife);
+			}
+		}
+		if (showBoss) {
+			setText('cp-boss-name', game.boss.name);
+			const bossPct = Math.max(0, (game.boss.hp / game.boss.maxHp) * 100);
+			const bossBar = document.getElementById('cp-boss-bar');
+			if (bossBar) bossBar.style.width = `${bossPct}%`;
+		}
+	}
+
+	/**
+	 * 毎フレームのコックピット姿勢計（人工水平儀）＆ G 慣性揺れ更新
+	 * @param {Player|null} player
+	 */
+	updateCockpitDynamics(player) {
+		if (!player || !player.mesh) return;
+		const attitudeGroup = document.getElementById('cp-attitude-group');
+		if (attitudeGroup) {
+			// 自機のロール（左右傾き）とピッチ（上下傾き）を人工水平儀へリアルタイム反映
+			const rollDeg = -THREE.MathUtils.radToDeg(player.mesh.rotation.z) * 0.55;
+			const pitchPx = THREE.MathUtils.clamp(player.mesh.rotation.x * 95.0, -42.0, 42.0);
+			attitudeGroup.setAttribute('transform', `translate(180, ${(120 + pitchPx).toFixed(1)}) rotate(${rollDeg.toFixed(1)})`);
+		}
+
+		// ダッシュボードのわずかな慣性シフトで機体内部の臨場感を演出
+		const dash = document.getElementById('cockpit-dashboard');
+		if (dash) {
+			const shiftX = THREE.MathUtils.clamp(player.mesh.rotation.z * 14.0, -10.0, 10.0);
+			const shiftY = THREE.MathUtils.clamp(-player.mesh.rotation.x * 16.0, -7.0, 7.0);
+			dash.style.transform = `translate3d(${shiftX.toFixed(1)}px, ${shiftY.toFixed(1)}px, 0px)`;
+		}
+
+		// バリア点灯状態は時間経過で終了するため毎フレーム軽量同期
+		const hasBarrier = !!player.hasBarrier;
+		const barrierLamp = document.getElementById('cp-barrier-lamp');
+		if (barrierLamp) barrierLamp.classList.toggle('lit', hasBarrier);
+		const hudShield = document.getElementById('cp-hud-shield');
+		if (hudShield) hudShield.classList.toggle('hidden', !hasBarrier);
+	}
+
+	/**
+	 * カメラ視点切替時の通知トーストを表示する
+	 * @param {string} modeLabel
+	 */
+	showCameraModeToast(modeLabel) {
+		const el = document.getElementById('camera-mode-toast');
+		if (!el) return;
+
+		el.innerText = `CAMERA: ${modeLabel}`;
+		el.classList.remove('hidden');
+		el.classList.add('active');
+
+		if (this._cameraToastTimer) {
+			clearTimeout(this._cameraToastTimer);
+		}
+		this._cameraToastTimer = setTimeout(() => {
+			el.classList.remove('active');
+			el.classList.add('hidden');
+			this._cameraToastTimer = null;
+		}, 1500);
+	}
+
+	/**
 	 * ボスHPゲージHUDの表示
 	 */
 	showBossHUD() {
@@ -619,7 +811,7 @@ class UIManager {
 	}
 
 	/**
-	 * ボスHPバーの幅更新
+	 * ボスHPバーの幅更新（通常HUDおよびコックピット計器の両方を同期）
 	 */
 	updateBossHPBar() {
 		const boss = this.game.boss;
@@ -628,6 +820,10 @@ class UIManager {
 		const bar = document.getElementById('boss-hp-bar');
 		if (bar) {
 			bar.style.width = `${pct}%`;
+		}
+		const cpBar = document.getElementById('cp-boss-bar');
+		if (cpBar) {
+			cpBar.style.width = `${pct}%`;
 		}
 	}
 

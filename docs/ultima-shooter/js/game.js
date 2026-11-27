@@ -355,6 +355,11 @@ class Game {
 
 		this.debugManager.checkShortcuts();
 
+		// プレイ中のカメラ視点切替（C キー / PAD Y / モバイル CAM）
+		if (this.state === GameState.PLAYING && this.input && this.input.isCameraToggleJustPressed()) {
+			this.cycleCameraMode();
+		}
+
 		if (this.player && this.player.mesh && this.player.state === 'ALIVE') {
 			this.collisionManager.checkCollisions();
 		}
@@ -364,6 +369,11 @@ class Game {
 		}
 
 		this.cameraController.update(gameDeltaTime, this.scrollSpeed, currentStage, this.entityManager.bossActiveRatio);
+
+		// コックピット視点時は人工水平儀と計器の慣性揺れを毎フレーム更新
+		if (this.state === GameState.PLAYING && this.cameraController.isCockpitViewActive()) {
+			this.uiManager.updateCockpitDynamics(this.player);
+		}
 
 		if (this.renderer) {
 			this.renderer.followPlayerZ(playerZ);
@@ -467,9 +477,29 @@ class Game {
 		if (this.cameraController) {
 			this.cameraController.isDyingMode = false;
 			this.cameraController.setTarget(this.player.mesh);
+			const isCockpit = this.cameraController.isCockpitViewActive();
+			this.player.setCockpitMode(isCockpit);
+			this.uiManager.setCockpitOverlayVisible(isCockpit);
 		}
 
 		this.scrollSpeed = GameConfig.game.scrollSpeed;
+	}
+
+	/**
+	 * カメラ視点を順番に切り替える（CHASE → CENTER LOCK → COCKPIT）
+	 */
+	cycleCameraMode() {
+		if (!this.cameraController) return;
+		this.cameraController.cycleMode();
+		const isCockpit = this.cameraController.isCockpitViewActive();
+		if (this.player) {
+			this.player.setCockpitMode(isCockpit);
+		}
+		this.uiManager.setCockpitOverlayVisible(isCockpit);
+		if (isCockpit) {
+			this.uiManager.updateCockpitInstruments();
+		}
+		this.uiManager.showCameraModeToast(this.cameraController.getModeLabel());
 	}
 
 	/**

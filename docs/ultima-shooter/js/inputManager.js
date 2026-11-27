@@ -54,9 +54,9 @@ class InputManager {
 		/** @type {boolean} */
 		this.touchFire = false;
 		/** @type {boolean} */
-		this.touchAutoFire = false;
-		/** @type {boolean} */
 		this.touchPauseQueued = false;
+		/** @type {boolean} */
+		this.touchCameraQueued = false;
 
 		this.init();
     }
@@ -69,7 +69,7 @@ class InputManager {
         const preventKeys = [
             'Space', 'Enter', 'Escape',
             'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
-            'KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyL', 'KeyK'
+            'KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyC', 'KeyL', 'KeyK'
         ];
 
         // キーボード入力監視
@@ -122,6 +122,7 @@ class InputManager {
 	postUpdate() {
 		this.prevKeys = { ...this.keys };
 		this.touchPauseQueued = false;
+		this.touchCameraQueued = false;
 
 		const gp = this.getGamepad();
 		if (gp) {
@@ -144,6 +145,7 @@ class InputManager {
 		this.touchY = 0.0;
 		this.touchFire = false;
 		this.touchPauseQueued = false;
+		this.touchCameraQueued = false;
 	}
 
 	/**
@@ -153,12 +155,15 @@ class InputManager {
 	 * @param {boolean} active - タッチ操作中かどうか
 	 */
 	setTouchMove(x, y, active) {
+		const wasTouchActive = this.touchActive;
 		this.touchActive = !!active;
 		this.touchX = Math.max(-1.0, Math.min(1.0, x));
 		this.touchY = Math.max(-1.0, Math.min(1.0, y));
-		// 指を離した際に慣性が残らず中央停止できるよう仮想スティック値も同期する
-		this.keyboardX = this.touchX;
-		this.keyboardY = this.touchY;
+		// タッチ操作中および指を離した瞬間のみ仮想スティック値を同期する（非タッチ時のキーボード入力を上書きしない）
+		if (this.touchActive || wasTouchActive) {
+			this.keyboardX = this.touchX;
+			this.keyboardY = this.touchY;
+		}
 	}
 
 	/**
@@ -170,18 +175,17 @@ class InputManager {
 	}
 
 	/**
-	 * タッチAUTOショットの有効状態を設定する
-	 * @param {boolean} enabled
-	 */
-	setTouchAutoFire(enabled) {
-		this.touchAutoFire = !!enabled;
-	}
-
-	/**
 	 * タッチPAUSEボタンの押下イベントを1フレーム分キューする
 	 */
 	triggerTouchPause() {
 		this.touchPauseQueued = true;
+	}
+
+	/**
+	 * タッチCAM（視点切替）ボタンの押下イベントを1フレーム分キューする
+	 */
+	triggerTouchCameraToggle() {
+		this.touchCameraQueued = true;
 	}
 
     /**
@@ -253,7 +257,7 @@ class InputManager {
 	 * @returns {boolean}
 	 */
 	isFirePressed() {
-		if (this.touchFire || this.touchAutoFire) return true;
+		if (this.touchFire) return true;
 		if (this.keys['Space']) return true;
 
 		const gp = this.getGamepad();
@@ -280,6 +284,24 @@ class InputManager {
         }
         return false;
     }
+
+	/**
+	 * カメラ視点切替ボタンが「押された瞬間」か（キーボード C / ゲームパッド Y / タッチ CAM）
+	 * @returns {boolean}
+	 */
+	isCameraToggleJustPressed() {
+		if (this.touchCameraQueued) return true;
+
+		const kbJust = this.keys['KeyC'] && !this.prevKeys['KeyC'];
+		if (kbJust) return true;
+
+		const gp = this.getGamepad();
+		if (gp) {
+			const gpButton3Just = gp.buttons[3]?.pressed && !this.prevGamepadButtons[3];
+			if (gpButton3Just) return true;
+		}
+		return false;
+	}
 
 	/**
 	 * ポーズボタンが「押された瞬間」か
