@@ -1,6 +1,6 @@
 :root {
     --copyright: "© 2026 Ultima Architect Inc.";
-    --version: "0.1.1";
+    --version: "0.1.2";
 }
 
 /* リセットスタイルと基本設定 */
@@ -1297,4 +1297,398 @@ html, body {
     color: #ffcccc;
     margin-bottom: 25px;
     text-shadow: 0 0 10px rgba(255, 51, 68, 0.5);
+}
+
+
+/* =========================================================================
+   レスポンシブ・リサイズ対応強化 & パネル共通安全制約
+   ========================================================================= */
+
+.pause-panel,
+.gameover-panel {
+	width: min(440px, calc(100vw - 32px));
+	padding: 36px 44px;
+	box-sizing: border-box;
+	gap: 20px;
+}
+
+.glass-panel,
+.clear-result-panel,
+.debug-menu,
+.ranking-modal-content,
+.confirm-modal-content {
+	box-sizing: border-box;
+	max-width: calc(100vw - 24px);
+	max-height: calc(100vh - 24px);
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+
+.ranking-table-wrapper {
+	width: 100%;
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+}
+
+/* 流体タイポグラフィ（通常デスクトップでは従来サイズを維持し、狭幅で自動縮小） */
+.title-logo {
+	font-size: clamp(2.1rem, 7vw, 5rem);
+	letter-spacing: clamp(0.12rem, 0.8vw, 0.5rem);
+	text-align: center;
+	padding: 0 16px;
+}
+
+.title-highscore {
+	font-size: clamp(1rem, 2.5vw, 1.5rem);
+	letter-spacing: clamp(0.1rem, 0.4vw, 0.3rem);
+	margin-bottom: clamp(1.2rem, 4vh, 3rem);
+}
+
+.panel-title {
+	font-size: clamp(2rem, 6vw, 3.5rem);
+	letter-spacing: clamp(0.12rem, 0.5vw, 0.3rem);
+}
+
+.clear-text,
+.panel-header {
+	font-size: clamp(1.8rem, 5.5vw, 2.8rem);
+}
+
+.stage-start-title {
+	font-size: clamp(1.6rem, 5vw, 3rem);
+	letter-spacing: clamp(0.12rem, 0.6vw, 0.4rem);
+	text-align: center;
+	left: 0;
+	right: 0;
+	width: 100%;
+	padding: 0 16px;
+	box-sizing: border-box;
+}
+
+.boss-warning-flash {
+	font-size: clamp(1.8rem, 6vw, 3.5rem);
+	letter-spacing: clamp(0.15rem, 0.7vw, 0.5rem);
+	line-height: clamp(2.4rem, 7.5vw, 4.5rem);
+	width: 92%;
+}
+
+.no-ammo-warning {
+	font-size: clamp(1.8rem, 6vw, 3rem);
+	white-space: nowrap;
+}
+
+/* タブレット・スマートフォン縦/狭幅画面向けスケール調整 */
+@media (max-width: 768px) {
+	.game-hud {
+		top: calc(10px + env(safe-area-inset-top, 0px));
+		left: calc(10px + env(safe-area-inset-left, 0px));
+		padding: 10px 14px;
+		gap: 6px;
+		font-size: 0.92rem;
+	}
+
+	.hud-item,
+	.hud-item.bar-type {
+		width: 155px;
+	}
+
+	.hud-label-row {
+		font-size: 0.85rem;
+	}
+
+	.boss-hud {
+		width: calc(100% - 24px);
+		padding: 10px 14px;
+		top: calc(10px + env(safe-area-inset-top, 0px));
+	}
+
+	.boss-hud.boss-hud--docked {
+		left: calc(100% - 190px);
+		width: 178px;
+		max-width: 178px;
+		padding: 8px 12px;
+	}
+
+	.glass-panel {
+		padding: 24px 22px;
+	}
+
+	.clear-result-panel {
+		min-width: 0;
+		width: min(360px, calc(100vw - 24px));
+		padding: 24px 20px;
+	}
+
+	.title-btn {
+		width: min(260px, 80vw);
+		font-size: 1.25rem;
+		padding: 10px 28px;
+	}
+
+	.title-footer {
+		bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+		flex-direction: column-reverse;
+		gap: 8px;
+	}
+
+	.title-footer .debug-btn {
+		position: static;
+	}
+
+	.debug-menu {
+		width: calc(100vw - 24px);
+		padding: 18px 16px;
+	}
+
+	.debug-row select,
+	.debug-row input[type="number"] {
+		width: 150px;
+	}
+
+	.debug-checkbox-grid {
+		grid-template-columns: 1fr;
+		gap: 8px;
+	}
+
+	.ranking-modal-content {
+		padding: 18px 14px;
+	}
+
+	.ranking-header h2 {
+		font-size: 1.35rem;
+	}
+
+	.ranking-table th,
+	.ranking-table td {
+		padding: 7px 6px;
+		font-size: 0.85rem;
+		white-space: nowrap;
+	}
+
+	.ranking-date {
+		font-size: 0.78rem;
+	}
+
+	.highscore-name-input,
+	.highscore-submit-btn {
+		width: min(230px, 72vw);
+		font-size: 1.2rem;
+	}
+}
+
+/* 横持ちモバイルなど画面高さが低い環境向け調整 */
+@media (max-height: 550px) {
+	.title-version {
+		margin-bottom: 0.8rem;
+	}
+
+	.title-highscore {
+		margin-bottom: 1rem;
+	}
+
+	.title-buttons {
+		margin-top: 10px;
+		flex-direction: row;
+		gap: 12px;
+	}
+
+	.title-btn {
+		width: 190px;
+		font-size: 1.15rem;
+		padding: 9px 20px;
+	}
+
+	.game-hud {
+		top: 8px;
+		left: 8px;
+		padding: 8px 12px;
+		gap: 4px;
+		font-size: 0.82rem;
+	}
+
+	.hud-item,
+	.hud-item.bar-type {
+		width: 145px;
+	}
+
+	.hud-bar-bg {
+		height: 6px;
+	}
+
+	.glass-panel {
+		padding: 18px 28px;
+	}
+}
+
+/* =========================================================================
+   モバイル向けタッチコントローラー（仮想ジョイスティック & アクションボタン）
+   ========================================================================= */
+
+.touch-controls {
+	position: fixed;
+	inset: 0;
+	z-index: 30;
+	pointer-events: none;
+	user-select: none;
+	-webkit-user-select: none;
+	touch-action: none;
+}
+
+.touch-controls.hidden {
+	display: none !important;
+}
+
+.touch-joystick-zone {
+	position: absolute;
+	left: calc(16px + env(safe-area-inset-left, 0px));
+	bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+	width: 156px;
+	height: 156px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	pointer-events: auto;
+	touch-action: none;
+}
+
+.touch-joystick-base {
+	width: 128px;
+	height: 128px;
+	border-radius: 50%;
+	background: radial-gradient(circle, rgba(0, 240, 255, 0.1) 0%, rgba(10, 20, 40, 0.55) 100%);
+	border: 2px solid rgba(0, 240, 255, 0.45);
+	box-shadow: 0 0 18px rgba(0, 240, 255, 0.2), inset 0 0 16px rgba(0, 240, 255, 0.15);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.touch-joystick-base.active {
+	border-color: rgba(0, 255, 136, 0.85);
+	box-shadow: 0 0 24px rgba(0, 255, 136, 0.4), inset 0 0 18px rgba(0, 255, 136, 0.25);
+}
+
+.touch-joystick-knob {
+	width: 52px;
+	height: 52px;
+	border-radius: 50%;
+	background: radial-gradient(circle at 35% 35%, rgba(0, 255, 180, 0.9), rgba(0, 160, 255, 0.65));
+	border: 2px solid rgba(255, 255, 255, 0.75);
+	box-shadow: 0 0 14px rgba(0, 240, 255, 0.65);
+	will-change: transform;
+}
+
+.touch-action-group {
+	position: absolute;
+	right: calc(20px + env(safe-area-inset-right, 0px));
+	bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 12px;
+	pointer-events: none;
+}
+
+.touch-fire-btn {
+	width: 92px;
+	height: 92px;
+	border-radius: 50%;
+	border: 2px solid rgba(255, 60, 100, 0.85);
+	background: radial-gradient(circle, rgba(255, 40, 90, 0.45) 0%, rgba(40, 5, 20, 0.72) 100%);
+	color: #fff;
+	font-family: 'Outfit', sans-serif;
+	font-size: 1.05rem;
+	font-weight: 900;
+	letter-spacing: 0.12rem;
+	text-shadow: 0 0 8px rgba(255, 60, 100, 0.9);
+	box-shadow: 0 0 20px rgba(255, 40, 90, 0.35);
+	pointer-events: auto;
+	touch-action: none;
+	outline: none;
+	transition: transform 0.08s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+
+.touch-fire-btn.active {
+	transform: scale(0.92);
+	background: radial-gradient(circle, rgba(255, 80, 120, 0.85) 0%, rgba(120, 10, 40, 0.85) 100%);
+	box-shadow: 0 0 28px rgba(255, 60, 100, 0.85);
+}
+
+.touch-autofire-btn {
+	min-width: 72px;
+	padding: 7px 14px;
+	border-radius: 999px;
+	border: 1.5px solid rgba(0, 240, 255, 0.6);
+	background: rgba(10, 20, 38, 0.72);
+	color: #a5d8ff;
+	font-family: 'Outfit', sans-serif;
+	font-size: 0.8rem;
+	font-weight: 900;
+	letter-spacing: 0.1rem;
+	pointer-events: auto;
+	touch-action: none;
+	outline: none;
+	transition: all 0.15s ease;
+}
+
+.touch-autofire-btn.active {
+	border-color: #00ff88;
+	background: rgba(0, 255, 136, 0.25);
+	color: #00ff88;
+	box-shadow: 0 0 14px rgba(0, 255, 136, 0.5);
+}
+
+.touch-pause-btn {
+	position: absolute;
+	top: calc(14px + env(safe-area-inset-top, 0px));
+	right: calc(14px + env(safe-area-inset-right, 0px));
+	width: 46px;
+	height: 46px;
+	border-radius: 10px;
+	border: 1.5px solid rgba(0, 240, 255, 0.6);
+	background: rgba(10, 18, 34, 0.72);
+	color: #00f0ff;
+	font-family: 'Outfit', sans-serif;
+	font-size: 1.05rem;
+	font-weight: 900;
+	letter-spacing: 0.1rem;
+	box-shadow: 0 0 12px rgba(0, 240, 255, 0.25);
+	pointer-events: auto;
+	touch-action: none;
+	outline: none;
+}
+
+.touch-pause-btn:active {
+	transform: scale(0.92);
+	background: rgba(0, 240, 255, 0.25);
+}
+
+@media (max-height: 450px) {
+	.touch-joystick-zone {
+		width: 132px;
+		height: 132px;
+		bottom: 10px;
+	}
+
+	.touch-joystick-base {
+		width: 108px;
+		height: 108px;
+	}
+
+	.touch-joystick-knob {
+		width: 44px;
+		height: 44px;
+	}
+
+	.touch-action-group {
+		bottom: 12px;
+		gap: 8px;
+	}
+
+	.touch-fire-btn {
+		width: 78px;
+		height: 78px;
+		font-size: 0.92rem;
+	}
 }

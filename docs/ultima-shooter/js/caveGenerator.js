@@ -228,11 +228,14 @@ class CaveSegment {
         this.z1 = index * -this.segmentLength;
         this.z2 = (index + 1) * -this.segmentLength;
         
-        this.mesh = null;
-        this.lines = null;
-        
-        this.create(stageConfig, material, gridMaterial, bossActiveRatio);
-    }
+		this.mesh = null;
+		this.lines = null;
+		this.decorGroup = null;
+		/** @type {Array<{start: THREE.Vector3, end: THREE.Vector3, radius: number, damage: number}>} 巨大結晶障害物の当たり判定カプセル群 */
+		this.crystalColliders = [];
+
+		this.create(stageConfig, material, gridMaterial, bossActiveRatio);
+	}
     
     /**
      * Z座標と角度に応じたノイズ（凹凸）を計算
@@ -284,47 +287,66 @@ class CaveSegment {
             ringVerts.push(this._getOctagonVertices(b, z, radialDivs));
         }
         
-        // 1. 3D壁面メッシュの作成 (UVの回り込みを考慮して radialDivs + 1 にする)
-        const vertices = new Float32Array((subDivs + 1) * (radialDivs + 1) * 3);
-        const uvs = new Float32Array((subDivs + 1) * (radialDivs + 1) * 2);
-        const colors = [];
-        let vIdx = 0, uvIdx = 0;
-        for (let j = 0; j <= subDivs; j++) {
-            const ring = ringVerts[j];
-            for (let i = 0; i <= radialDivs; i++) {
-                const src_i = i % radialDivs;
-                vertices[vIdx++] = ring[src_i*3];
-                vertices[vIdx++] = ring[src_i*3+1];
-                vertices[vIdx++] = ring[src_i*3+2];
-                uvs[uvIdx++] = i / radialDivs;
-                // Z軸方向にテクスチャが流れるように
-                uvs[uvIdx++] = j / subDivs;
-                colors.push(1.0, 1.0, 1.0);
-            }
-        }
-        
-        const indices = [];
-        for (let j = 0; j < subDivs; j++) {
-            for (let i = 0; i < radialDivs; i++) {
-                const v0 = j * (radialDivs + 1) + i;
-                const v1 = j * (radialDivs + 1) + (i + 1);
-                const v2 = (j + 1) * (radialDivs + 1) + i;
-                const v3 = (j + 1) * (radialDivs + 1) + (i + 1);
-                
-                indices.push(v0, v1, v3);
-                indices.push(v0, v3, v2);
-            }
-        }
-        
-        geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-        geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
-        geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-        geometry.setIndex(indices);
-        geometry.computeVertexNormals();
+		// 1. 3D壁面メッシュの作成 (UVの回り込みを考慮して radialDivs + 1 にする)
+		const vertices = new Float32Array((subDivs + 1) * (radialDivs + 1) * 3);
+		const uvs = new Float32Array((subDivs + 1) * (radialDivs + 1) * 2);
+		const colors = new Float32Array((subDivs + 1) * (radialDivs + 1) * 3);
+		let vIdx = 0;
+		let uvIdx = 0;
+		let cIdx = 0;
 
-        this.mesh = new THREE.Mesh(geometry, material);
-        this.mesh.receiveShadow = true;
-        this.scene.add(this.mesh);
+		for (let j = 0; j <= subDivs; j++) {
+			const ring = ringVerts[j];
+			const z = this.z1 + (this.z2 - this.z1) * (j / subDivs);
+			// Z方向に緩やかな環境光の明暗リズムを付与
+			const depthBand = 0.92 + Math.sin(z * 0.06) * 0.08;
+
+			for (let i = 0; i <= radialDivs; i++) {
+				const srcI = i % radialDivs;
+				const theta = (srcI / radialDivs) * Math.PI * 2;
+				const disp = this._getDisplacement(theta, z);
+
+				vertices[vIdx++] = ring[srcI * 3];
+				vertices[vIdx++] = ring[srcI * 3 + 1];
+				vertices[vIdx++] = ring[srcI * 3 + 2];
+				uvs[uvIdx++] = i / radialDivs;
+				uvs[uvIdx++] = j / subDivs;
+
+				// 頂点カラーによる擬似 AO & 高さシェーディング
+				// 凹凸の出っ張りは明るく、窪みは暗くし、側面を強調・床/天井を引き締める
+				const sinT = Math.sin(theta);
+				const heightShade = sinT < -0.35 ? 0.68 : (sinT > 0.55 ? 0.78 : 1.0);
+				const aoShade = 0.85 + disp * 0.14;
+				const shade = Math.max(0.42, Math.min(1.18, heightShade * aoShade * depthBand));
+
+				colors[cIdx++] = shade * 0.92;
+				colors[cIdx++] = shade;
+				colors[cIdx++] = shade * 1.08;
+			}
+		}
+
+		const indices = [];
+		for (let j = 0; j < subDivs; j++) {
+			for (let i = 0; i < radialDivs; i++) {
+				const v0 = j * (radialDivs + 1) + i;
+				const v1 = j * (radialDivs + 1) + (i + 1);
+				const v2 = (j + 1) * (radialDivs + 1) + i;
+				const v3 = (j + 1) * (radialDivs + 1) + (i + 1);
+
+				indices.push(v0, v1, v3);
+				indices.push(v0, v3, v2);
+			}
+		}
+
+		geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+		geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+		geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+		geometry.setIndex(indices);
+		geometry.computeVertexNormals();
+
+		this.mesh = new THREE.Mesh(geometry, material);
+		this.mesh.receiveShadow = true;
+		this.scene.add(this.mesh);
         
         // 2. サイバーグリッドラインの作成 (ワイヤーフレーム)
         const lineGeometry = new THREE.BufferGeometry();
@@ -354,9 +376,238 @@ class CaveSegment {
         
         lineGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(lineVertsArray), 3));
         
-        this.lines = new THREE.LineSegments(lineGeometry, gridMaterial);
-        this.scene.add(this.lines);
-    }
+		this.lines = new THREE.LineSegments(lineGeometry, gridMaterial);
+		this.scene.add(this.lines);
+
+		// 3. 洞窟内壁の大型結晶障害物クラスター（希少配置・広い空間限定・当たり判定あり）
+		if (this.index >= 4 && this.index % 8 === 0 && stageConfig && stageConfig.theme) {
+			this._createWallCrystals(ringVerts[Math.floor(subDivs / 2)], radialDivs, stageConfig, bossActiveRatio);
+		}
+	}
+
+	/**
+	 * 洞窟が十分に広い区間でのみ、片側壁面から大きく突き出すガラス状クリスタル障害物クラスターを配置する。
+	 * 対岸までの通り抜け安全幅（最低 20 ユニット）を必ず確保し、狭い区間では生成しない。
+	 */
+	_createWallCrystals(midRing, radialDivs, stageConfig, bossActiveRatio) {
+		const midZ = (this.z1 + this.z2) * 0.5;
+		const bounds = getCaveBoundsAt(midZ, stageConfig, bossActiveRatio);
+
+		// 狭い洞窟区間では進路封鎖を防ぐため生成を見送る
+		const minRequiredWidth = 36.0;
+		const minRequiredHeight = 42.0;
+		if (bounds.width < minRequiredWidth || bounds.height < minRequiredHeight) {
+			return;
+		}
+
+		// 障害物として存在感を出しつつ、対岸までの安全通過幅（最低 20.0）を必ず残す
+		const safePassage = 20.0;
+		const maxProtrusionX = Math.min(22.0, (bounds.width - safePassage) * 0.52);
+		const maxProtrusionY = Math.min(22.0, (bounds.height - safePassage) * 0.52);
+		const mainLength = Math.min(maxProtrusionX, maxProtrusionY);
+		if (mainLength < 9.0) return;
+
+		const center = new THREE.Vector3(bounds.centerX, bounds.centerY, midZ);
+		const wallColor = stageConfig.theme.wallColor || 0x00ff88;
+		const themeColor = stageConfig.theme.gridColor || wallColor;
+		const baseColor = new THREE.Color(themeColor);
+		const deepColor = baseColor.clone().multiplyScalar(0.32);
+		const brightColor = baseColor.clone().lerp(new THREE.Color(0xe8ffff), 0.55);
+
+		// 光る半透明ガラス結晶用カスタムシェーダー
+		// ワイヤーフレーム線に頼らず、フラットカット面ごとの鏡面反射・フレネル輪郭・先端透過発光＋FogExp2減衰で本物の水晶質感を表現
+		const fogColor = new THREE.Color(stageConfig.theme.fogColor !== undefined ? stageConfig.theme.fogColor : 0x050510);
+		const fogDensity = stageConfig.theme.fogDensity !== undefined ? stageConfig.theme.fogDensity : 0.01;
+		const crystalMat = new THREE.ShaderMaterial({
+			uniforms: {
+				uDeepColor: { value: deepColor },
+				uBaseColor: { value: baseColor },
+				uBrightColor: { value: brightColor },
+				uLightDir: { value: new THREE.Vector3(0.35, 0.78, 0.52).normalize() },
+				uFogColor: { value: fogColor },
+				uFogDensity: { value: fogDensity }
+			},
+			vertexShader: `
+				varying vec3 vViewNormal;
+				varying vec3 vViewPos;
+				varying float vHeightRatio;
+				void main() {
+					vHeightRatio = uv.y;
+					vViewNormal = normalize(normalMatrix * normal);
+					vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+					vViewPos = -mvPos.xyz;
+					gl_Position = projectionMatrix * mvPos;
+				}
+			`,
+			fragmentShader: `
+				uniform vec3 uDeepColor;
+				uniform vec3 uBaseColor;
+				uniform vec3 uBrightColor;
+				uniform vec3 uLightDir;
+				uniform vec3 uFogColor;
+				uniform float uFogDensity;
+				varying vec3 vViewNormal;
+				varying vec3 vViewPos;
+				varying float vHeightRatio;
+
+				void main() {
+					vec3 n = normalize(vViewNormal);
+					float fogDepth = length(vViewPos);
+					vec3 v = vViewPos / max(fogDepth, 0.0001);
+					vec3 l = normalize(uLightDir);
+					vec3 h = normalize(l + v);
+
+					// ガラス特有のフレネル反射（輪郭ほど強く輝き、正面は透き通る）
+					float ndotv = max(0.0, dot(n, v));
+					float fresnel = pow(1.0 - ndotv, 2.3);
+					float sharpRim = pow(1.0 - ndotv, 4.5);
+
+					// カット面ごとの明暗コントラスト＋鋭い宝石鏡面ハイライト
+					float diff = max(0.0, dot(n, l)) * 0.65 + 0.35;
+					float spec = pow(max(0.0, dot(n, h)), 36.0);
+					float facetGlow = pow(max(0.0, dot(n, normalize(vec3(-0.4, 0.3, 0.85)))), 14.0) * 0.45;
+
+					// 根元は深い鉱石色、先端へ向かって内部から透けて光るグラデーション
+					float tipGrad = smoothstep(0.05, 0.95, vHeightRatio);
+					vec3 bodyCol = mix(uDeepColor, uBaseColor, tipGrad * 0.78 + 0.15) * (0.65 + diff * 0.75);
+
+					// 内部透過発光 + フレネルリム + 鋭いガラス鏡面反射
+					vec3 col = bodyCol;
+					col += uBaseColor * (tipGrad * 0.75 + fresnel * 1.15);
+					col += uBrightColor * (sharpRim * 1.85 + spec * 3.2 + facetGlow * 0.85);
+
+					// Three.js の FogExp2 と同等の指数フォグ減衰を適用し、奥の暗闇から徐々に浮かび上がらせる
+					float fogFactor = 1.0 - exp(-uFogDensity * uFogDensity * fogDepth * fogDepth);
+					col = mix(col, uFogColor, clamp(fogFactor, 0.0, 1.0));
+
+					// 遠距離では透明度も滑らかに 0 へフェードさせて急な出現感を完全になくす
+					float distFade = 1.0 - smoothstep(130.0, 230.0, fogDepth);
+					float alpha = clamp(0.42 + fresnel * 0.42 + tipGrad * 0.14 + spec * 0.35, 0.38, 0.92) * distFade;
+					if (alpha < 0.005) discard;
+					gl_FragColor = vec4(col, alpha);
+				}
+			`,
+			transparent: true,
+			depthWrite: true,
+			side: THREE.FrontSide
+		});
+
+		// 洞窟の壁と同色・同テクスチャの岩盤ベース（壁面との自然な一体感を確保）
+		const baseRockMat = new THREE.MeshStandardMaterial({
+			color: wallColor,
+			roughness: 0.78,
+			metalness: 0.24,
+			flatShading: true,
+			bumpMap: (typeof MaterialLibrary !== 'undefined') ? MaterialLibrary.getCaveBumpTexture() : null,
+			bumpScale: 0.45,
+			roughnessMap: (typeof MaterialLibrary !== 'undefined') ? MaterialLibrary.getCaveRoughnessTexture() : null,
+			envMapIntensity: 0.85
+		});
+
+		this.decorGroup = new THREE.Group();
+		this.decorGroup.visible = bossActiveRatio < 0.05;
+
+		// 1 セグメントにつき片側 1 箇所のみ（左右交互・斜め壁面から決定論的に選択）
+		const slotCandidates = [0, 6, 1, 5, 11, 7];
+		const slotIdx = slotCandidates[Math.floor(this.index / 8) % slotCandidates.length] % radialDivs;
+
+		const wallPt = new THREE.Vector3(
+			midRing[slotIdx * 3],
+			midRing[slotIdx * 3 + 1],
+			midRing[slotIdx * 3 + 2]
+		);
+		const inward = center.clone().sub(wallPt).normalize();
+		const upVec = new THREE.Vector3(0, 1, 0);
+
+		// 壁と同化してわずかに隆起する扁平な岩盤ベース（突き出しを最小限に抑える）
+		const baseRadius = Math.max(2.6, mainLength * 0.22);
+		const baseGeo = new THREE.DodecahedronGeometry(baseRadius, 0);
+		const baseMesh = new THREE.Mesh(baseGeo, baseRockMat);
+		baseMesh.position.copy(wallPt).addScaledVector(inward, -baseRadius * 0.65);
+		baseMesh.quaternion.setFromUnitVectors(upVec, inward);
+		baseMesh.scale.set(1.3, 0.52, 1.3);
+		this.decorGroup.add(baseMesh);
+
+		// 3 本構成の天然水晶カット結晶クラスター（柱＋先端を一体ロフト造形してフラット面を美しく見せる）
+		const specs = [
+			{ len: mainLength, rBot: mainLength * 0.17, tiltZ: 0.0, tiltY: 0.0 },
+			{ len: mainLength * 0.70, rBot: mainLength * 0.125, tiltZ: -0.32, tiltY: 0.26 },
+			{ len: mainLength * 0.56, rBot: mainLength * 0.11, tiltZ: 0.34, tiltY: -0.22 }
+		];
+
+		for (const sp of specs) {
+			const dir = inward.clone();
+			dir.z += sp.tiltZ;
+			dir.y += sp.tiltY;
+			dir.normalize();
+
+			const rootPos = wallPt.clone().addScaledVector(inward, -1.5);
+			const endPos = rootPos.clone().addScaledVector(dir, sp.len);
+
+			// 根元 → 肩（72%位置） → 鋭利な先端（100%位置）を1つの六角水晶ジオメトリで造形
+			const crystalGeo = this._createCrystalPillarGeometry(sp.rBot, sp.len);
+			const crystalMesh = new THREE.Mesh(crystalGeo, crystalMat);
+			crystalMesh.position.copy(rootPos);
+			crystalMesh.quaternion.setFromUnitVectors(upVec, dir);
+			this.decorGroup.add(crystalMesh);
+
+			// 障害物用カプセル当たり判定を登録
+			this.crystalColliders.push({
+				start: rootPos.clone().addScaledVector(dir, 1.8),
+				end: endPos.clone().addScaledVector(dir, -0.6),
+				radius: sp.rBot * 0.72,
+				damage: 25
+			});
+		}
+
+		this.scene.add(this.decorGroup);
+	}
+
+	/**
+	 * 天然水晶の六角柱＋尖塔カットを一体化したノンインデックス・ハードファセット BufferGeometry を生成する。
+	 * UV.y に根元(0.0)→先端(1.0)の高さ比率を格納する。
+	 * @param {number} rBot - 根元半径
+	 * @param {number} len - 全長
+	 * @returns {THREE.BufferGeometry}
+	 */
+	_createCrystalPillarGeometry(rBot, len) {
+		const sides = 6;
+		const shoulderY = len * 0.72;
+		const rMid = rBot * 0.80;
+		const positions = [];
+		const uvs = [];
+
+		const pushTri = (a, b, c, va, vb, vc) => {
+			positions.push(a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1], c[2]);
+			uvs.push(0.5, va, 0.5, vb, 0.5, vc);
+		};
+
+		const ringBot = [];
+		const ringMid = [];
+		for (let i = 0; i < sides; i++) {
+			const ang = (i / sides) * Math.PI * 2;
+			// わずかな非対称カットを入れて天然結晶のリアルさを出す
+			const asym = 1.0 + (i % 2 === 0 ? 0.08 : -0.06);
+			ringBot.push([Math.cos(ang) * rBot * asym, 0, Math.sin(ang) * rBot * asym]);
+			ringMid.push([Math.cos(ang) * rMid * asym, shoulderY, Math.sin(ang) * rMid * asym]);
+		}
+		const tip = [0, len, 0];
+
+		for (let i = 0; i < sides; i++) {
+			const j = (i + 1) % sides;
+			// 外向き法線（Y軸上から見て時計回り順に側面を構成: bot[j] -> bot[i] -> mid[i]）
+			pushTri(ringBot[j], ringBot[i], ringMid[i], 0.0, 0.0, 0.72);
+			pushTri(ringBot[j], ringMid[i], ringMid[j], 0.0, 0.72, 0.72);
+			// 先端の6面カットファセット
+			pushTri(ringMid[j], ringMid[i], tip, 0.72, 0.72, 1.0);
+		}
+
+		const geo = new THREE.BufferGeometry();
+		geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+		geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+		geo.computeVertexNormals();
+		return geo;
+	}
 
     /**
      * 頂点・グリッドラインの動的位置更新（ボス出現時などの動的変形）
@@ -422,22 +673,41 @@ class CaveSegment {
             }
         }
 
-        linePosAttr.needsUpdate = true;
-    }
-    
-    /**
-     * リソース破棄
-     */
-    destroy() {
-        if (this.mesh) {
-            this.scene.remove(this.mesh);
-            if (this.mesh.geometry) this.mesh.geometry.dispose();
-        }
-        if (this.lines) {
-            this.scene.remove(this.lines);
-            if (this.lines.geometry) this.lines.geometry.dispose();
-        }
-        this.mesh = null;
-        this.lines = null;
-    }
+		linePosAttr.needsUpdate = true;
+
+		if (this.decorGroup) {
+			this.decorGroup.visible = bossActiveRatio < 0.05;
+		}
+	}
+
+	/**
+	 * リソース破棄
+	 */
+	destroy() {
+		if (this.mesh) {
+			this.scene.remove(this.mesh);
+			if (this.mesh.geometry) this.mesh.geometry.dispose();
+		}
+		if (this.lines) {
+			this.scene.remove(this.lines);
+			if (this.lines.geometry) this.lines.geometry.dispose();
+		}
+		if (this.decorGroup) {
+			this.scene.remove(this.decorGroup);
+			const disposedMats = new Set();
+			this.decorGroup.traverse((child) => {
+				if (child.isMesh || child.isLineSegments) {
+					if (child.geometry) child.geometry.dispose();
+					if (child.material && !disposedMats.has(child.material)) {
+						child.material.dispose();
+						disposedMats.add(child.material);
+					}
+				}
+			});
+			this.decorGroup = null;
+		}
+		this.crystalColliders = [];
+		this.mesh = null;
+		this.lines = null;
+	}
 }

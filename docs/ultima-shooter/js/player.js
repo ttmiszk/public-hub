@@ -98,367 +98,197 @@ class Player {
         this.init();
     }
 
-    /**
-     * 近代ステルス戦闘機の3Dモデル初期化
-     */
-    init() {
-        this.mesh = new THREE.Group();
+	/**
+	 * 近代ステルス戦闘機の3Dモデル初期化（PlayerModelBuilder に委譲）
+	 */
+	init() {
+		const built = PlayerModelBuilder.build();
+		this.mesh = built.mesh;
+		this.mainMat = built.mainMat;
+		this.bodyMats = built.bodyMats;
+		this.leftJet = built.leftJet;
+		this.rightJet = built.rightJet;
 
-        // 配色定義（白飛びしないように少し暗めのグレー基調にする）
-        const bodyColor = 0xb0b5bc; // 機体中央（強い光が当たると白く見える）
-        const wingColor = 0x9ba2ab; // 主翼
-        const noseColor = 0xb0b5bc; // 機首
-        const stabColor = 0x8a929e; // 垂直尾翼
-        const canopyColor = 0x334455; // キャノピー（暗すぎない青灰色）
-        const metalColor = 0x778899; // 推進器などの金属パーツ（明るめのグレー）
+		// 初期位置
+		this.mesh.position.set(0, 1.0, 0);
 
-        this.mainMat = new THREE.MeshStandardMaterial({ 
-            color: bodyColor, 
-            metalness: 0.2, // 塗装された金属のイメージ
-            roughness: 0.3,
-            flatShading: true,
-            emissive: 0x000000
-        });
+		// バリアエフェクト用のメッシュ（次世代 SF ハニカム・エネルギーシールド + ジャイロリング + プロジェクタードローン）
+		this.barrierGroup = new THREE.Group();
+		this.barrierGroup.visible = false;
 
-        const wingMat = new THREE.MeshStandardMaterial({ 
-            color: wingColor, 
-            metalness: 0.2,
-            roughness: 0.3,
-            flatShading: true,
-            emissive: 0x000000
-        });
+		// 1. 高精細トライプラナー六角形（ハニカム）エネルギーシールド球体
+		// 正確なビュー空間フレネル反射 + 前方→後方へ流れるスキャンパルス + 終了警告色シフト
+		const shieldGeo = new THREE.SphereGeometry(2.55, 36, 28);
+		this.barrierShieldMat = new THREE.ShaderMaterial({
+			uniforms: {
+				uTime: { value: 0.0 },
+				uColor: { value: new THREE.Color(0x00d8ff) },
+				uAccentColor: { value: new THREE.Color(0x88f8ff) },
+				uWarnColor: { value: new THREE.Color(0xff4422) },
+				uWarning: { value: 0.0 },
+				uOpacity: { value: 0.0 }
+			},
+			vertexShader: `
+				varying vec3 vViewNormal;
+				varying vec3 vViewPos;
+				varying vec3 vLocalPos;
+				varying vec3 vLocalNormal;
+				void main() {
+					vLocalPos = position;
+					vLocalNormal = normalize(normal);
+					vViewNormal = normalize(normalMatrix * normal);
+					vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+					vViewPos = -mvPos.xyz;
+					gl_Position = projectionMatrix * mvPos;
+				}
+			`,
+			fragmentShader: `
+				uniform float uTime;
+				uniform vec3 uColor;
+				uniform vec3 uAccentColor;
+				uniform vec3 uWarnColor;
+				uniform float uWarning;
+				uniform float uOpacity;
+				varying vec3 vViewNormal;
+				varying vec3 vViewPos;
+				varying vec3 vLocalPos;
+				varying vec3 vLocalNormal;
 
-        const noseMat = new THREE.MeshStandardMaterial({ 
-            color: noseColor, 
-            metalness: 0.2,
-            roughness: 0.3,
-            flatShading: true,
-            emissive: 0x000000
-        });
+				// 2D 六角形グリッド距離場（戻り値: x=エッジからの距離, y=セルIDハッシュ）
+				vec2 hexGrid(vec2 p) {
+					const vec2 s = vec2(1.0, 1.7320508);
+					vec4 hC = floor(vec4(p, p - vec2(0.5, 1.0)) / s.xyxy) + 0.5;
+					vec4 h = vec4(p - hC.xy * s, p - (hC.zw + 0.5) * s);
+					vec4 res = dot(h.xy, h.xy) < dot(h.zw, h.zw) ? vec4(h.xy, hC.xy) : vec4(h.zw, hC.zw + 0.5);
+					vec2 q = abs(res.xy);
+					float edgeDist = 0.5 - max(dot(q, s * 0.5), q.x);
+					float cellHash = fract(sin(dot(res.zw, vec2(127.1, 311.7))) * 43758.5453);
+					return vec2(edgeDist, cellHash);
+				}
 
-        const stabMat = new THREE.MeshStandardMaterial({ 
-            color: stabColor, 
-            metalness: 0.2,
-            roughness: 0.3,
-            flatShading: true,
-            emissive: 0x000000
-        });
+				void main() {
+					// 正確なビュー空間フレネル（外輪郭ほど強く光り、正面中央は澄んだ透明に）
+					vec3 viewDir = normalize(vViewPos);
+					float ndotv = abs(dot(normalize(vViewNormal), viewDir));
+					float fresnel = pow(1.0 - ndotv, 2.6);
+					float sharpRim = pow(1.0 - ndotv, 5.2);
 
-        this.bodyMats = [this.mainMat, wingMat, noseMat, stabMat];
+					// トライプラナー投影による極歪みのない 3D ハニカム構造
+					vec3 blend = pow(abs(vLocalNormal), vec3(4.0));
+					blend /= (blend.x + blend.y + blend.z + 0.0001);
 
-        const metalMat = new THREE.MeshStandardMaterial({ 
-            color: metalColor, 
-            metalness: 0.4, // 0.9だと環境マップがないと真っ黒になるため下げる
-            roughness: 0.3,
-            flatShading: true
-        });
+					float hexScale = 2.65;
+					vec2 hXY = hexGrid(vLocalPos.xy * hexScale);
+					vec2 hYZ = hexGrid(vLocalPos.yz * hexScale);
+					vec2 hZX = hexGrid(vLocalPos.zx * hexScale);
 
-        // 1. 中央胴体 (Fuselage)
-        const bodyGeo = new THREE.BoxGeometry(0.7, 0.28, 2.5);
-        const body = new THREE.Mesh(bodyGeo, this.mainMat);
-        body.position.z = 0.0;
-        this.mesh.add(body);
+					float hexEdgeDist = hXY.x * blend.z + hYZ.x * blend.x + hZX.x * blend.y;
+					float cellId = hXY.y * blend.z + hYZ.y * blend.x + hZX.y * blend.y;
 
-        // 機首 (Nose Cone) - 丸みを持たせて滑らかな流線形に
-        const noseGeo = new THREE.ConeGeometry(0.35, 1.2, 16);
-        // 先端（+Y）を前方向（-Z）に向けるためにマイナス90度回転
-        noseGeo.rotateX(-Math.PI / 2); 
-        noseGeo.scale(1.0, 0.4, 1.0); 
-        const nose = new THREE.Mesh(noseGeo, noseMat);
-        nose.position.set(0, 0.0, -1.85); 
-        this.mesh.add(nose);
+					// 精密なハニカム境界線
+					float hexLine = 1.0 - smoothstep(0.025, 0.085, hexEdgeDist);
 
-        // 2. コックピットキャノピー (流線形に平たく伸ばす)
-        const canopyGeo = new THREE.SphereGeometry(0.14, 12, 12);
-        canopyGeo.scale(1.0, 0.6, 3.8); // 縦を潰し、前後に長く伸ばして滑らかに
-        const canopyMat = new THREE.MeshStandardMaterial({ 
-            color: canopyColor,
-            metalness: 0.4, // 0.8から下げて環境光を反射させる
-            roughness: 0.2,
-            flatShading: true
-        });
-        const canopy = new THREE.Mesh(canopyGeo, canopyMat);
-        canopy.position.set(0, 0.16, -0.65); // 機体に埋め込むように高さを下げる
-        this.mesh.add(canopy);
+					// 機首(-Z)から後方(+Z)へ周期的に走るエネルギー・スキャン波
+					float wavePhase = fract(vLocalPos.z * 0.22 - uTime * 0.75);
+					float scanWave = smoothstep(0.18, 0.0, abs(wavePhase - 0.5));
 
-        // 3. 主翼 (戦闘機風のデルタウィング)
-        const extrudeSettings = { depth: 0.04, bevelEnabled: false };
-        
-        // 左翼の形状定義
-        const leftShape = new THREE.Shape();
-        leftShape.moveTo(0, -0.7); // 機首側の付け根
-        leftShape.lineTo(-1.6, 0.6); // 翼端（後退角）
-        leftShape.lineTo(0, 0.6); // 機尾側の付け根
-        leftShape.lineTo(0, -0.7);
-        const leftWingGeo = new THREE.ExtrudeGeometry(leftShape, extrudeSettings);
-        leftWingGeo.rotateX(Math.PI / 2); // XZ平面に寝かせる
-        leftWingGeo.translate(0, 0.02, 0); // Y軸の中心合わせ
+					// セル単位の微細パルス（電子エネルギー充填感）
+					float cellShimmer = 0.5 + 0.5 * sin(uTime * 3.8 + cellId * 18.0);
+					float activeCell = smoothstep(0.72, 0.98, cellShimmer) * scanWave;
 
-        const leftWing = new THREE.Mesh(leftWingGeo, wingMat);
-        leftWing.position.set(-0.35, 0.0, 0.3); // 胴体の左側面に配置
-        this.mesh.add(leftWing);
+					// 残り時間低下時は警告カラーへシフト
+					vec3 baseCol = mix(uColor, uWarnColor, uWarning);
+					vec3 rimCol = mix(uAccentColor, vec3(1.0, 0.75, 0.4), uWarning);
 
-        // 右翼の形状定義
-        const rightShape = new THREE.Shape();
-        rightShape.moveTo(0, -0.7); // 機首側の付け根
-        rightShape.lineTo(1.6, 0.6); // 翼端（後退角）
-        rightShape.lineTo(0, 0.6); // 機尾側の付け根
-        rightShape.lineTo(0, -0.7);
-        const rightWingGeo = new THREE.ExtrudeGeometry(rightShape, extrudeSettings);
-        rightWingGeo.rotateX(Math.PI / 2); // XZ平面に寝かせる
-        rightWingGeo.translate(0, 0.02, 0); // Y軸の中心合わせ
+					// 正面中央のノイズを抑え、外周とスキャン波付近のハニカムを際立たせる
+					float hexVisibility = mix(0.14, 1.0, fresnel) + scanWave * 0.55;
+					float pattern = hexLine * hexVisibility;
 
-        const rightWing = new THREE.Mesh(rightWingGeo, wingMat);
-        rightWing.position.set(0.35, 0.0, 0.3); // 胴体の右側面に配置
-        this.mesh.add(rightWing);
+					vec3 col = baseCol * (0.35 + fresnel * 1.9 + activeCell * 0.9);
+					col += rimCol * (pattern * 1.6 + sharpRim * 2.6 + scanWave * hexLine * 1.5);
 
-        // 4. 水平尾翼
-        const stabGeo = new THREE.BoxGeometry(0.65, 0.03, 0.45);
-        
-        const leftStab = new THREE.Mesh(stabGeo, stabMat);
-        leftStab.position.set(-0.65, 0.0, 1.05);
-        leftStab.rotation.y = Math.PI / 6; 
-        this.mesh.add(leftStab);
+					float alpha = uOpacity * (0.04 + fresnel * 0.62 + pattern * 0.42 + sharpRim * 0.55 + activeCell * 0.16);
+					gl_FragColor = vec4(col * 1.75, clamp(alpha, 0.0, 0.78));
+				}
+			`,
+			transparent: true,
+			blending: THREE.AdditiveBlending,
+			depthWrite: false,
+			side: THREE.FrontSide
+		});
+		this.barrierShieldMesh = new THREE.Mesh(shieldGeo, this.barrierShieldMat);
+		this.barrierGroup.add(this.barrierShieldMesh);
 
-        const rightStab = new THREE.Mesh(stabGeo, stabMat);
-        rightStab.position.set(0.65, 0.0, 1.05);
-        rightStab.rotation.y = -Math.PI / 6;
-        this.mesh.add(rightStab);
+		// 2. 外周の極細ジャイロ・ホログラムリング（2軸交差）
+		this.barrierMat = new THREE.MeshBasicMaterial({
+			color: 0x33e6ff,
+			transparent: true,
+			opacity: 0.0,
+			blending: THREE.AdditiveBlending,
+			depthWrite: false
+		});
+		this.barrierMat.color.multiplyScalar(2.4);
 
-        // 5. 垂直尾翼 (高さを抑えた三角形)
-        const finShape = new THREE.Shape();
-        finShape.moveTo(-0.25, 0); // 前方の付け根
-        finShape.lineTo(0.25, 0); // 後方の付け根
-        finShape.lineTo(0.25, 0.4); // 後方上部の先端（高さを0.65から0.4へ低下）
-        finShape.lineTo(-0.25, 0);
-        
-        const finExtrudeSettings = { depth: 0.03, bevelEnabled: false };
-        const finGeo = new THREE.ExtrudeGeometry(finShape, finExtrudeSettings);
-        finGeo.rotateY(-Math.PI / 2); // 向きをZ軸に沿わせる
-        finGeo.translate(-0.015, 0, 0); // 中心合わせ
-        
-        const leftFin = new THREE.Mesh(finGeo, stabMat);
-        leftFin.position.set(-0.3, 0.14, 0.95); // Y座標を胴体上部に合わせる
-        leftFin.rotation.z = -Math.PI / 18; 
-        leftFin.rotation.y = -Math.PI / 24; 
-        this.mesh.add(leftFin);
+		const ringGeo = new THREE.TorusGeometry(2.68, 0.018, 6, 48);
+		this.barrierOrbits = [];
+		const ringRotations = [
+			new THREE.Euler(Math.PI / 2.3, 0.25, 0),
+			new THREE.Euler(-Math.PI / 2.6, -0.35, 0)
+		];
 
-        const rightFin = new THREE.Mesh(finGeo, stabMat);
-        rightFin.position.set(0.3, 0.14, 0.95);
-        rightFin.rotation.z = Math.PI / 18;  
-        rightFin.rotation.y = Math.PI / 24;
-        this.mesh.add(rightFin);
+		for (let i = 0; i < ringRotations.length; i++) {
+			const orbit = new THREE.Group();
+			orbit.rotation.copy(ringRotations[i]);
+			const ringMesh = new THREE.Mesh(ringGeo, this.barrierMat);
+			orbit.add(ringMesh);
+			this.barrierOrbits.push(orbit);
+			this.barrierGroup.add(orbit);
+		}
 
-        // 6. 双発エンジンノズル (滑らかな円柱にするためポリゴン数を増加)
-        const nozzleGeo = new THREE.CylinderGeometry(0.15, 0.18, 0.35, 16);
-        nozzleGeo.rotateX(Math.PI / 2);
-        
-        const leftNozzle = new THREE.Mesh(nozzleGeo, metalMat);
-        leftNozzle.position.set(-0.2, 0.0, 1.35);
-        this.mesh.add(leftNozzle);
+		// 3. 編隊公転する 3 基のミニ・シールドプロジェクタードローン
+		this.barrierDroneOrbit = new THREE.Group();
+		this.barrierDroneOrbit.rotation.set(0.32, 0, 0.12);
+		const droneHullMat = new THREE.MeshStandardMaterial({
+			color: 0x1e2834,
+			metalness: 0.85,
+			roughness: 0.22,
+			flatShading: true,
+			envMapIntensity: 1.5
+		});
+		const droneBodyGeo = new THREE.ConeGeometry(0.11, 0.36, 4);
+		droneBodyGeo.rotateX(Math.PI / 2);
+		const droneFinGeo = new THREE.BoxGeometry(0.34, 0.02, 0.14);
+		const droneCoreGeo = new THREE.OctahedronGeometry(0.065, 0);
 
-        const rightNozzle = new THREE.Mesh(nozzleGeo, metalMat);
-        rightNozzle.position.set(0.2, 0.0, 1.35);
-        this.mesh.add(rightNozzle);
+		this.barrierDrones = [];
+		for (let d = 0; d < 3; d++) {
+			const angle = (d / 3) * Math.PI * 2;
+			const drone = new THREE.Group();
+			drone.add(new THREE.Mesh(droneBodyGeo, droneHullMat));
+			const fin = new THREE.Mesh(droneFinGeo, droneHullMat);
+			fin.position.z = 0.06;
+			drone.add(fin);
+			const core = new THREE.Mesh(droneCoreGeo, this.barrierMat);
+			core.position.z = -0.14;
+			drone.add(core);
 
-        // 7. ツインジェットブースター (アフターバーナーの表現)
-        // 7. ツインジェットブースター (アフターバーナーの表現)
-        // ① 最も外側の長い青い炎
-        const jetOuterGeo = new THREE.ConeGeometry(0.12, 1.6, 16, 1, true);
-        jetOuterGeo.translate(0, 0.8, 0); 
-        jetOuterGeo.rotateX(Math.PI / 2); 
-        const jetOuterMat = new THREE.MeshBasicMaterial({
-            color: 0x0044ff, // 深い青
-            transparent: true,
-            opacity: 0.2, // 透明度を下げて内側を見えやすく
-            blending: THREE.AdditiveBlending,
-            depthWrite: false,
-            side: THREE.DoubleSide
-        });
-        jetOuterMat.color.multiplyScalar(1.5); // 発光を控えめに
+			drone.position.set(Math.cos(angle) * 2.68, Math.sin(angle) * 2.68, 0);
+			drone.rotation.z = angle + Math.PI / 2;
+			this.barrierDrones.push(drone);
+			this.barrierDroneOrbit.add(drone);
+		}
+		this.barrierGroup.add(this.barrierDroneOrbit);
 
-        // ② 内側のライトブルーの炎
-        const jetInnerGeo = new THREE.ConeGeometry(0.08, 1.0, 12, 1, true);
-        jetInnerGeo.translate(0, 0.5, 0);
-        jetInnerGeo.rotateX(Math.PI / 2);
-        const jetInnerMat = new THREE.MeshBasicMaterial({
-            color: 0x2288ff, // 青
-            transparent: true,
-            opacity: 0.4, // 透明度を下げて内側を見えやすく
-            blending: THREE.AdditiveBlending,
-            depthWrite: false,
-            side: THREE.DoubleSide
-        });
-        jetInnerMat.color.multiplyScalar(2.0); // 中程度の発光
+		// 点滅処理や爆散対象から確実に除外できるようマーカー付与
+		this.barrierGroup.traverse((child) => {
+			child.userData.isBarrierPart = true;
+		});
 
-        // ③ 根本のオレンジ色の強力な発光（白飛びを防ぐためノーマルブレンド）
-        const jetBaseGeo = new THREE.ConeGeometry(0.06, 0.5, 12, 1, true);
-        jetBaseGeo.translate(0, 0.25, 0);
-        jetBaseGeo.rotateX(Math.PI / 2);
-        const jetBaseMat = new THREE.MeshBasicMaterial({
-            color: 0xffaa00, // 鮮やかなオレンジ・黄色
-            transparent: true,
-            opacity: 1.0,
-            blending: THREE.NormalBlending, // 加算合成を外して色を保つ
-            depthWrite: false,
-            side: THREE.DoubleSide
-        });
-        jetBaseMat.color.multiplyScalar(6.0); // 中心だけ強烈に発光させる
+		this.mesh.add(this.barrierGroup);
 
-        // 左ブースター
-        this.leftJet = new THREE.Group();
-        const leftOuter = new THREE.Mesh(jetOuterGeo, jetOuterMat);
-        const leftInner = new THREE.Mesh(jetInnerGeo, jetInnerMat);
-        const leftBase = new THREE.Mesh(jetBaseGeo, jetBaseMat);
-        this.leftJet.add(leftOuter);
-        this.leftJet.add(leftInner);
-        this.leftJet.add(leftBase);
-        this.leftJet.position.set(-0.2, 0.0, 1.5);
-        this.mesh.add(this.leftJet);
-
-        // 右ブースター
-        this.rightJet = new THREE.Group();
-        const rightOuter = new THREE.Mesh(jetOuterGeo, jetOuterMat);
-        const rightInner = new THREE.Mesh(jetInnerGeo, jetInnerMat);
-        const rightBase = new THREE.Mesh(jetBaseGeo, jetBaseMat);
-        this.rightJet.add(rightOuter);
-        this.rightJet.add(rightInner);
-        this.rightJet.add(rightBase);
-        this.rightJet.position.set(0.2, 0.0, 1.5);
-        this.mesh.add(this.rightJet);
-
-        // 初期位置
-        this.mesh.position.set(0, 1.0, 0);
-        
-        // バリアエフェクト用のメッシュ（ホログラムシールド球体 + 衛星クリスタル）
-        this.barrierGroup = new THREE.Group();
-        this.barrierGroup.visible = false;
-
-        // 1. 中央のエネルギーシールド球体（3D回転ホログラム緯度リング＋高透明シースルー膜）
-        const shieldGeo = new THREE.IcosahedronGeometry(2.6, 3);
-        this.barrierShieldMat = new THREE.ShaderMaterial({
-            uniforms: {
-                uTime: { value: 0 },
-                uColor: { value: new THREE.Color(0x00d2ff) },
-                uOpacity: { value: 0.35 }
-            },
-            vertexShader: `
-                varying vec3 vNormal;
-                varying vec3 vPosition;
-                varying vec2 vUv;
-                void main() {
-                    vUv = uv;
-                    vNormal = normalize(normalMatrix * normal);
-                    vPosition = position;
-                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                }
-            `,
-            fragmentShader: `
-                uniform float uTime;
-                uniform vec3 uColor;
-                uniform float uOpacity;
-                varying vec3 vNormal;
-                varying vec3 vPosition;
-                varying vec2 vUv;
-
-                vec3 rotateY(vec3 p, float angle) {
-                    float c = cos(angle);
-                    float s = sin(angle);
-                    return vec3(c * p.x + s * p.z, p.y, -s * p.x + c * p.z);
-                }
-
-                void main() {
-                    vec3 viewDir = normalize(-vPosition);
-                    float dotNV = abs(dot(viewDir, vNormal));
-                    float fresnel = pow(1.0 - dotNV, 2.5);
-
-                    // 時間経過で3D回転する球体表面座標
-                    vec3 rotPos = rotateY(vPosition, uTime * 0.8);
-
-                    // 正面カメラ方向のライン視認性をすっきりさせるフェード係数
-                    float frontFade = mix(0.35, 1.0, fresnel);
-
-                    // 1. 3Dホログラム緯度リング（極細・繊細なシャープライン）
-                    float latLine = abs(sin(rotPos.y * 4.5 + uTime * 1.5));
-                    float gridLine = smoothstep(0.965, 0.995, latLine) * frontFade;
-
-                    // 2. 補助的な経度グリッド線（極細）
-                    float lonLine = abs(sin(atan(rotPos.z, rotPos.x) * 4.0 + uTime * 1.0));
-                    float gridCross = smoothstep(0.975, 0.996, lonLine) * 0.35 * frontFade;
-
-                    float pulse = sin(uTime * 3.5) * 0.1 + 0.9;
-
-                    vec3 lineColor = vec3(0.3, 0.95, 1.0);
-                    vec3 baseGlow = uColor * (0.8 + fresnel * 2.5);
-                    vec3 finalColor = mix(baseGlow, lineColor * 2.8, max(gridLine, gridCross));
-
-                    // 正面中央の膜は非常に薄く透明、極細ホログラムラインと外周輪郭で上品な3D球体を表現
-                    float alpha = uOpacity * (0.10 + fresnel * 0.75 + gridLine * 0.5 + gridCross * 0.25) * pulse;
-
-                    gl_FragColor = vec4(finalColor * 2.2, clamp(alpha, 0.0, 0.60));
-                }
-            `,
-            transparent: true,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false,
-            side: THREE.DoubleSide
-        });
-        this.barrierShieldMesh = new THREE.Mesh(shieldGeo, this.barrierShieldMat);
-        this.barrierGroup.add(this.barrierShieldMesh);
-
-        // 2. 衛星クリスタル
-        const satGeo = new THREE.OctahedronGeometry(0.12, 0);
-        this.barrierMat = new THREE.MeshStandardMaterial({
-            color: 0xfeca57,
-            emissive: 0xaa6600,
-            metalness: 0.1,
-            roughness: 0.1,
-            flatShading: true,
-            transparent: true,
-            opacity: 0.0,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false
-        });
-
-        this.barrierOrbits = [];
-        const orbitAngles = [
-            new THREE.Euler(0, 0, 0),
-            new THREE.Euler(Math.PI / 4, Math.PI / 4, 0),
-            new THREE.Euler(-Math.PI / 4, -Math.PI / 4, 0),
-            new THREE.Euler(Math.PI / 2, 0, Math.PI / 4)
-        ];
-
-        for (let i = 0; i < orbitAngles.length; i++) {
-            const orbit = new THREE.Group();
-            orbit.rotation.copy(orbitAngles[i]);
-            
-            for (let j = 0; j < 3; j++) {
-                const sat = new THREE.Mesh(satGeo, this.barrierMat);
-                const angle = (j / 3) * Math.PI * 2;
-                sat.position.set(Math.cos(angle) * 2.5, Math.sin(angle) * 2.5, 0);
-                sat.scale.set(1.0, 1.0, 1.0);
-                orbit.add(sat);
-            }
-            
-            this.barrierOrbits.push(orbit);
-            this.barrierGroup.add(orbit);
-        }
-
-        this.mesh.add(this.barrierGroup);
-        
-        // 影を落とす・受ける設定を有効化
-        this.mesh.castShadow = true;
-        this.mesh.receiveShadow = true;
-        this.mesh.traverse((child) => {
-            if (child.isMesh) {
-                child.castShadow = true;
-                child.receiveShadow = true;
-            }
-        });
-
-        // シーンに追加
-        this.game.renderer.scene.add(this.mesh);
-    }
+		// シーンに追加
+		this.game.renderer.scene.add(this.mesh);
+	}
 
     /**
      * バリアアイテム取得時の無敵時間付与
@@ -471,16 +301,19 @@ class Player {
         this.invincibleTimer = Math.max(this.invincibleTimer, duration);
         this.barrierMaxTimer = this.invincibleTimer; // 縮小演出のために最大時間を保持
         
-        // バリア取得時に、もし点滅中で消えているパーツがあればすべて表示状態に戻す
-        this.mesh.traverse((child) => {
-            if (child.isMesh && child.material !== this.barrierMat) {
-                child.visible = true;
-            }
-        });
+		// バリア取得時に、もし点滅中で消えている機体パーツがあればすべて表示状態に戻す
+		this.mesh.traverse((child) => {
+			if (child.isMesh && !child.userData.isBarrierPart) {
+				child.visible = true;
+			}
+		});
 
-        if (this.barrierGroup) {
-            this.barrierGroup.scale.set(1, 1, 1); // グループ全体のスケールをリセット
-        }
+		if (this.barrierGroup) {
+			this.barrierGroup.scale.set(1, 1, 1);
+		}
+		if (this.barrierShieldMat && this.barrierShieldMat.uniforms) {
+			this.barrierShieldMat.uniforms.uWarning.value = 0.0;
+		}
         
         this.flash(GameConfig.items.types.BARRIER.color);
         if (window.audioManager) {
@@ -979,106 +812,125 @@ class Player {
      * @param {number} deltaTime
      */
     handleInvincibility(deltaTime) {
-        if (!this.isInvincible) {
-            // 無敵終了後のバリアのフェードアウト処理
-            if (this.barrierGroup && this.barrierGroup.visible) {
-                this.barrierMat.opacity = Math.max(0, this.barrierMat.opacity - deltaTime * 4.0);
-                
-                // フェードアウトと同時にグループ全体を急激に縮小させて消滅感を出す
-                const currentScale = this.barrierGroup.scale.x;
-                const nextScale = Math.max(0, currentScale - deltaTime * 3.0);
-                this.barrierGroup.scale.set(nextScale, nextScale, nextScale);
+		if (!this.isInvincible) {
+			// 無敵終了後のバリアのフェードアウト収束処理
+			if (this.barrierGroup && this.barrierGroup.visible) {
+				this.barrierMat.opacity = Math.max(0, this.barrierMat.opacity - deltaTime * 4.0);
+				if (this.barrierShieldMat && this.barrierShieldMat.uniforms) {
+					this.barrierShieldMat.uniforms.uOpacity.value = Math.max(
+						0,
+						this.barrierShieldMat.uniforms.uOpacity.value - deltaTime * 3.5
+					);
+				}
 
-                if (this.barrierMat.opacity <= 0) {
-                    this.barrierGroup.visible = false;
-                }
-            }
-            return;
-        }
+				const currentScale = this.barrierGroup.scale.x;
+				const nextScale = Math.max(0, currentScale - deltaTime * 3.2);
+				this.barrierGroup.scale.set(nextScale, nextScale, nextScale);
 
-        this.invincibleTimer -= deltaTime;
+				if (nextScale <= 0.01) {
+					this.barrierGroup.visible = false;
+				}
+			}
+			return;
+		}
 
-        // バリア状態の描画更新
-        if (this.hasBarrier) {
-            this.barrierGroup.visible = true;
+		this.invincibleTimer -= deltaTime;
 
-            // シェーダーのアニメーション時間を進める
-            if (this.barrierShieldMat && this.barrierShieldMat.uniforms) {
-                this.barrierShieldMat.uniforms.uTime.value += deltaTime;
-            }
+		// バリア状態の描画更新
+		if (this.hasBarrier) {
+			this.barrierGroup.visible = true;
 
-            // 全体の残り時間の割合
-            const overallRatio = this.barrierMaxTimer > 0 ? (this.invincibleTimer / this.barrierMaxTimer) : 1.0;
-            const ratio = Math.min(1.0, overallRatio / 0.2);
+			if (this.barrierShieldMat && this.barrierShieldMat.uniforms) {
+				this.barrierShieldMat.uniforms.uTime.value += deltaTime;
+			}
 
-            const satScale = Math.max(0.03, ratio);
+			const overallRatio = this.barrierMaxTimer > 0 ? (this.invincibleTimer / this.barrierMaxTimer) : 1.0;
+			const ratio = Math.min(1.0, overallRatio / 0.2);
+			const droneScale = Math.max(0.25, ratio);
 
-            if (this.invincibleTimer < 1.5) {
-                const flashOpacity = 0.3 + 0.7 * Math.abs(Math.sin(this.invincibleTimer * 30.0));
-                this.barrierMat.opacity = flashOpacity;
-                if (this.barrierShieldMat) {
-                    this.barrierShieldMat.uniforms.uOpacity.value = flashOpacity * 0.35;
-                }
-            } else {
-                this.barrierMat.opacity = Math.min(0.9, this.barrierMat.opacity + deltaTime * 2.0);
-                if (this.barrierShieldMat) {
-                    this.barrierShieldMat.uniforms.uOpacity.value = Math.min(0.35, this.barrierShieldMat.uniforms.uOpacity.value + deltaTime * 1.2);
-                }
-            }
-            // 軌道面は固定し、Z軸（軌道面上での回転）のみを回すことで、安定した衛星軌道を表現
-            // ラスト20%の期間にのみ周回速度も徐々に遅くする（最低で元の30%の速度）
-            const speedRatio = Math.max(0.3, ratio);
-            const speedBase = 10.0 * speedRatio;
-            this.barrierOrbits[0].rotation.z += deltaTime * speedBase;
-            this.barrierOrbits[1].rotation.z -= deltaTime * (speedBase * 1.2); 
-            this.barrierOrbits[2].rotation.z += deltaTime * (speedBase * 0.9); 
-            this.barrierOrbits[3].rotation.z -= deltaTime * (speedBase * 1.1);
-            
-            // 衛星自体も回転させる（キラキラさせる）と同時にスケールも更新
-            this.barrierOrbits.forEach(orbit => {
-                orbit.children.forEach(sat => {
-                    sat.rotation.x += deltaTime * 5.0;
-                    sat.rotation.y += deltaTime * 6.0;
-                    sat.scale.set(satScale, satScale, satScale);
-                });
-            });
+			// バリア球体（六角形ハニカム模様）自体をゆっくり 2 軸回転させる
+			if (this.barrierShieldMesh) {
+				const shieldSpin = Math.max(0.4, ratio);
+				this.barrierShieldMesh.rotation.y += deltaTime * 0.55 * shieldSpin;
+				this.barrierShieldMesh.rotation.x += deltaTime * 0.22 * shieldSpin;
+			}
 
-            // バリア持続音のループ再生
-            if (this.barrierSoundTimer === undefined) {
-                this.barrierSoundTimer = 0;
-            }
-            this.barrierSoundTimer -= deltaTime;
-            if (this.barrierSoundTimer <= 0) {
-                if (window.audioManager) {
-                    audioManager.play('barrierLoop');
-                }
-                // 周回速度の低下に合わせて、効果音が鳴る間隔も広げる（0.15秒 〜 最長0.45秒）
-                this.barrierSoundTimer = 0.15 + (1.0 - ratio) * 0.30;
-            }
-        }
+			// 残り 2.0 秒未満でシアンから警告アンバー/レッドへ滑らかにシフト
+			const warningFactor = this.invincibleTimer < 2.0
+				? Math.min(1.0, (2.0 - this.invincibleTimer) / 1.5)
+				: 0.0;
 
-        if (this.invincibleTimer <= 0) {
-            this.isInvincible = false;
-            this.hasBarrier = false;
-            // バリア以外のメッシュをすべて表示状態に戻す
-            this.mesh.traverse((child) => {
-                if (child.isMesh && child.material !== this.barrierMat) {
-                    child.visible = true;
-                }
-            });
-        } else {
-            // ダメージによる無敵時間中は機体を点滅させる（バリア展開中は点滅しない）
-            if (!this.hasBarrier) {
-                const blinkInterval = 0.05;
-                const step = Math.floor(this.invincibleTimer / blinkInterval);
-                const isVis = (step % 2 === 0);
-                this.mesh.traverse((child) => {
-                    if (child.isMesh && child.material !== this.barrierMat) {
-                        child.visible = isVis;
-                    }
-                });
-            }
-        }
+			if (this.barrierShieldMat && this.barrierShieldMat.uniforms) {
+				this.barrierShieldMat.uniforms.uWarning.value = warningFactor;
+			}
+
+			if (this.invincibleTimer < 1.5) {
+				const flash = 0.35 + 0.65 * Math.abs(Math.sin(this.invincibleTimer * 24.0));
+				this.barrierMat.opacity = flash * 0.75;
+				if (this.barrierShieldMat) {
+					this.barrierShieldMat.uniforms.uOpacity.value = flash * 0.85;
+				}
+			} else {
+				this.barrierMat.opacity = Math.min(0.65, this.barrierMat.opacity + deltaTime * 2.5);
+				if (this.barrierShieldMat) {
+					this.barrierShieldMat.uniforms.uOpacity.value = Math.min(
+						0.85,
+						this.barrierShieldMat.uniforms.uOpacity.value + deltaTime * 2.8
+					);
+				}
+			}
+
+			// 2軸ジャイロリングと 3 基のシールドプロジェクタードローンの滑らかな回転
+			const speedRatio = Math.max(0.35, ratio);
+			if (this.barrierOrbits[0]) {
+				this.barrierOrbits[0].rotation.z += deltaTime * 1.8 * speedRatio;
+				this.barrierOrbits[0].rotation.y += deltaTime * 0.9 * speedRatio;
+			}
+			if (this.barrierOrbits[1]) {
+				this.barrierOrbits[1].rotation.z -= deltaTime * 2.2 * speedRatio;
+				this.barrierOrbits[1].rotation.x += deltaTime * 0.7 * speedRatio;
+			}
+			if (this.barrierDroneOrbit) {
+				this.barrierDroneOrbit.rotation.z += deltaTime * 4.8 * speedRatio;
+			}
+			if (this.barrierDrones) {
+				for (let i = 0; i < this.barrierDrones.length; i++) {
+					this.barrierDrones[i].scale.set(droneScale, droneScale, droneScale);
+				}
+			}
+
+			// バリア持続音のループ再生
+			if (this.barrierSoundTimer === undefined) {
+				this.barrierSoundTimer = 0;
+			}
+			this.barrierSoundTimer -= deltaTime;
+			if (this.barrierSoundTimer <= 0) {
+				if (window.audioManager) {
+					audioManager.play('barrierLoop');
+				}
+				this.barrierSoundTimer = 0.15 + (1.0 - ratio) * 0.30;
+			}
+		}
+
+		if (this.invincibleTimer <= 0) {
+			this.isInvincible = false;
+			this.hasBarrier = false;
+			this.mesh.traverse((child) => {
+				if (child.isMesh && !child.userData.isBarrierPart) {
+					child.visible = true;
+				}
+			});
+		} else if (!this.hasBarrier) {
+			// 被弾直後の無敵時間中は機体のみ点滅させる
+			const blinkInterval = 0.05;
+			const step = Math.floor(this.invincibleTimer / blinkInterval);
+			const isVis = (step % 2 === 0);
+			this.mesh.traverse((child) => {
+				if (child.isMesh && !child.userData.isBarrierPart) {
+					child.visible = isVis;
+				}
+			});
+		}
     }
 
     /**
@@ -1138,8 +990,8 @@ class Player {
         if (this.leftJet) this.leftJet.visible = false;
         if (this.rightJet) this.rightJet.visible = false;
 
-        this.mesh.children.forEach((part) => {
-            if (part === this.leftJet || part === this.rightJet) return;
+		this.mesh.children.forEach((part) => {
+			if (part === this.leftJet || part === this.rightJet || part === this.barrierGroup) return;
 
             // 放射状の初期移動ベクトル
             const radialDir = part.position.clone();

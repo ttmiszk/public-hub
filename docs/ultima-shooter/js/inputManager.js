@@ -41,10 +41,24 @@ class InputManager {
         /** @type {number} 最大感度になるまでの長押し時間 (0.25秒) */
         this.sensitivityRampTime = 0.25;
 
-        /** @type {boolean} ゲームパッドが実際に人間によって操作されたか */
-        this.gamepadActive = false;
+		/** @type {boolean} ゲームパッドが実際に人間によって操作されたか */
+		this.gamepadActive = false;
 
-        this.init();
+		// タッチコントローラー（モバイル仮想ジョイスティック等）入力状態
+		/** @type {boolean} */
+		this.touchActive = false;
+		/** @type {number} */
+		this.touchX = 0.0;
+		/** @type {number} */
+		this.touchY = 0.0;
+		/** @type {boolean} */
+		this.touchFire = false;
+		/** @type {boolean} */
+		this.touchAutoFire = false;
+		/** @type {boolean} */
+		this.touchPauseQueued = false;
+
+		this.init();
     }
 
     /**
@@ -102,19 +116,73 @@ class InputManager {
         });
     }
 
-    /**
-     * 前フレームの状態を保存する（ゲームループの最後で呼ぶ）
-     */
-    postUpdate() {
-        this.prevKeys = { ...this.keys };
-        
-        const gp = this.getGamepad();
-        if (gp) {
-            this.prevGamepadButtons = gp.buttons.map(b => b.pressed);
-        } else {
-            this.prevGamepadButtons = [];
-        }
-    }
+	/**
+	 * 前フレームの状態を保存する（ゲームループの最後で呼ぶ）
+	 */
+	postUpdate() {
+		this.prevKeys = { ...this.keys };
+		this.touchPauseQueued = false;
+
+		const gp = this.getGamepad();
+		if (gp) {
+			this.prevGamepadButtons = gp.buttons.map(b => b.pressed);
+		} else {
+			this.prevGamepadButtons = [];
+		}
+	}
+
+	/**
+	 * 移動・タッチ入力の蓄積状態をリセットする（ゲーム開始・タイトル復帰時用）
+	 */
+	resetMovement() {
+		this.keyboardX = 0.0;
+		this.keyboardY = 0.0;
+		this.pressDurationX = 0.0;
+		this.pressDurationY = 0.0;
+		this.touchActive = false;
+		this.touchX = 0.0;
+		this.touchY = 0.0;
+		this.touchFire = false;
+		this.touchPauseQueued = false;
+	}
+
+	/**
+	 * 仮想ジョイスティックからの移動入力を設定する
+	 * @param {number} x - 横方向 (-1.0 〜 1.0)
+	 * @param {number} y - 縦方向 (-1.0 〜 1.0)
+	 * @param {boolean} active - タッチ操作中かどうか
+	 */
+	setTouchMove(x, y, active) {
+		this.touchActive = !!active;
+		this.touchX = Math.max(-1.0, Math.min(1.0, x));
+		this.touchY = Math.max(-1.0, Math.min(1.0, y));
+		// 指を離した際に慣性が残らず中央停止できるよう仮想スティック値も同期する
+		this.keyboardX = this.touchX;
+		this.keyboardY = this.touchY;
+	}
+
+	/**
+	 * タッチFIREボタンの押下状態を設定する
+	 * @param {boolean} pressed
+	 */
+	setTouchFire(pressed) {
+		this.touchFire = !!pressed;
+	}
+
+	/**
+	 * タッチAUTOショットの有効状態を設定する
+	 * @param {boolean} enabled
+	 */
+	setTouchAutoFire(enabled) {
+		this.touchAutoFire = !!enabled;
+	}
+
+	/**
+	 * タッチPAUSEボタンの押下イベントを1フレーム分キューする
+	 */
+	triggerTouchPause() {
+		this.touchPauseQueued = true;
+	}
 
     /**
      * 現在接続されているゲームパッドを取得
@@ -156,37 +224,44 @@ class InputManager {
         return null;
     }
 
-    /**
-     * 横方向の移動入力を取得 (-1.0 〜 1.0)
-     * @returns {number}
-     */
-    getMoveX() {
-        // キーボード、D-pad、およびアナログスティックの統合累積値（-1.0 〜 1.0）
-        return Math.max(-1.0, Math.min(1.0, this.keyboardX));
-    }
+	/**
+	 * 横方向の移動入力を取得 (-1.0 〜 1.0)
+	 * @returns {number}
+	 */
+	getMoveX() {
+		if (this.touchActive) {
+			return this.touchX;
+		}
+		// キーボード、D-pad、およびアナログスティックの統合累積値（-1.0 〜 1.0）
+		return Math.max(-1.0, Math.min(1.0, this.keyboardX));
+	}
 
-    /**
-     * 縦方向の移動入力を取得 (-1.0 〜 1.0)
-     * @returns {number}
-     */
-    getMoveY() {
-        // キーボード、D-pad、およびアナログスティックの統合累積値（-1.0 〜 1.0）
-        return Math.max(-1.0, Math.min(1.0, this.keyboardY));
-    }
+	/**
+	 * 縦方向の移動入力を取得 (-1.0 〜 1.0)
+	 * @returns {number}
+	 */
+	getMoveY() {
+		if (this.touchActive) {
+			return this.touchY;
+		}
+		// キーボード、D-pad、およびアナログスティックの統合累積値（-1.0 〜 1.0）
+		return Math.max(-1.0, Math.min(1.0, this.keyboardY));
+	}
 
-    /**
-     * ショットボタンが押されているか (押しっぱなし連射用)
-     * @returns {boolean}
-     */
-    isFirePressed() {
-        if (this.keys['Space']) return true;
+	/**
+	 * ショットボタンが押されているか (押しっぱなし連射用)
+	 * @returns {boolean}
+	 */
+	isFirePressed() {
+		if (this.touchFire || this.touchAutoFire) return true;
+		if (this.keys['Space']) return true;
 
-        const gp = this.getGamepad();
-        if (gp) {
-            if (gp.buttons[0]?.pressed || gp.buttons[7]?.pressed) return true;
-        }
-        return false;
-    }
+		const gp = this.getGamepad();
+		if (gp) {
+			if (gp.buttons[0]?.pressed || gp.buttons[7]?.pressed) return true;
+		}
+		return false;
+	}
 
     /**
      * ゲーム開始ボタンが「押された瞬間」か
@@ -206,21 +281,23 @@ class InputManager {
         return false;
     }
 
-    /**
-     * ポーズボタンが「押された瞬間」か
-     * @returns {boolean}
-     */
-    isPauseJustPressed() {
-        const kbJust = this.keys['Escape'] && !this.prevKeys['Escape'];
-        if (kbJust) return true;
+	/**
+	 * ポーズボタンが「押された瞬間」か
+	 * @returns {boolean}
+	 */
+	isPauseJustPressed() {
+		if (this.touchPauseQueued) return true;
 
-        const gp = this.getGamepad();
-        if (gp) {
-            const gpButton9Just = gp.buttons[9]?.pressed && !this.prevGamepadButtons[9];
-            if (gpButton9Just) return true;
-        }
-        return false;
-    }
+		const kbJust = this.keys['Escape'] && !this.prevKeys['Escape'];
+		if (kbJust) return true;
+
+		const gp = this.getGamepad();
+		if (gp) {
+			const gpButton9Just = gp.buttons[9]?.pressed && !this.prevGamepadButtons[9];
+			if (gpButton9Just) return true;
+		}
+		return false;
+	}
 
     /**
      * ゲームパッドのSELECTボタンが「押された瞬間」であるかを判定

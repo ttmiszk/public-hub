@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Ultima Shooter</title>
     <!-- Google Fonts: Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -32,7 +32,21 @@
     <div id="ui-container"></div>
 
     
-    <!-- ボス接近アラート警告: ui-containerのinnerHTML書き換えに巻き込まれないよう独立配置 -->
+	<!-- モバイル向けタッチコントローラー: ui-container の書き換えに巻き込まれないよう独立配置 -->
+	<div id="touch-controls" class="touch-controls hidden" aria-hidden="true">
+		<div id="touch-joystick-zone" class="touch-joystick-zone">
+			<div id="touch-joystick-base" class="touch-joystick-base">
+				<div id="touch-joystick-knob" class="touch-joystick-knob"></div>
+			</div>
+		</div>
+		<button id="touch-pause-btn" type="button" class="touch-pause-btn" aria-label="Pause">II</button>
+		<div class="touch-action-group">
+			<button id="touch-autofire-btn" type="button" class="touch-autofire-btn" aria-pressed="false">AUTO</button>
+			<button id="touch-fire-btn" type="button" class="touch-fire-btn">FIRE</button>
+		</div>
+	</div>
+
+	<!-- ボス接近アラート警告: ui-containerのinnerHTML書き換えに巻き込まれないよう独立配置 -->
     <div id="boss-warning" class="boss-warning-flash">
         WARNING<br><span style="font-size:1.6rem; color:#fff; font-weight:700; text-shadow:0 0 15px rgba(255,0,0,0.8);">BOSS APPROACHING</span>
     </div>
@@ -92,21 +106,23 @@
                 <h2>TOP 10 RANKING</h2>
                 <button id="ranking-clear-btn" class="debug-btn debug-danger-btn debug-btn-small" style="margin:0;">CLEAR DATA</button>
             </div>
-            <table class="ranking-table">
-                <thead>
-                    <tr>
-                        <th style="width: 10%;">RANK</th>
-                        <th style="width: 20%;">SCORE</th>
-                        <th style="width: 20%;">NAME</th>
-                        <th style="width: 12%;">LOOP</th>
-                        <th style="width: 13%;">STAGE</th>
-                        <th style="width: 25%;">DATE</th>
-                    </tr>
-                </thead>
-                <tbody id="ranking-tbody">
-                    <!-- JSで動的に追加される -->
-                </tbody>
-            </table>
+			<div class="ranking-table-wrapper">
+				<table class="ranking-table">
+					<thead>
+						<tr>
+							<th style="width: 10%;">RANK</th>
+							<th style="width: 20%;">SCORE</th>
+							<th style="width: 20%;">NAME</th>
+							<th style="width: 12%;">LOOP</th>
+							<th style="width: 13%;">STAGE</th>
+							<th style="width: 25%;">DATE</th>
+						</tr>
+					</thead>
+					<tbody id="ranking-tbody">
+						<!-- JSで動的に追加される -->
+					</tbody>
+				</table>
+			</div>
             <div class="modal-actions" style="margin-top:20px; text-align:center;">
                 <button id="ranking-close-btn" class="debug-btn" style="min-width: 150px;">CLOSE</button>
             </div>
@@ -124,25 +140,35 @@
         </div>
     </div>
 
-    <!-- JSファイルの読み込み (依存順) -->
-    <script src="js/audioData.js"></script>
-    <script src="js/audioManager.js"></script>
-    <script src="js/config.js"></script>
-    <script src="js/caveGenerator.js"></script>
-    <script src="js/inputManager.js"></script>
-    <script src="js/cameraController.js"></script>
-    <script src="js/objectPool.js"></script>
-    <script src="js/renderer.js"></script>
-    <script src="js/player.js"></script>
-    <script src="js/bullet.js"></script>
-    <script src="js/enemy.js"></script>
-    <script src="js/enemySpawner.js"></script>
-    <script src="js/item.js"></script>
-    <script src="js/effect.js"></script>
-    <script src="js/stageManager.js"></script>
-    <script src="js/obstacle.js"></script>
-    <script src="js/boss.js"></script>
-    <script src="js/game.js"></script>
-    <script src="js/main.js"></script>
+	<!-- JSファイルの読み込み (依存順 / ローカル実行のため ES Modules 不使用) -->
+	<script src="js/audioData.js"></script>
+	<script src="js/audioManager.js"></script>
+	<script src="js/config.js"></script>
+	<script src="js/caveGenerator.js"></script>
+	<script src="js/inputManager.js"></script>
+	<script src="js/touchController.js"></script>
+	<script src="js/cameraController.js"></script>
+	<script src="js/objectPool.js"></script>
+	<script src="js/materialLibrary.js"></script>
+	<script src="js/renderer.js"></script>
+	<script src="js/playerModel.js"></script>
+	<script src="js/player.js"></script>
+	<script src="js/bullet.js"></script>
+	<script src="js/enemyModel.js"></script>
+	<script src="js/enemy.js"></script>
+	<script src="js/enemySpawner.js"></script>
+	<script src="js/item.js"></script>
+	<script src="js/effect.js"></script>
+	<script src="js/stageManager.js"></script>
+	<script src="js/obstacle.js"></script>
+	<script src="js/bossModel.js"></script>
+	<script src="js/boss.js"></script>
+	<script src="js/scoreManager.js"></script>
+	<script src="js/entityManager.js"></script>
+	<script src="js/collisionManager.js"></script>
+	<script src="js/debugManager.js"></script>
+	<script src="js/uiManager.js"></script>
+	<script src="js/game.js"></script>
+	<script src="js/main.js"></script>
 </body>
 </html>

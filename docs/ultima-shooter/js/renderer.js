@@ -142,17 +142,28 @@ class Renderer {
         /** @type {THREE.WebGLRenderer} */
         this.webGLRenderer = null;
         
-        /** @type {THREE.AmbientLight} */
-        this.ambientLight = null;
-        /** @type {THREE.DirectionalLight} */
-        this.dirLight = null;
-        
-        /** @type {THREE.UnrealBloomPass} */
-        this.bloomPass = null;
-        /** @type {THREE.ShaderPass} */
-        this.screenEffectsPass = null;
-        /** @type {THREE.ShaderPass} */
-        this.fxaaPass = null;
+		/** @type {THREE.AmbientLight} */
+		this.ambientLight = null;
+		/** @type {THREE.DirectionalLight} */
+		this.dirLight = null;
+		/** @type {THREE.DirectionalLight} */
+		this.rimLight = null;
+		/** @type {{texture: THREE.Texture, dispose: Function}|null} */
+		this.envMapResource = null;
+
+		/** @type {THREE.UnrealBloomPass} */
+		this.bloomPass = null;
+		/** @type {THREE.ShaderPass} */
+		this.screenEffectsPass = null;
+		/** @type {THREE.ShaderPass} */
+		this.fxaaPass = null;
+
+		// 動的画質調整（Adaptive Quality）パラメータ
+		this.qualityLevel = 'HIGH'; // 'HIGH' | 'MEDIUM' | 'LOW'
+		this.avgFrameMs = 16.67;
+		this.lowFpsDuration = 0.0;
+		this.highFpsDuration = 0.0;
+		this.qualitySwitchCooldown = 0.0;
 
         // エフェクトパラメータ
         this.baseBloomStrength = 1.5;
@@ -169,24 +180,41 @@ class Renderer {
         this.distortionTarget = 0.0;
         this.distortionCurrent = 0.0;
 
-        this.elapsedTime = 0.0;
-        
-        this.init();
+		this.elapsedTime = 0.0;
+
+		// レスポンシブFOV設定（狭幅・縦長画面で水平視界が狭まりすぎないよう自動拡張）
+		this.baseFov = 72;
+		this.minReferenceAspect = 1.5;
+		this.maxFov = 105;
+
+		this.init();
     }
 
-    /**
-     * 初期化処理
-     */
-    init() {
-        this.initScene();
-        this.initCamera();
-        this.initWebGLRenderer();
-        this.initPostProcessing();
-        
-        // --- 2. シーン構築 ---
-        this.initLights();
-        this.setupResizeHandler();
-    }
+	/**
+	 * 初期化処理
+	 */
+	init() {
+		this.initScene();
+		this.initCamera();
+		this.initWebGLRenderer();
+		this.initEnvironment();
+		this.initPostProcessing();
+
+		// --- 2. シーン構築 ---
+		this.initLights();
+		this.setupResizeHandler();
+	}
+
+	/**
+	 * プロシージャル環境マップ（IBL）を初期化し、PBRマテリアルの金属反射を有効化する
+	 */
+	initEnvironment() {
+		if (typeof MaterialLibrary === 'undefined' || !this.webGLRenderer || !this.scene) return;
+		this.envMapResource = MaterialLibrary.createEnvironmentMap(this.webGLRenderer);
+		if (this.envMapResource && this.envMapResource.texture) {
+			this.scene.environment = this.envMapResource.texture;
+		}
+	}
 
     /**
      * シーン初期化 (フォグの追加による遠近感向上)
@@ -202,19 +230,43 @@ class Renderer {
         this.scene.fog = new THREE.FogExp2(bgColor, 0.015);
     }
 
-    /**
-     * カメラ初期化 (視野角 FOV: 72 に変更し広角化)
-     */
-    initCamera() {
-        const width = this.container.clientWidth;
-        const height = this.container.clientHeight;
-        
-        this.camera = new THREE.PerspectiveCamera(72, width / height, 0.1, 1000);
-        
-        // 初期位置
-        this.camera.position.set(0, 7.5, 13.0);
-        this.camera.lookAt(0, 0.5, -12.0);
-    }
+	/**
+	 * カメラ初期化 (視野角 FOV: 72 基準、縦長画面では水平視界を保つよう自動補正)
+	 */
+	initCamera() {
+		const width = Math.max(1, this.container.clientWidth);
+		const height = Math.max(1, this.container.clientHeight);
+
+		this.camera = new THREE.PerspectiveCamera(this.baseFov, width / height, 0.1, 1000);
+		this.updateCameraProjection(width, height);
+
+		// 初期位置
+		this.camera.position.set(0, 7.5, 13.0);
+		this.camera.lookAt(0, 0.5, -12.0);
+	}
+
+	/**
+	 * ビューポートサイズに応じてアスペクト比と垂直FOVを更新する
+	 * @param {number} width
+	 * @param {number} height
+	 */
+	updateCameraProjection(width, height) {
+		if (!this.camera || width <= 0 || height <= 0) return;
+
+		const aspect = width / height;
+		this.camera.aspect = aspect;
+
+		// 基準アスペクト比より縦長の場合は水平視野角を維持するように垂直FOVを拡張する
+		let fov = this.baseFov;
+		if (aspect < this.minReferenceAspect) {
+			const baseVRad = THREE.MathUtils.degToRad(this.baseFov);
+			const expandedVRad = 2 * Math.atan(Math.tan(baseVRad / 2) * (this.minReferenceAspect / aspect));
+			fov = Math.min(this.maxFov, THREE.MathUtils.radToDeg(expandedVRad));
+		}
+
+		this.camera.fov = fov;
+		this.camera.updateProjectionMatrix();
+	}
 
     /**
      * WebGLレンダラー初期化
@@ -260,10 +312,11 @@ class Renderer {
         this.screenEffectsPass = new THREE.ShaderPass(ScreenEffectsShader);
         this.composer.addPass(this.screenEffectsPass);
 
-        // 4. FXAAパス (アンチエイリアス)
-        this.fxaaPass = new THREE.ShaderPass(FXAAShader);
-        this.fxaaPass.uniforms['resolution'].value.set(1 / width, 1 / height);
-        this.composer.addPass(this.fxaaPass);
+		// 4. FXAAパス (アンチエイリアス)
+		const dpr = this.webGLRenderer.getPixelRatio();
+		this.fxaaPass = new THREE.ShaderPass(FXAAShader);
+		this.fxaaPass.uniforms['resolution'].value.set(1 / (width * dpr), 1 / (height * dpr));
+		this.composer.addPass(this.fxaaPass);
     }
 
     /**
@@ -296,31 +349,127 @@ class Renderer {
         this.dirLight.shadow.camera.far = 130;
         this.dirLight.shadow.bias = -0.0006;
 
-        this.scene.add(this.dirLight);
-    }
+		this.scene.add(this.dirLight);
 
-    /**
-     * ウィンドウリサイズ対応
-     */
-    setupResizeHandler() {
-        window.addEventListener('resize', () => {
-            const width = this.container.clientWidth;
-            const height = this.container.clientHeight;
-            
-            // カメラ設定更新
-            this.camera.aspect = width / height;
-            this.camera.updateProjectionMatrix();
-            
-            // レンダラーサイズ更新
-            this.webGLRenderer.setSize(width, height);
-            if (this.composer) {
-                this.composer.setSize(width, height);
-            }
-            if (this.fxaaPass) {
-                this.fxaaPass.uniforms['resolution'].value.set(1 / width, 1 / height);
-            }
-        });
-    }
+		// 輪郭・ハードエッジを際立たせるクールブルー系リムライト（影なしで軽量）
+		this.rimLight = new THREE.DirectionalLight(0x88ccff, 0.75);
+		this.rimLight.position.set(-22, 18, -28);
+		this.scene.add(this.rimLight);
+	}
+
+	/**
+	 * ウィンドウリサイズ・画面回転対応
+	 */
+	setupResizeHandler() {
+		this._onResize = () => this.handleResize();
+		window.addEventListener('resize', this._onResize);
+		window.addEventListener('orientationchange', () => {
+			// モバイルブラウザの回転直後はクライアント寸法の確定が少し遅れるため遅延再計算を行う
+			setTimeout(() => this.handleResize(), 120);
+		});
+	}
+
+	/**
+	 * 現在の画質レベルに応じたピクセル比上限を返す
+	 * @returns {number}
+	 */
+	_getTargetPixelRatio() {
+		const rawDpr = window.devicePixelRatio || 1;
+		if (this.qualityLevel === 'LOW') return 1.0;
+		if (this.qualityLevel === 'MEDIUM') return Math.min(rawDpr, 1.25);
+		return Math.min(rawDpr, 2.0);
+	}
+
+	/**
+	 * 動的画質レベルを適用する
+	 * @param {'HIGH'|'MEDIUM'|'LOW'} level
+	 */
+	setQualityLevel(level) {
+		if (this.qualityLevel === level) return;
+		this.qualityLevel = level;
+		this.qualitySwitchCooldown = 3.0;
+
+		if (this.webGLRenderer) {
+			this.webGLRenderer.shadowMap.enabled = (level !== 'LOW');
+		}
+		if (this.fxaaPass) {
+			this.fxaaPass.enabled = (level !== 'LOW');
+		}
+		this.handleResize();
+	}
+
+	/**
+	 * フレーム時間の移動平均から端末負荷を判定し、画質を段階的に自動調整する
+	 * @param {number} deltaTime
+	 */
+	_updateAdaptiveQuality(deltaTime) {
+		// タブ復帰や初回ロード直後の極端なスパイクは除外
+		if (deltaTime <= 0 || deltaTime >= 0.095) return;
+
+		const frameMs = deltaTime * 1000.0;
+		this.avgFrameMs = this.avgFrameMs * 0.92 + frameMs * 0.08;
+
+		if (this.qualitySwitchCooldown > 0) {
+			this.qualitySwitchCooldown -= deltaTime;
+			return;
+		}
+
+		// 負荷過多（約42fps未満が2.5秒継続）で1段階ダウン
+		if (this.avgFrameMs > 24.0) {
+			this.lowFpsDuration += deltaTime;
+			this.highFpsDuration = 0.0;
+			if (this.lowFpsDuration >= 2.5) {
+				this.lowFpsDuration = 0.0;
+				if (this.qualityLevel === 'HIGH') this.setQualityLevel('MEDIUM');
+				else if (this.qualityLevel === 'MEDIUM') this.setQualityLevel('LOW');
+			}
+		} else if (this.avgFrameMs < 17.8 && this.qualityLevel !== 'HIGH') {
+			// 十分な余裕（約56fps以上が6秒継続）で1段階復帰
+			this.highFpsDuration += deltaTime;
+			this.lowFpsDuration = 0.0;
+			if (this.highFpsDuration >= 6.0) {
+				this.highFpsDuration = 0.0;
+				if (this.qualityLevel === 'LOW') this.setQualityLevel('MEDIUM');
+				else if (this.qualityLevel === 'MEDIUM') this.setQualityLevel('HIGH');
+			}
+		} else {
+			this.lowFpsDuration = Math.max(0.0, this.lowFpsDuration - deltaTime * 0.5);
+			this.highFpsDuration = Math.max(0.0, this.highFpsDuration - deltaTime * 0.5);
+		}
+	}
+
+	/**
+	 * 現在のコンテナサイズに合わせてカメラ・レンダラー・ポストプロセスを再調整する
+	 */
+	handleResize() {
+		if (!this.container || !this.webGLRenderer || !this.camera) return;
+
+		const width = this.container.clientWidth;
+		const height = this.container.clientHeight;
+		if (width <= 0 || height <= 0) return;
+
+		const dpr = this._getTargetPixelRatio();
+
+		// カメラのアスペクト比・レスポンシブFOV更新
+		this.updateCameraProjection(width, height);
+
+		// レンダラーとポストプロセスの解像度更新
+		this.webGLRenderer.setPixelRatio(dpr);
+		this.webGLRenderer.setSize(width, height);
+
+		if (this.composer) {
+			if (typeof this.composer.setPixelRatio === 'function') {
+				this.composer.setPixelRatio(dpr);
+			}
+			this.composer.setSize(width, height);
+		}
+		if (this.bloomPass && typeof this.bloomPass.setSize === 'function') {
+			this.bloomPass.setSize(width, height);
+		}
+		if (this.fxaaPass) {
+			this.fxaaPass.uniforms['resolution'].value.set(1 / (width * dpr), 1 / (height * dpr));
+		}
+	}
 
     /**
      * 被弾ダメージフラッシュの発動
@@ -397,21 +546,22 @@ class Renderer {
         }
     }
 
-    /**
-     * 描画の実行
-     * @param {number} [deltaTime=0.016]
-     */
-    render(deltaTime = 0.016) {
-        this.updatePostProcessing(deltaTime);
+	/**
+	 * 描画の実行
+	 * @param {number} [deltaTime=0.016]
+	 */
+	render(deltaTime = 0.016) {
+		this._updateAdaptiveQuality(deltaTime);
+		this.updatePostProcessing(deltaTime);
 
-        if (this.webGLRenderer && this.scene && this.camera) {
-            if (this.composer) {
-                this.composer.render();
-            } else {
-                this.webGLRenderer.render(this.scene, this.camera);
-            }
-        }
-    }
+		if (this.webGLRenderer && this.scene && this.camera) {
+			if (this.composer) {
+				this.composer.render();
+			} else {
+				this.webGLRenderer.render(this.scene, this.camera);
+			}
+		}
+	}
 
     /**
      * ステージのテーマに合わせてビジュアルを動的に更新する

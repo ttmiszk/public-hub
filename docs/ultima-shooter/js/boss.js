@@ -65,9 +65,13 @@ class Boss {
         /** @type {THREE.MeshStandardMaterial[]} */
         this.materials = [];
         
-        // Stage 3 浮遊クリスタル用
-        /** @type {THREE.Mesh[]|null} */
-        this.orbitCrystals = null;
+		// ステージ固有アニメーション用パーツ参照
+		/** @type {Array<{object: THREE.Object3D, speedX: number, speedY: number, speedZ: number}>} */
+		this.rotatingRings = [];
+		/** @type {THREE.Object3D[]|null} */
+		this.blades = null;
+		/** @type {THREE.Object3D[]|null} */
+		this.orbitCrystals = null;
 
         // 必殺技・ビーム用変数
         this.isCharging = false;
@@ -97,115 +101,21 @@ class Boss {
         this.initMesh();
     }
 
-    /**
-     * ステージごとに特徴的な超巨大メカ3Dモデルの構築
-     */
-    initMesh() {
-        this.mesh = new THREE.Group();
-        
-        // 振動演出をビジュアルだけに適用するためのサブグループ
-        this.visualGroup = new THREE.Group();
-        this.mesh.add(this.visualGroup);
+	/**
+	 * ステージごとに特徴的な超巨大メカ3Dモデルの構築（BossModelBuilder に委譲）
+	 */
+	initMesh() {
+		this.mesh = new THREE.Group();
 
-        // 共通PBRマテリアル（被弾時に発光させる）
-        const mat = new THREE.MeshStandardMaterial({
-            color: this.color,
-            metalness: 0.7,
-            roughness: 0.3,
-            flatShading: true,
-            emissive: 0x000000
-        });
-        this.materials.push(mat);
+		// 振動演出をビジュアルだけに適用するためのサブグループ
+		this.visualGroup = new THREE.Group();
+		this.mesh.add(this.visualGroup);
 
-        const darkMetalMat = new THREE.MeshStandardMaterial({
-            color: 0x1e1e24,
-            metalness: 0.8,
-            roughness: 0.2,
-            flatShading: true
-        });
-        this.materials.push(darkMetalMat);
-
-        if (this.stageIndex === 0) {
-            // --- Stage 1: GREEN TITAN (巨大多面体 ＋ 回転する外周リング) ---
-            const bodyGeo = new THREE.IcosahedronGeometry(3.5, 1);
-            const body = new THREE.Mesh(bodyGeo, mat);
-            this.visualGroup.add(body);
-
-            // 外周を囲むリング
-            const ringGeo = new THREE.TorusGeometry(5.0, 0.4, 8, 28);
-            ringGeo.rotateX(Math.PI / 2);
-            const ring = new THREE.Mesh(ringGeo, mat);
-            this.visualGroup.add(ring);
-            
-            // 砲台ノズル
-            const nozzleGeo = new THREE.CylinderGeometry(0.3, 0.4, 1.8, 6);
-            nozzleGeo.rotateX(Math.PI / 2);
-            const nozzle = new THREE.Mesh(nozzleGeo, darkMetalMat);
-            nozzle.position.set(0, -0.5, 3.5);
-            this.visualGroup.add(nozzle);
-        } 
-        else if (this.stageIndex === 1) {
-            // --- Stage 2: BLUE LEVIATHAN (巨大巡洋戦艦型) ---
-            const bodyGeo = new THREE.BoxGeometry(9.0, 2.2, 5.0);
-            const body = new THREE.Mesh(bodyGeo, mat);
-            this.visualGroup.add(body);
-
-            // 左右の巨大砲台ポッド
-            const podGeo = new THREE.BoxGeometry(2.0, 1.5, 4.0);
-            const leftPod = new THREE.Mesh(podGeo, darkMetalMat);
-            leftPod.position.set(-5.5, 0, 0.5);
-            this.visualGroup.add(leftPod);
-            
-            const rightPod = new THREE.Mesh(podGeo, darkMetalMat);
-            rightPod.position.set(5.5, 0, 0.5);
-            this.visualGroup.add(rightPod);
-
-            // 前方突出シールド
-            const shieldGeo = new THREE.ConeGeometry(1.5, 3.5, 4);
-            shieldGeo.rotateX(Math.PI / 2);
-            shieldGeo.scale(3.0, 0.5, 1.0);
-            const shield = new THREE.Mesh(shieldGeo, mat);
-            shield.position.set(0, 0, 3.8);
-            this.visualGroup.add(shield);
-        } 
-        else {
-            // --- Stage 3: VOID OVERLORD (漆黒の要塞コア ＋ 4枚の巨大結晶ブレード羽 ＋ 浮遊衛星) ---
-            // 1. 中央のダークコア（高輝度の発光球体）
-            const coreGeo = new THREE.SphereGeometry(2.2, 16, 16);
-            const coreMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-            const core = new THREE.Mesh(coreGeo, coreMat);
-            core.position.set(0, 0, 0);
-            this.visualGroup.add(core);
-
-            // 2. コアを取り巻くアウターデビルリング
-            const ringGeo = new THREE.TorusGeometry(3.6, 0.4, 8, 24);
-            const ring = new THREE.Mesh(ringGeo, mat);
-            ring.rotation.x = Math.PI / 4;
-            this.visualGroup.add(ring);
-
-            // 3. 4枚の凶悪な巨大結晶ブレード（羽のように上下左右からコアを包む）
-            const bladeGeo = new THREE.OctahedronGeometry(3.5);
-            bladeGeo.scale(0.3, 2.5, 0.8); // 縦長結晶ブレード
-            bladeGeo.translate(0, 5.0, 0);
-
-            this.blades = [];
-            for (let i = 0; i < 4; i++) {
-                const blade = new THREE.Mesh(bladeGeo, mat);
-                blade.rotation.z = (i * Math.PI) / 2;
-                blade.rotation.x = 0.25;
-                this.visualGroup.add(blade);
-                this.blades.push(blade);
-            }
-
-            // 4. 浮遊しつつ公転する4個の小型クリスタル衛星
-            this.orbitCrystals = [];
-            const cryGeo = new THREE.OctahedronGeometry(0.9);
-            for (let i = 0; i < 4; i++) {
-                const cry = new THREE.Mesh(cryGeo, mat);
-                this.visualGroup.add(cry);
-                this.orbitCrystals.push(cry);
-            }
-        }
+		const built = BossModelBuilder.build(this.visualGroup, this.stageIndex, this.color);
+		this.materials = built.materials;
+		this.rotatingRings = built.rotatingRings;
+		this.blades = built.blades;
+		this.orbitCrystals = built.orbitCrystals;
 
         // --- 必殺技ビームメッシュの構築 ---
         const beamColor = this.color;
@@ -402,16 +312,18 @@ class Boss {
         }
     }
 
-    _updateAnimations(deltaTime) {
-        // ビジュアル固有アニメーション
-        if (this.stageIndex === 0) {
-            // リングを傾けながら回転
-            if (this.visualGroup.children[1]) {
-                this.visualGroup.children[1].rotation.y = this.actionTimer * 1.2;
-                this.visualGroup.children[1].rotation.z = this.actionTimer * 0.4;
-            }
-        } 
-        else if (this.stageIndex === 2) {
+	_updateAnimations(deltaTime) {
+		// 回転リング演出（Stage 1 のジャイロリング / Stage 3 のルーンリング）
+		if (this.rotatingRings && this.rotatingRings.length > 0) {
+			for (let i = 0; i < this.rotatingRings.length; i++) {
+				const r = this.rotatingRings[i];
+				if (r.speedX) r.object.rotation.x += r.speedX * deltaTime;
+				if (r.speedY) r.object.rotation.y += r.speedY * deltaTime;
+				if (r.speedZ) r.object.rotation.z += r.speedZ * deltaTime;
+			}
+		}
+
+		if (this.stageIndex === 2) {
             // 4個の浮遊クリスタルを周囲で回す
             if (this.orbitCrystals) {
                 this.orbitCrystals.forEach((cry, idx) => {
